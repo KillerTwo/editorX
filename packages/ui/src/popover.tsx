@@ -9,12 +9,13 @@ import {
   useDismiss,
   useFloating,
   useInteractions,
+  useMergeRefs,
   useRole,
   type OpenChangeReason,
   type Placement,
 } from '@floating-ui/react'
 import { useTheme } from '@editorx/theme'
-import { cloneElement, useState, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 
 export interface PopoverProps {
@@ -55,10 +56,12 @@ export function Popover({
     useDismiss(context),
     useRole(context, { role: 'dialog' }),
   ])
+  const childRef = (children.props as { ref?: Ref<Element> }).ref
+  const ref = useMergeRefs([refs.setReference, childRef])
 
   return (
     <>
-      {cloneElement(children, { ref: refs.setReference, ...getReferenceProps(children.props) })}
+      {cloneElement(children, getReferenceProps({ ...children.props, ref }))}
       {open && (
         <FloatingPortal root={portalRoot}>
           <FloatingFocusManager context={context} modal={false}>

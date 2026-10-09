@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { Popover } from './popover'
 import { renderWithTheme } from './test-utils'
@@ -37,6 +38,25 @@ describe('Popover', () => {
     await userEvent.click(screen.getByRole('button', { name: '打开' }))
     await screen.findByRole('dialog')
     await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('触发器自带 ref 时仍可开关，且 ref 指向触发元素', async () => {
+    const r = createRef<HTMLButtonElement>()
+    renderWithTheme(
+      <Popover content={() => <p>内容</p>}>
+        <button ref={r}>打开</button>
+      </Popover>,
+    )
+    const trigger = screen.getByRole('button', { name: '打开' })
+    expect(r.current).toBe(trigger)
+    await userEvent.click(trigger)
+    await screen.findByRole('dialog')
+    await userEvent.click(trigger)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await userEvent.click(trigger)
+    await screen.findByRole('dialog')
+    await userEvent.click(document.body)
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
