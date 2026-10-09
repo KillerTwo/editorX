@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import { StrictMode, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { RadioGroup, type RadioOption } from './radio-group'
 import { renderWithTheme } from './test-utils'
@@ -29,7 +29,11 @@ function Controlled({ onChange }: { onChange?: (v: Kind) => void }) {
 
 describe('RadioGroup', () => {
   it('渲染 radiogroup 与同名原生单选，选中项带 is-checked', () => {
-    renderWithTheme(<Controlled />)
+    renderWithTheme(
+      <StrictMode>
+        <Controlled />
+      </StrictMode>,
+    )
     expect(screen.getByRole('radiogroup', { name: '类型' })).toHaveClass('ex-radio-group')
     const radios = screen.getAllByRole('radio')
     expect(radios).toHaveLength(3)
@@ -40,7 +44,11 @@ describe('RadioGroup', () => {
 
   it('点击文字切换并回调；禁用项不可选', async () => {
     const onChange = vi.fn()
-    renderWithTheme(<Controlled onChange={onChange} />)
+    renderWithTheme(
+      <StrictMode>
+        <Controlled onChange={onChange} />
+      </StrictMode>,
+    )
     await userEvent.click(screen.getByText('乙'))
     expect(onChange).toHaveBeenCalledWith('b')
     expect(screen.getByRole('radio', { name: '乙' })).toBeChecked()
@@ -52,10 +60,10 @@ describe('RadioGroup', () => {
 
   it('整组禁用、invalid 与 labelledBy', () => {
     renderWithTheme(
-      <>
+      <StrictMode>
         <span id="lbl">可见范围</span>
         <RadioGroup labelledBy="lbl" value="a" options={options} onChange={() => {}} disabled invalid />
-      </>,
+      </StrictMode>,
     )
     expect(screen.getByRole('radiogroup', { name: '可见范围' })).toHaveAttribute('aria-invalid', 'true')
     for (const radio of screen.getAllByRole('radio')) expect(radio).toBeDisabled()

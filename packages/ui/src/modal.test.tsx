@@ -1,5 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { StrictMode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { Modal } from './modal'
 import { renderWithTheme } from './test-utils'
@@ -61,9 +62,11 @@ describe('Modal', () => {
 
   it('maskClassName 追加到遮罩', () => {
     renderWithTheme(
-      <Modal open onClose={() => {}} title="发布文章" maskClassName="ex-pub-mask">
-        内容
-      </Modal>,
+      <StrictMode>
+        <Modal open onClose={() => {}} title="发布文章" maskClassName="ex-pub-mask">
+          内容
+        </Modal>
+      </StrictMode>,
     )
     const mask = screen.getByRole('dialog', { name: '发布文章' }).closest('.ex-modal-mask')
     expect(mask).toHaveClass('ex-modal-mask', 'ex-pub-mask')
