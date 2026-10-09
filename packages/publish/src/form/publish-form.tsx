@@ -33,6 +33,9 @@ export interface PublishFormProps {
   templates?: readonly PublishOption[]
   agreementLinks?: AgreementLinks
   notify(message: string, type?: ToastType): void
+  /** 已聚焦过的失败次数；由常驻的父组件保存，表单重新挂载（弹窗重开）时不会为旧的失败抢焦点 */
+  focusedFailures: number
+  onFailuresFocused(count: number): void
 }
 
 const VISIBILITIES = ['public', 'private', 'fans', 'vip'] as const
@@ -40,6 +43,7 @@ const DECLARATIONS = ['none', 'ai', 'network', 'personal'] as const
 
 export function PublishForm(props: PublishFormProps) {
   const { ctl, variant, document: doc, adapters, missingAdapter, coverModes, templates, agreementLinks, notify } = props
+  const { focusedFailures, onFailuresFocused } = props
   const p = useMessages().publish
   const { settings, errors, update, failedAttempts } = ctl
   const rootRef = useRef<HTMLDivElement>(null)
@@ -47,13 +51,14 @@ export function PublishForm(props: PublishFormProps) {
   const fid = (name: string) => `${baseId}${name}`
 
   useEffect(() => {
-    if (failedAttempts === 0) return
+    if (failedAttempts === focusedFailures) return
     // 定时发布弹窗随校验失败关闭时会在微任务里归还焦点，等它之后再聚焦首个错误字段
     const timer = window.setTimeout(() => {
+      onFailuresFocused(failedAttempts)
       rootRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
     })
     return () => window.clearTimeout(timer)
-  }, [failedAttempts])
+  }, [failedAttempts, focusedFailures, onFailuresFocused])
 
   const state = (name: AdapterName) => adapterState(adapters, name, missingAdapter)
   const categoriesState = state('getCategories')

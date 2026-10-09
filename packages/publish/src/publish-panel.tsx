@@ -1,7 +1,7 @@
 import { ThemeProvider, useOptionalTheme } from '@editorx/theme'
 import { MessagesProvider, useMessages, type CoverMode, type EditorAdapters } from '@editorx/toolbar'
 import { Modal, ToastProvider, useToast, type ToastType } from '@editorx/ui'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { PublishActions } from './actions'
 import { adapterState } from './adapter-state'
 import { cx } from './cx'
@@ -61,6 +61,12 @@ function usePublishParts(
   const missing = props.missingAdapter ?? 'hide'
   const notify = (message: string, type?: ToastType) => toast.notify(message, type)
   const [schedule, setSchedule] = useState<ScheduleState | null>(null)
+  const [focusedFailures, setFocusedFailures] = useState(0)
+  // 发起发布后弹窗一直开着才在成功时自动关闭；期间关闭过（可能已重新打开）则不再关闭
+  const autoClose = useRef(false)
+  useEffect(() => {
+    if (!open) autoClose.current = false
+  }, [open])
   const ctl = usePublishController({
     value: props.value,
     defaultValue: props.defaultValue,
@@ -71,12 +77,17 @@ function usePublishParts(
     messages: m.publish,
     notify,
     onPublished: (payload) => {
-      // 先收起：onPublished 抛错时文章已发布，弹窗照常关闭
+      // 先收起再回调：onPublished 抛错时文章已发布，不影响关闭
       setSchedule(null)
-      onDone?.()
+      if (autoClose.current) onDone?.()
       props.onPublished?.(payload)
     },
   })
+  const publish = (scheduledAt?: string) => {
+    autoClose.current = true
+    void ctl.publish(scheduledAt)
+  }
+  if (!open && focusedFailures !== ctl.failedAttempts) setFocusedFailures(ctl.failedAttempts)
   if (schedule && (!open || ctl.failedAttempts !== schedule.attempts)) {
     // 只有发布时间无效时留在定时弹窗里；其他字段无效则关闭弹窗，由表单聚焦首个错误字段
     const timeOnly = open && Object.keys(ctl.errors).every((field) => field === 'scheduledAt')
@@ -93,6 +104,8 @@ function usePublishParts(
       templates={props.templates}
       agreementLinks={props.agreementLinks}
       notify={notify}
+      focusedFailures={focusedFailures}
+      onFailuresFocused={setFocusedFailures}
     />
   )
   const actions = (
@@ -103,15 +116,16 @@ function usePublishParts(
       publishState={adapterState(adapters, 'onPublish', missing)}
       onSaveDraft={() => void ctl.saveDraft()}
       onSchedule={() => setSchedule({ attempts: ctl.failedAttempts, showError: false })}
-      onPublish={() => void ctl.publish()}
+      onPublish={() => publish()}
       onCancel={onCancel}
     />
   )
   const scheduleDialog = schedule && (
     <ScheduleDialog
       error={schedule.showError ? ctl.errors.scheduledAt : undefined}
+      busy={ctl.busy === 'publish'}
       onCancel={() => setSchedule(null)}
-      onConfirm={(iso) => void ctl.publish(iso)}
+      onConfirm={publish}
     />
   )
   return { form, actions, schedule: scheduleDialog }
@@ -164,7 +178,10 @@ export function PublishPanel(props: PublishPanelProps) {
   )
 }
 
-/** 740 宽发布弹窗；控制器在弹窗外，关闭后非受控设置与进行中的请求保留，发布成功后调用 onClose */
+/**
+ * 740 宽发布弹窗；控制器在弹窗外，关闭后非受控设置与进行中的请求保留。
+ * 发布成功时，仅当发起后弹窗一直开着才调用 onClose；请求期间关闭过则只提示成功并回调 onPublished。
+ */
 export function PublishModal(props: PublishModalProps) {
   return (
     <PublishRoot props={props}>

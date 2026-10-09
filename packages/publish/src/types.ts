@@ -38,7 +38,10 @@ export interface PublishBaseProps {
   templates?: readonly PublishOption[]
   /** GitCode 协议链接；未提供时渲染为纯文本 */
   agreementLinks?: AgreementLinks
-  /** 发布成功后调用（PublishModal 在此之前已调用 onClose）；抛出的异常不会显示为发布失败 */
+  /**
+   * 发布成功后调用；抛出的异常不会显示为发布失败。
+   * PublishModal：若发起发布后弹窗一直开着，会先调用 onClose 再调用它；请求期间关闭过弹窗则只调用它，不再调用 onClose。
+   */
   onPublished?(payload: PublishPayload): void
   locale?: DeepPartial<Messages>
   /**

@@ -5,12 +5,14 @@ import { defaultScheduleTime, fromLocalInputValue, toLocalInputValue } from './s
 
 export interface ScheduleDialogProps {
   error?: string
+  /** 定时发布请求进行中 */
+  busy?: boolean
   onCancel(): void
   onConfirm(iso: string): void
 }
 
 /** 只在打开时挂载：初始时间在挂载时（客户端）计算 */
-export function ScheduleDialog({ error, onCancel, onConfirm }: ScheduleDialogProps) {
+export function ScheduleDialog({ error, busy = false, onCancel, onConfirm }: ScheduleDialogProps) {
   const m = useMessages()
   const s = m.publish.schedule
   const inputId = useId()
@@ -28,7 +30,7 @@ export function ScheduleDialog({ error, onCancel, onConfirm }: ScheduleDialogPro
       footer={
         <>
           <Button onClick={onCancel}>{m.publish.actions.cancel}</Button>
-          <Button variant="primary" disabled={!iso} onClick={() => iso && onConfirm(iso)}>
+          <Button variant="primary" disabled={!iso} loading={busy} onClick={() => iso && onConfirm(iso)}>
             {s.confirm}
           </Button>
         </>

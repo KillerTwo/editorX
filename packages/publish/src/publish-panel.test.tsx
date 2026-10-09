@@ -37,7 +37,7 @@ async function collectUnhandledRejections(run: () => Promise<void>): Promise<unk
   process.on('unhandledRejection', onRejection)
   try {
     await run()
-    await tick()
+    await vi.waitFor(() => expect(caught).toHaveLength(1))
   } finally {
     process.off('unhandledRejection', onRejection)
     for (const listener of saved) process.on('unhandledRejection', listener)
@@ -261,6 +261,36 @@ describe('PublishPanel（内联）', () => {
     expect(root).toHaveClass('ex-pub-theme')
     expect(root).toHaveAttribute('data-ex-theme', 'dark')
   })
+
+  it('有外层 ThemeProvider 且未传主题属性：复用外层主题，不自建 .ex-pub-theme', () => {
+    const { container } = renderWithProviders(<PublishPanel document={doc} adapters={adapters()} />)
+    expect(container.querySelectorAll('.ex-root')).toHaveLength(1)
+    expect(container.querySelector('.ex-pub-theme')).toBeNull()
+    expect(container.querySelector('.ex-root')).toContainElement(screen.getByRole('region', { name: '发布设置' }))
+  })
+
+  it('定时发布请求进行中：「确定」显示加载态，完成后关闭弹窗', async () => {
+    let finish!: () => void
+    const a = adapters({
+      onPublish: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve
+          }),
+      ),
+    })
+    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
+    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
+    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
+    const confirm = within(dialog).getByRole('button', { name: '确定' })
+    expect(confirm).not.toHaveAttribute('aria-busy')
+    await userEvent.click(confirm)
+    await waitFor(() => expect(a.onPublish).toHaveBeenCalledTimes(1))
+    expect(confirm).toHaveAttribute('aria-busy', 'true')
+    expect(confirm).toBeDisabled()
+    await act(async () => finish())
+    await waitFor(() => expect(dialog).not.toBeInTheDocument())
+  })
 })
 
 describe('PublishModal', () => {
@@ -339,6 +369,57 @@ describe('PublishModal', () => {
     expect(screen.queryByRole('dialog', { name: '发布文章' })).toBeNull()
     await act(async () => finish())
     expect(await screen.findByText('发布成功')).toBeInTheDocument()
+  })
+
+  it('请求中关闭又重新打开：成功后提示并回调 onPublished，但不关闭重新打开的弹窗', async () => {
+    let finish!: () => void
+    const a = adapters({
+      onPublish: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve
+          }),
+      ),
+    })
+    const onPublished = vi.fn()
+    renderWithProviders(<Host a={a} onPublished={onPublished} defaultValue={{ tags: ['React'] }} />)
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    const first = await screen.findByRole('dialog', { name: '发布文章' })
+    await userEvent.click(within(first).getByRole('button', { name: '发布文章' }))
+    await waitFor(() => expect(a.onPublish).toHaveBeenCalledTimes(1))
+    await userEvent.click(within(first).getByRole('button', { name: '取消' }))
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    await screen.findByRole('dialog', { name: '发布文章' })
+    await act(async () => finish())
+    expect(await screen.findByText('发布成功')).toBeInTheDocument()
+    expect(onPublished).toHaveBeenCalledTimes(1)
+    await tick()
+    expect(screen.getByRole('dialog', { name: '发布文章' })).toBeInTheDocument()
+  })
+
+  it('校验失败后关闭再打开：不把焦点移到旧的错误字段；再次发布失败仍聚焦首个错误字段', async () => {
+    // 弹窗初始焦点走 requestAnimationFrame；同步执行以模拟浏览器里它先于 setTimeout 到达的时序
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callback(performance.now())
+      return 0
+    })
+    const a = adapters()
+    renderWithProviders(<Host a={a} />)
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    const first = await screen.findByRole('dialog', { name: '发布文章' })
+    await userEvent.click(within(first).getByRole('button', { name: '发布文章' }))
+    await waitFor(() => expect(within(first).getByRole('button', { name: '添加文章标签' })).toHaveFocus())
+    await userEvent.click(within(first).getByRole('button', { name: '取消' }))
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    const dialog = await screen.findByRole('dialog', { name: '发布文章' })
+    const add = within(dialog).getByRole('button', { name: '添加文章标签' })
+    expect(add).toHaveAttribute('aria-invalid', 'true')
+    await tick()
+    expect(add).not.toHaveFocus()
+    expect(dialog).toContainElement(document.activeElement as HTMLElement)
+    await userEvent.click(within(dialog).getByRole('button', { name: '发布文章' }))
+    await waitFor(() => expect(add).toHaveFocus())
+    expect(a.onPublish).not.toHaveBeenCalled()
   })
 
   it('onPublished 抛错：弹窗仍自动关闭，不提示发布失败，异常交给调用方', async () => {
