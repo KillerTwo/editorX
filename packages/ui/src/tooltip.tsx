@@ -15,6 +15,8 @@ import {
 } from '@floating-ui/react'
 import { useTheme } from '@editorx/theme'
 import { cloneElement, useState, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from 'react'
+import { cx } from './cx'
+import { useModalLayerClass } from './layer'
 
 export interface TooltipProps extends Omit<HTMLAttributes<HTMLElement>, 'content' | 'children'> {
   content: ReactNode
@@ -53,6 +55,7 @@ export function Tooltip({
 }: TooltipProps) {
   const [open, setOpen] = useState(false)
   const { portalRoot } = useTheme()
+  const layerClass = useModalLayerClass()
   const { refs, floatingStyles, context } = useFloating({
     open,
     onOpenChange: setOpen,
@@ -74,7 +77,7 @@ export function Tooltip({
       {cloneElement(children, getReferenceProps({ ...mergeChildProps(children.props, rest), ref }))}
       {open && (
         <FloatingPortal root={portalRoot}>
-          <div ref={refs.setFloating} style={floatingStyles} className="ex-tooltip" {...getFloatingProps()}>
+          <div ref={refs.setFloating} style={floatingStyles} className={cx('ex-tooltip', layerClass)} {...getFloatingProps()}>
             {content}
           </div>
         </FloatingPortal>

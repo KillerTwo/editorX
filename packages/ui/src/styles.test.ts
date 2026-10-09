@@ -21,4 +21,13 @@ describe('ui styles.css', () => {
       expect(css, cls).toMatch(new RegExp(`\\.${cls}(?![\\w-])`))
     }
   })
+
+  it('Modal 内的弹出层（is-in-modal）层级高于遮罩、低于 toast', () => {
+    const rule = /([^{}]*)\{[^}]*z-index:\s*calc\(var\(--ex-z-modal\)\s*\+\s*1\)/.exec(css)
+    expect(rule).not.toBeNull()
+    const selectors = rule![1]!.split(',').map((s) => s.trim())
+    expect(selectors).toEqual(expect.arrayContaining(['.ex-popover.is-in-modal', '.ex-tooltip.is-in-modal']))
+    const z = (name: string) => Number(new RegExp(`--ex-z-${name}:\\s*(\\d+);`).exec(themeCss)?.[1])
+    expect(z('modal') + 1).toBeLessThan(z('toast'))
+  })
 })

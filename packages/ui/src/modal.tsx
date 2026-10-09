@@ -14,6 +14,7 @@ import { X } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'
+import { ModalLayer } from './layer'
 
 export interface ModalProps {
   open: boolean
@@ -78,14 +79,16 @@ function ModalInner({
                 aria-label={title ? undefined : ariaLabel}
                 {...getFloatingProps()}
               >
-                <div className="ex-modal__header">
-                  {title && <h2 id={titleId} className="ex-modal__title">{title}</h2>}
-                  <button type="button" className="ex-modal__close" aria-label={closeLabel} onClick={onClose}>
-                    <X size={16} aria-hidden="true" />
-                  </button>
-                </div>
-                <div className="ex-modal__body">{children}</div>
-                {footer && <div className="ex-modal__footer">{footer}</div>}
+                <ModalLayer>
+                  <div className="ex-modal__header">
+                    {title && <h2 id={titleId} className="ex-modal__title">{title}</h2>}
+                    <button type="button" className="ex-modal__close" aria-label={closeLabel} onClick={onClose}>
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                  <div className="ex-modal__body">{children}</div>
+                  {footer && <div className="ex-modal__footer">{footer}</div>}
+                </ModalLayer>
               </div>
             </FloatingFocusManager>
           </FloatingOverlay>

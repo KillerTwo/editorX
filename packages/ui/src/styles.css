@@ -81,6 +81,8 @@
   box-shadow: var(--ex-shadow-popover);
 }
 .ex-popover:focus { outline: none; }
+.ex-popover.is-in-modal,
+.ex-tooltip.is-in-modal { z-index: calc(var(--ex-z-modal) + 1); }
 
 .ex-dropdown { margin: 0; padding: var(--ex-space-1) 0; list-style: none; }
 .ex-dropdown__sep { height: 1px; margin: var(--ex-space-1) 0; background: var(--ex-color-border); }

@@ -20,6 +20,7 @@ import { useTheme } from '@editorx/theme'
 import { cloneElement, useRef, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'
+import { useModalLayerClass } from './layer'
 
 export interface DropdownItem {
   key: string
@@ -48,6 +49,7 @@ function DropdownInner({ items, onSelect, children, placement = 'bottom-start', 
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const { portalRoot } = useTheme()
+  const layerClass = useModalLayerClass()
   const nodeId = useFloatingNodeId()
   const listRef = useRef<Array<HTMLElement | null>>([])
   const { refs, floatingStyles, context } = useFloating({
@@ -80,7 +82,7 @@ function DropdownInner({ items, onSelect, children, placement = 'bottom-start', 
               <ul
                 ref={refs.setFloating}
                 style={floatingStyles}
-                className={cx('ex-popover ex-dropdown', className)}
+                className={cx('ex-popover ex-dropdown', layerClass, className)}
                 {...floatingProps}
                 aria-label={label}
                 aria-labelledby={label ? undefined : (floatingProps['aria-labelledby'] as string | undefined)}

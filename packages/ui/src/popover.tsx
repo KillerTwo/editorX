@@ -20,6 +20,7 @@ import { useTheme } from '@editorx/theme'
 import { cloneElement, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'
+import { useModalLayerClass } from './layer'
 
 export interface PopoverProps {
   content: (close: () => void) => ReactNode
@@ -41,6 +42,7 @@ function PopoverInner({
   const [innerOpen, setInnerOpen] = useState(false)
   const open = openProp ?? innerOpen
   const { portalRoot } = useTheme()
+  const layerClass = useModalLayerClass()
   const nodeId = useFloatingNodeId()
 
   const setOpen = (next: boolean, event?: Event, reason?: OpenChangeReason) => {
@@ -74,7 +76,7 @@ function PopoverInner({
               <div
                 ref={refs.setFloating}
                 style={floatingStyles}
-                className={cx('ex-popover', className)}
+                className={cx('ex-popover', layerClass, className)}
                 {...getFloatingProps()}
               >
                 {content(() => setOpen(false))}
