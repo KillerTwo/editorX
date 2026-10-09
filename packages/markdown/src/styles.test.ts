@@ -53,10 +53,35 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)
     expect(css).toMatch(/\.ex-mde-rail \{[^}]*width: 56px;/)
     expect(css).toContain('calc(var(--ex-mde-split, 0.5) * 100%)')
-    expect(css).toMatch(/\.ex-mde \.ex-editor-content \{[^}]*padding: 16px 20cqi;[^}]*font-size: 15px;/)
+    expect(css).toMatch(/\.ex-mde \.ex-editor-content \{[^}]*padding: 16px 20cqi;[^}]*font-size: 16px;[^}]*line-height: 26px;/)
     expect(css).toMatch(/\.ex-mde-body \{[^}]*container-type: inline-size;/)
     expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-mde-preview \{[^}]*padding: 16px 40px;/)
     expect(css).toMatch(/::-webkit-scrollbar \{[^}]*width: 8px;/)
+  })
+
+  it('编辑区排版按 CSDN 实测：西文 Arial 优先，标题逐级递减且行高统一', () => {
+    expect(css).toMatch(/--ex-mde-font-family: -apple-system, 'SF UI Text', Arial,/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-setext-h1 \{ font-size: 22px; line-height: 48px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-setext-h2 \{ font-size: 20px; line-height: 46px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-h3 \{ font-size: 18px; line-height: 46px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-h4 \{ font-size: 17px; line-height: 46px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-h6 \{ font-size: 16px; line-height: 46px; \}/)
+    expect(css).toMatch(/\.ex-editor-section:has\(> :is\(\.ex-md-h1, \.ex-md-setext-h1\):first-child\) \{ padding-top: 41px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-tag \{ font-size: 13\.5px; line-height: 0; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-toc \{ font-size: 29px; line-height: 37px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-md-toc :is\(\.ex-md-link, \.ex-md-marker\) \{\s*color: var\(--ex-color-mde-body-marker\);/)
+  })
+
+  it('预览排版：标题 22/20/18/16px、目录无项目符号、脚注与流程图细线', () => {
+    expect(css).toMatch(/\.ex-mde \.ex-preview \{[^}]*font-size: 16px;[^}]*line-height: 26px;/)
+    expect(css).toMatch(/\.ex-mde \.ex-preview h1 \{ font-size: 22px; line-height: 32px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-preview h2 \{ font-size: 20px; line-height: 30px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-preview h3 \{ font-size: 18px; line-height: 28px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-preview :is\(h4, h5, h6\) \{ font-size: 16px; line-height: 26px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-preview \.ex-toc ul \{[^}]*list-style: none;/)
+    expect(css).toMatch(/\.ex-mde \.ex-preview \.ex-footnotes p \{ margin: 0; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-flowchart svg :is\(rect, path, circle, ellipse\) \{ stroke-width: 1px; \}/)
+    expect(css).toMatch(/\.ex-mde \.ex-flowchart svg text \{ fill: var\(--ex-color-mde-heading-text\); \}/)
   })
 
   it('目录层级字号 18/16/13px', () => {

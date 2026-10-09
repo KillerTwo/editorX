@@ -99,23 +99,56 @@
 .ex-mde[data-view='split'] .ex-mde-editor { flex: 0 0 calc(var(--ex-mde-split, 0.5) * 100%); }
 .ex-mde[data-view='split'] .ex-mde-preview-pane { background: var(--ex-color-mde-split-preview-bg); }
 
+/* CSDN 正文西文先用 Arial，中文回落到苹方/雅黑（与参考截图字宽一致） */
+.ex-mde { --ex-mde-font-family: -apple-system, 'SF UI Text', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+
 .ex-mde .ex-editor-content {
   padding: 16px 20cqi;
-  font-family: var(--ex-font-family);
-  font-size: 15px;
-  line-height: 1.65;
+  font-family: var(--ex-mde-font-family);
+  font-size: 16px;
+  line-height: 26px;
   color: var(--ex-color-mde-body-text);
 }
 
 .ex-mde[data-view='split'] .ex-editor-content { padding: 16px 24px; }
 
 .ex-mde .ex-md-heading { color: var(--ex-color-mde-body-text); }
+.ex-mde .ex-md-h1,
+.ex-mde .ex-md-setext-h1 { font-size: 22px; line-height: 48px; }
+.ex-mde .ex-md-h2,
+.ex-mde .ex-md-setext-h2 { font-size: 20px; line-height: 46px; }
+.ex-mde .ex-md-h3 { font-size: 18px; line-height: 46px; }
+.ex-mde .ex-md-h4 { font-size: 17px; line-height: 46px; }
+.ex-mde .ex-md-h5,
+.ex-mde .ex-md-h6 { font-size: 16px; line-height: 46px; }
+
+/* 顶层标题总在段首：标题上方的留白放在段上，行内元素的 padding 不撑开行高 */
+.ex-mde .ex-editor-section:has(> :is(.ex-md-h1, .ex-md-setext-h1):first-child) { padding-top: 41px; }
+.ex-mde .ex-editor-section:has(> :is(.ex-md-h2, .ex-md-setext-h2, .ex-md-h3, .ex-md-h4, .ex-md-h5, .ex-md-h6):first-child) { padding-top: 16px; }
+
+/* 链接、网址与 HTML 标签按正文色显示；标签缩小、标签名加粗，line-height: 0 使小字号不改变行高 */
+.ex-mde .ex-md-link,
+.ex-mde .ex-md-link > .ex-md-marker,
+.ex-mde .ex-md-url,
+.ex-mde .ex-md-tag {
+  color: var(--ex-color-mde-body-text);
+}
+
+.ex-mde .ex-md-tag { font-size: 13.5px; line-height: 0; }
+.ex-mde .ex-md-tag-name { font-weight: 600; }
 
 .ex-mde .ex-md-marker,
 .ex-mde .ex-md-list > .ex-md-marker,
 .ex-mde .ex-md-task,
-.ex-mde .ex-md-hr,
-.ex-mde .ex-md-url {
+.ex-mde .ex-md-hr {
+  color: var(--ex-color-mde-body-marker);
+}
+
+/* @[TOC] 行：CSDN 整行以大号标记灰显示 */
+.ex-mde .ex-md-toc { font-size: 29px; line-height: 37px; }
+
+.ex-mde .ex-md-toc,
+.ex-mde .ex-md-toc :is(.ex-md-link, .ex-md-marker) {
   color: var(--ex-color-mde-body-marker);
 }
 
@@ -125,6 +158,49 @@
 }
 
 .ex-mde[data-view='split'] .ex-mde-preview { padding: 16px 40px; }
+
+/* ---------- 预览排版（CSDN 实测：正文 16/26px，标题 22/20/18px） ---------- */
+.ex-mde .ex-preview {
+  font-family: var(--ex-mde-font-family);
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--ex-color-mde-body-text);
+}
+
+.ex-mde .ex-preview :is(h1, h2, h3, h4, h5, h6) {
+  margin: 24px 0 8px;
+  color: var(--ex-color-mde-heading-text);
+  font-weight: 600;
+}
+
+.ex-mde .ex-preview h1 { font-size: 22px; line-height: 32px; }
+.ex-mde .ex-preview h2 { font-size: 20px; line-height: 30px; }
+.ex-mde .ex-preview h3 { font-size: 18px; line-height: 28px; }
+.ex-mde .ex-preview :is(h4, h5, h6) { font-size: 16px; line-height: 26px; }
+
+.ex-mde .ex-preview :is(p, ul, ol) { margin: 0 0 24px; }
+.ex-mde .ex-preview :is(ul, ol) { padding-left: 31px; }
+.ex-mde .ex-preview li { color: var(--ex-color-mde-list-text); }
+.ex-mde .ex-preview a { color: var(--ex-color-mde-preview-link); }
+.ex-mde .ex-preview hr { border-top-color: var(--ex-color-mde-preview-rule); }
+
+/* 目录块：上方留白用 padding（首个元素的 margin-top 被预览基础样式清零） */
+.ex-mde .ex-preview .ex-toc { margin: 0 0 60px; padding-top: 16px; }
+.ex-mde .ex-preview .ex-toc-title { margin: 0 0 13px; color: var(--ex-color-mde-heading-text); font-size: 18px; line-height: 26px; }
+.ex-mde .ex-preview .ex-toc ul { margin: 0; padding-left: 24px; list-style: none; }
+.ex-mde .ex-preview .ex-toc li { line-height: 32px; }
+.ex-mde .ex-preview .ex-toc a { color: var(--ex-color-mde-preview-link); }
+
+.ex-mde .ex-preview .ex-footnotes { color: var(--ex-color-mde-body-text); font-size: 16px; }
+.ex-mde .ex-preview .ex-footnotes hr { margin-bottom: 24px; border-top-color: var(--ex-color-mde-preview-rule); }
+.ex-mde .ex-preview .ex-footnotes ol { padding-left: 25px; }
+.ex-mde .ex-preview .ex-footnotes li { margin-bottom: 16px; }
+.ex-mde .ex-preview .ex-footnotes p { margin: 0; }
+
+/* flowchart.js 的线宽是 SVG 属性，CSS 可覆盖；CSDN 为 1px 细线。画布按 3px 线宽留白，负上边距抵消多出的留白 */
+.ex-mde .ex-preview .ex-flowchart { margin: -11px 0 29px; }
+.ex-mde .ex-flowchart svg :is(rect, path, circle, ellipse) { stroke-width: 1px; }
+.ex-mde .ex-flowchart svg text { fill: var(--ex-color-mde-heading-text); }
 
 .ex-mde-preview .ex-mde-upload-failed {
   outline: 1px dashed var(--ex-color-error);
