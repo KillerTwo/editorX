@@ -90,3 +90,7 @@
   font: inherit;
   cursor: pointer;
 }
+.ex-mde-preview .ex-mde-upload-failed {
+  outline: 1px dashed var(--ex-color-error);
+  color: var(--ex-color-error);
+}

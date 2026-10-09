@@ -43,7 +43,7 @@ describe('MarkdownEditor 图片上传', () => {
     const list = await screen.findByRole('list', { name: '上传失败的图片' })
     expect(list).toHaveTextContent('bad.png 上传失败')
     expect(screen.getByRole('alert')).toHaveTextContent('图片 bad.png 上传失败：超时')
-    await userEvent.click(screen.getByRole('button', { name: '删除' }))
+    await userEvent.click(screen.getByRole('button', { name: '删除 bad.png' }))
     expect(screen.queryByRole('list', { name: '上传失败的图片' })).toBeNull()
     expect(handle().getValue()).toBe('')
   })
@@ -53,9 +53,67 @@ describe('MarkdownEditor 图片上传', () => {
     fireEvent.drop(editorContent(), { dataTransfer: { files: [png('bad.png')], types: ['Files'] } })
     await screen.findByRole('list', { name: '上传失败的图片' })
     rerender(<MarkdownEditor ref={ref} defaultTheme="light" themeStorageKey={false} adapters={{ uploadImage: async () => ({ url: 'ok.png' }) }} />)
-    await userEvent.click(screen.getByRole('button', { name: '重试' }))
+    await userEvent.click(screen.getByRole('button', { name: '重试 bad.png' }))
     await waitFor(() => expect(handle().getValue()).toBe('![bad](ok.png)'))
     expect(screen.queryByRole('list', { name: '上传失败的图片' })).toBeNull()
+  })
+
+  it('剪贴板同时含文本与图片（Office 复制）：交给引擎粘贴文本，不上传', () => {
+    const uploadImage = vi.fn(async () => ({ url: 'u' }))
+    renderEditor({ adapters: { uploadImage } })
+    const notPrevented = fireEvent.paste(editorContent(), {
+      clipboardData: { files: [png()], types: ['text/plain', 'Files'], getData: (t: string) => (t === 'text/plain' ? 'a\tb' : '') },
+    })
+    expect(notPrevented).toBe(true)
+    expect(uploadImage).not.toHaveBeenCalled()
+  })
+
+  it('剪贴板文本为空白时仍按图片上传', () => {
+    const uploadImage = vi.fn(() => new Promise<{ url: string }>(() => {}))
+    renderEditor({ adapters: { uploadImage } })
+    const notPrevented = fireEvent.paste(editorContent(), {
+      clipboardData: { files: [png()], types: ['text/plain', 'Files'], getData: (t: string) => (t === 'text/plain' ? ' \n' : '') },
+    })
+    expect(notPrevented).toBe(false)
+    expect(uploadImage).toHaveBeenCalledTimes(1)
+  })
+
+  it('上传完成后 onChange 收到替换后的最终 markdown', async () => {
+    const onChange = vi.fn()
+    renderEditor({ onChange, adapters: { uploadImage: async () => ({ url: 'https://cdn/a.png' }) } })
+    fireEvent.paste(editorContent(), { clipboardData: { files: [png()], types: ['Files'], getData: () => '' } })
+    await waitFor(() => expect(onChange).toHaveBeenLastCalledWith('![shot](https://cdn/a.png)', expect.stringContaining('https://cdn/a.png')))
+  })
+
+  it('只读时失败条按钮禁用', async () => {
+    const adapters = { uploadImage: async () => Promise.reject(new Error('超时')) }
+    const { ref, rerender } = renderEditor({ adapters })
+    fireEvent.drop(editorContent(), { dataTransfer: { files: [png('bad.png')], types: ['Files'] } })
+    await screen.findByRole('list', { name: '上传失败的图片' })
+    rerender(<MarkdownEditor ref={ref} defaultTheme="light" themeStorageKey={false} readOnly adapters={adapters} />)
+    expect(screen.getByRole('button', { name: '重试 bad.png' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '删除 bad.png' })).toBeDisabled()
+  })
+
+  it('删除后焦点移到下一行的删除按钮，列表清空后回到编辑区', async () => {
+    renderEditor({ adapters: { uploadImage: async () => Promise.reject(new Error('超时')) } })
+    fireEvent.drop(editorContent(), { dataTransfer: { files: [png('a.png'), png('b.png')], types: ['Files'] } })
+    await screen.findByRole('button', { name: '删除 b.png' })
+    await userEvent.click(screen.getByRole('button', { name: '删除 a.png' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: '删除 b.png' })).toHaveFocus())
+    await userEvent.click(screen.getByRole('button', { name: '删除 b.png' }))
+    await waitFor(() => expect(editorContent()).toHaveFocus())
+  })
+
+  it('预览中失败占位标红，上传中占位不标', async () => {
+    const queue = [Promise.reject(new Error('x')), new Promise<{ url: string }>(() => {})]
+    queue[0]!.catch(() => {})
+    renderEditor({ adapters: { uploadImage: () => queue.shift()! } })
+    fireEvent.drop(editorContent(), { dataTransfer: { files: [png('a.png'), png('b.png')], types: ['Files'] } })
+    await waitFor(() => expect(previewEl().querySelectorAll('img')).toHaveLength(2))
+    await waitFor(() => expect(previewEl().querySelectorAll('img.ex-mde-upload-failed')).toHaveLength(1))
+    expect(previewEl().querySelectorAll('img')[0]).toHaveClass('ex-mde-upload-failed')
+    expect(previewEl().querySelectorAll('img')[1]).not.toHaveClass('ex-mde-upload-failed')
   })
 
   it('上传中卸载：不抛错、不写入已销毁的引擎', async () => {

@@ -7,13 +7,14 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 // eslint-disable-next-line no-control-regex
 const flatten = (text: string) => text.replace(/[\u0000-\u001f\u007f]+/g, ' ')
 
-export const escapeAlt = (text: string) => flatten(text).replace(/[[\]\\]/g, '\\$&')
+/** 反引号也要转义：代码段优先级高于方括号，会吞掉图片语法 */
+export const escapeAlt = (text: string) => flatten(text).replace(/[[\]\\`]/g, '\\$&')
 
-/** 空白与控制字符百分号编码，`\ ( ) < >` 反斜杠转义，保证地址停留在 `(...)` 内 */
+/** 空白、控制字符与反引号百分号编码，`\ ( ) < >` 反斜杠转义，保证地址停留在 `(...)` 内 */
 export const escapeUrl = (url: string) =>
   url
     // eslint-disable-next-line no-control-regex
-    .replace(/[\s\u0000-\u001f\u007f]/g, (ch) => encodeURIComponent(ch))
+    .replace(/[\s\u0000-\u001f\u007f`]/g, (ch) => encodeURIComponent(ch))
     .replace(/[\\()<>]/g, '\\$&')
 
 export const baseName = (name: string) => name.replace(/\.[^.]+$/, '')

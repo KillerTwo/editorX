@@ -9,6 +9,8 @@ export interface UploaderOptions {
   getAdapters(): EditorAdapters
   getMessages(): Messages
   notify(message: string, type?: NotifyType): void
+  /** 只读时 upload/retry/remove 不改文档；进行中的上传仍会替换自己的占位 */
+  isReadOnly?(): boolean
   createId?(): string
 }
 
@@ -16,8 +18,11 @@ export interface Uploader {
   upload(files: readonly File[]): Promise<void>
   retry(id: string): Promise<void>
   remove(id: string): void
-  /** 组件挂载期间保持连接；断开后到达的上传结果被丢弃，不再写入引擎、store 或提示 */
-  attach(): () => void
+  /**
+   * 组件挂载期间保持连接；断开后到达的上传结果被丢弃，不再写入引擎、store 或提示。
+   * 传入编辑器 host 时监听其输入法组合事件，组合期间到达的替换排队到 compositionend 之后。
+   */
+  attach(host?: HTMLElement | null): () => void
 }
 
 export function imageFiles(list: FileList | readonly File[] | null | undefined): File[] {
@@ -33,6 +38,14 @@ export function createUploader(opts: UploaderOptions): Uploader {
   const files = new Map<string, File>()
   const inFlight = new Set<string>()
   let attached = true
+  let composing = false
+  let idleWaiters: Array<() => void> = []
+  const releaseWaiters = () => {
+    const waiters = idleWaiters
+    idleWaiters = []
+    for (const resolve of waiters) resolve()
+  }
+  const readOnly = () => opts.isReadOnly?.() ?? false
 
   const dropFailure = (id: string) => {
     store.set({ uploads: store.get().uploads.filter((u) => u.id !== id) })
@@ -56,13 +69,16 @@ export function createUploader(opts: UploaderOptions): Uploader {
     inFlight.add(id)
     let result: { ok: true; url: string } | { ok: false; error: unknown }
     try {
-      const { url } = await upload(file)
+      const response: { url?: unknown } | null | undefined = await upload(file)
+      const url = response?.url
+      if (typeof url !== 'string' || url === '') throw new TypeError('uploadImage must resolve to { url: string }')
       result = { ok: true, url }
     } catch (error) {
       result = { ok: false, error }
-    } finally {
-      inFlight.delete(id)
     }
+    // 组合输入期间改动文档会打断输入法：等 compositionend 后再按完成顺序替换
+    while (composing && attached) await new Promise<void>((resolve) => idleWaiters.push(resolve))
+    inFlight.delete(id)
     if (!attached) return
     if (result.ok) {
       replacePlaceholder(id, imageMarkdown(file.name, result.url))
@@ -80,7 +96,7 @@ export function createUploader(opts: UploaderOptions): Uploader {
 
   return {
     async upload(list) {
-      if (!attached) return
+      if (!attached || readOnly()) return
       const m = opts.getMessages()
       if (!opts.getAdapters().uploadImage) {
         opts.notify(m.upload.noAdapter, 'warning')
@@ -98,7 +114,7 @@ export function createUploader(opts: UploaderOptions): Uploader {
 
     async retry(id) {
       const file = files.get(id)
-      if (!attached || !file || inFlight.has(id)) return
+      if (!attached || readOnly() || !file || inFlight.has(id)) return
       if (!opts.getAdapters().uploadImage) {
         opts.notify(opts.getMessages().upload.noAdapter, 'warning')
         return
@@ -112,17 +128,31 @@ export function createUploader(opts: UploaderOptions): Uploader {
     },
 
     remove(id) {
-      if (!attached) return
+      if (!attached || readOnly()) return
       files.delete(id)
       dropFailure(id)
       const range = findPlaceholder(engine.getValue(), id)
       if (range) engine.replace(range.start, range.end, '')
     },
 
-    attach() {
+    attach(host) {
       attached = true
+      const onStart = () => {
+        composing = true
+      }
+      // 宿主捕获阶段先于引擎自己的 compositionend 处理：推迟到微任务，等引擎同步完组合结果
+      const onEnd = () => {
+        composing = false
+        queueMicrotask(releaseWaiters)
+      }
+      host?.addEventListener('compositionstart', onStart, true)
+      host?.addEventListener('compositionend', onEnd, true)
       return () => {
+        host?.removeEventListener('compositionstart', onStart, true)
+        host?.removeEventListener('compositionend', onEnd, true)
         attached = false
+        composing = false
+        releaseWaiters()
       }
     },
   }

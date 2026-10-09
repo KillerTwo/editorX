@@ -9,6 +9,7 @@ import { ModeTabs } from './mode-tabs'
 import { useEditorRuntime } from './runtime'
 import { createEditorStore } from './store'
 import type { MarkdownEditorProps } from './types'
+import { observeFailedPlaceholders } from './uploads/failed-marker'
 import { UploadFailures } from './uploads/upload-failures'
 import { createUploader, imageFiles } from './uploads/uploader'
 import { useControllableState } from './use-controllable'
@@ -78,7 +79,7 @@ function EditorShell({
   const previewRef = useRef<HTMLDivElement>(null)
   const titleRef = useLatest(title)
   const { notify } = useToast()
-  const live = useLatest({ adapters, messages, notify })
+  const live = useLatest({ adapters, messages, notify, readOnly })
   const [uploader] = useState(() =>
     createUploader({
       engine,
@@ -86,6 +87,7 @@ function EditorShell({
       getAdapters: () => live.current.adapters,
       getMessages: () => live.current.messages,
       notify: (message, type) => live.current.notify(message, type),
+      isReadOnly: () => live.current.readOnly,
     }),
   )
 
@@ -108,18 +110,26 @@ function EditorShell({
   })
 
   useEffect(() => {
-    const detach = uploader.attach()
+    const detach = uploader.attach(hostRef.current)
+    const unmark = previewRef.current
+      ? observeFailedPlaceholders(previewRef.current, () => live.current.messages.upload.failed)
+      : () => {}
     const take = (files: FileList | null | undefined, e: Event) => {
       const images = imageFiles(files)
       if (images.length === 0 || !live.current.adapters.uploadImage) return
       e.preventDefault()
       void uploader.upload(images)
     }
-    const offPaste = engine.on('paste', (e) => take(e.clipboardData?.files, e))
+    const offPaste = engine.on('paste', (e) => {
+      // Office 复制会在文本之外附带整块截图：有文本时按文本粘贴
+      if ((e.clipboardData?.getData('text/plain') ?? '').trim() !== '') return
+      take(e.clipboardData?.files, e)
+    })
     const offDrop = engine.on('drop', (e) => take(e.dataTransfer?.files, e))
     return () => {
       offPaste()
       offDrop()
+      unmark()
       detach()
     }
   }, [engine, uploader, live])
@@ -156,7 +166,13 @@ function EditorShell({
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>
         </div>
-        <UploadFailures store={store} onRetry={(id) => void uploader.retry(id)} onRemove={uploader.remove} />
+        <UploadFailures
+          store={store}
+          readOnly={readOnly}
+          onRetry={(id) => void uploader.retry(id)}
+          onRemove={uploader.remove}
+          onEmptied={() => engine.focus()}
+        />
       </div>
     </div>
   )
