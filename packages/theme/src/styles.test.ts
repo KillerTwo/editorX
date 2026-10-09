@@ -95,6 +95,44 @@ describe('styles.css 层级', () => {
   })
 })
 
+const MDE_TOKENS = [
+  '--ex-color-mde-canvas',
+  '--ex-color-mde-chrome-text',
+  '--ex-color-mde-tab-bg',
+  '--ex-color-mde-tab-active-bg',
+  '--ex-color-mde-tab-active-text',
+  '--ex-color-mde-divider',
+  '--ex-color-mde-status-border',
+  '--ex-color-mde-status-text',
+  '--ex-color-mde-split-preview-bg',
+  '--ex-color-mde-scrollbar',
+  '--ex-color-mde-panel-title-bg',
+  '--ex-color-mde-rail-active-bg',
+  '--ex-color-mde-toc-link',
+  '--ex-color-mde-body-text',
+  '--ex-color-mde-body-marker',
+  '--ex-color-mde-disabled-text',
+]
+
+describe('CSDN 外壳 token', () => {
+  it.each(MDE_TOKENS)('%s 定义在主块（兜底块一致性由上方用例校验）', (name) => {
+    expect(mainTokens.has(name)).toBe(true)
+  })
+
+  it('亮色值与参考截图实测一致', () => {
+    expect(expected.get('--ex-color-mde-canvas')?.[0]).toBe('#f2f2f2')
+    expect(expected.get('--ex-color-mde-tab-active-bg')?.[0]).toBe('#1a1a1a')
+    expect(expected.get('--ex-color-mde-split-preview-bg')?.[0]).toBe('#f9f9f9')
+    expect(expected.get('--ex-color-mde-rail-active-bg')?.[0]).toBe('#e5f1ff')
+  })
+
+  it('暗色值单独定义（CSDN 无暗色主题）', () => {
+    expect(expected.get('--ex-color-mde-canvas')?.[1]).toBe('#111214')
+    expect(expected.get('--ex-color-mde-tab-active-bg')?.[1]).toBe('#e8e8ed')
+    expect(expected.get('--ex-color-mde-split-preview-bg')?.[1]).toBe('#1d1e22')
+  })
+})
+
 describe('styles.css 主题切换', () => {
   it('切换期间禁用 transition', () => {
     expect(css).toContain('.ex-root[data-ex-theme-switching] *')

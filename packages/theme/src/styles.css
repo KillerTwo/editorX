@@ -33,6 +33,22 @@
   --ex-color-code-number: light-dark(#005cc5, #79c0ff);
   --ex-color-code-function: light-dark(#6f42c1, #d2a8ff);
   --ex-color-code-tag: light-dark(#22863a, #7ee787);
+  --ex-color-mde-canvas: light-dark(#f2f2f2, #111214);
+  --ex-color-mde-chrome-text: light-dark(#1a1a1a, #e8e8ed);
+  --ex-color-mde-tab-bg: light-dark(#f2f2f2, #2a2b30);
+  --ex-color-mde-tab-active-bg: light-dark(#1a1a1a, #e8e8ed);
+  --ex-color-mde-tab-active-text: light-dark(#ffffff, #1a1a1a);
+  --ex-color-mde-divider: light-dark(#f2f2f2, #2a2b30);
+  --ex-color-mde-status-border: light-dark(#e8e8ef, #2a2b30);
+  --ex-color-mde-status-text: light-dark(#666666, #9a9ba6);
+  --ex-color-mde-split-preview-bg: light-dark(#f9f9f9, #1d1e22);
+  --ex-color-mde-scrollbar: light-dark(#bbbbbb, #4a4b52);
+  --ex-color-mde-panel-title-bg: light-dark(#e5e6e7, #2e2f34);
+  --ex-color-mde-rail-active-bg: light-dark(#e5f1ff, #1f2a3a);
+  --ex-color-mde-toc-link: light-dark(#333333, #c8c9d1);
+  --ex-color-mde-body-text: light-dark(#4d4d4d, #c8c9d1);
+  --ex-color-mde-body-marker: light-dark(#999999, #6b6c76);
+  --ex-color-mde-disabled-text: light-dark(#bbbbbb, #5a5b63);
 
   --ex-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'SF UI Text', Arial, sans-serif;
   --ex-font-family-mono: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
@@ -126,6 +142,22 @@
     --ex-color-code-number: #005cc5;
     --ex-color-code-function: #6f42c1;
     --ex-color-code-tag: #22863a;
+    --ex-color-mde-canvas: #f2f2f2;
+    --ex-color-mde-chrome-text: #1a1a1a;
+    --ex-color-mde-tab-bg: #f2f2f2;
+    --ex-color-mde-tab-active-bg: #1a1a1a;
+    --ex-color-mde-tab-active-text: #ffffff;
+    --ex-color-mde-divider: #f2f2f2;
+    --ex-color-mde-status-border: #e8e8ef;
+    --ex-color-mde-status-text: #666666;
+    --ex-color-mde-split-preview-bg: #f9f9f9;
+    --ex-color-mde-scrollbar: #bbbbbb;
+    --ex-color-mde-panel-title-bg: #e5e6e7;
+    --ex-color-mde-rail-active-bg: #e5f1ff;
+    --ex-color-mde-toc-link: #333333;
+    --ex-color-mde-body-text: #4d4d4d;
+    --ex-color-mde-body-marker: #999999;
+    --ex-color-mde-disabled-text: #bbbbbb;
   }
 
   .ex-root[data-ex-theme='dark'] {
@@ -163,6 +195,22 @@
     --ex-color-code-number: #79c0ff;
     --ex-color-code-function: #d2a8ff;
     --ex-color-code-tag: #7ee787;
+    --ex-color-mde-canvas: #111214;
+    --ex-color-mde-chrome-text: #e8e8ed;
+    --ex-color-mde-tab-bg: #2a2b30;
+    --ex-color-mde-tab-active-bg: #e8e8ed;
+    --ex-color-mde-tab-active-text: #1a1a1a;
+    --ex-color-mde-divider: #2a2b30;
+    --ex-color-mde-status-border: #2a2b30;
+    --ex-color-mde-status-text: #9a9ba6;
+    --ex-color-mde-split-preview-bg: #1d1e22;
+    --ex-color-mde-scrollbar: #4a4b52;
+    --ex-color-mde-panel-title-bg: #2e2f34;
+    --ex-color-mde-rail-active-bg: #1f2a3a;
+    --ex-color-mde-toc-link: #c8c9d1;
+    --ex-color-mde-body-text: #c8c9d1;
+    --ex-color-mde-body-marker: #6b6c76;
+    --ex-color-mde-disabled-text: #5a5b63;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -201,6 +249,22 @@
       --ex-color-code-number: #79c0ff;
       --ex-color-code-function: #d2a8ff;
       --ex-color-code-tag: #7ee787;
+      --ex-color-mde-canvas: #111214;
+      --ex-color-mde-chrome-text: #e8e8ed;
+      --ex-color-mde-tab-bg: #2a2b30;
+      --ex-color-mde-tab-active-bg: #e8e8ed;
+      --ex-color-mde-tab-active-text: #1a1a1a;
+      --ex-color-mde-divider: #2a2b30;
+      --ex-color-mde-status-border: #2a2b30;
+      --ex-color-mde-status-text: #9a9ba6;
+      --ex-color-mde-split-preview-bg: #1d1e22;
+      --ex-color-mde-scrollbar: #4a4b52;
+      --ex-color-mde-panel-title-bg: #2e2f34;
+      --ex-color-mde-rail-active-bg: #1f2a3a;
+      --ex-color-mde-toc-link: #c8c9d1;
+      --ex-color-mde-body-text: #c8c9d1;
+      --ex-color-mde-body-marker: #6b6c76;
+      --ex-color-mde-disabled-text: #5a5b63;
     }
   }
 }
