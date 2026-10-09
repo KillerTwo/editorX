@@ -262,37 +262,58 @@ test('KaTeX、Mermaid 与 flowchart.js 在亮/暗主题下真实渲染', async (
   await expect(p.locator('.katex')).toHaveCount(2)
 })
 
-test('10k 行文档单次按键延迟 < 50ms', async ({ page }) => {
-  await loadLargeDoc(page)
-  await editor(page).click({ position: { x: 60, y: 30 } })
-  await page.keyboard.press('End')
+type LatencyWindow = Window & { __exLatency: number[] }
+
+// 从事件创建时刻（e.timeStamp，与 performance.now 同一时钟）到下一帧之后的任务
+async function typeAndMeasure(page: Page, keys: string, delay: number) {
   await page.evaluate(() => {
-    const w = window as unknown as { __exLatency: number[] }
-    w.__exLatency = []
-    document.querySelector('.ex-editor-content')!.addEventListener(
-      'keydown',
-      () => {
-        const t0 = performance.now()
-        requestAnimationFrame(() => {
-          setTimeout(() => w.__exLatency.push(performance.now() - t0), 0)
-        })
-      },
-      { capture: true },
-    )
+    ;(window as unknown as LatencyWindow).__exLatency = []
   })
-  const keys = 'abcdefghijklmnopqrstuvwxyz0123'
-  await page.keyboard.type(keys, { delay: 80 })
-  await expect
-    .poll(() => page.evaluate(() => (window as unknown as { __exLatency: number[] }).__exLatency.length))
-    .toBe(keys.length)
-  const samples = await page.evaluate(() => (window as unknown as { __exLatency: number[] }).__exLatency)
+  await page.keyboard.type(keys, { delay })
+  await expect.poll(() => page.evaluate(() => (window as unknown as LatencyWindow).__exLatency.length)).toBe(keys.length)
+  const samples = await page.evaluate(() => (window as unknown as LatencyWindow).__exLatency)
   const sorted = [...samples].sort((a, b) => a - b)
-  const median = sorted[Math.floor(sorted.length / 2)]!
-  const p95 = sorted[Math.ceil(sorted.length * 0.95) - 1]!
-  test.info().annotations.push({ type: 'latency-ms', description: JSON.stringify({ median, p95, max: sorted.at(-1) }) })
-  expect(await editorValue(page)).toContain(keys)
-  expect(median).toBeLessThan(50)
-  expect(p95).toBeLessThan(50)
+  return {
+    median: sorted[Math.floor(sorted.length / 2)]!,
+    p95: sorted[Math.ceil(sorted.length * 0.95) - 1]!,
+    max: sorted.at(-1)!,
+  }
+}
+
+test.describe('性能', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  test('10k 行文档单次按键延迟 < 50ms（连续输入与停顿输入）', { tag: '@perf' }, async ({ page }) => {
+    await loadLargeDoc(page)
+    await editor(page).click({ position: { x: 60, y: 30 } })
+    await page.keyboard.press('End')
+    await page.evaluate(() => {
+      const w = window as unknown as LatencyWindow
+      document.querySelector('.ex-editor-content')!.addEventListener(
+        'keydown',
+        (e) => {
+          const t0 = e.timeStamp
+          requestAnimationFrame(() => {
+            setTimeout(() => w.__exLatency.push(performance.now() - t0), 0)
+          })
+        },
+        { capture: true },
+      )
+    })
+
+    const burstKeys = 'abcdefghijklmnopqrstuvwxyz0123'
+    const burst = await typeAndMeasure(page, burstKeys, 80)
+    // 260ms 间隔让 200ms 防抖的预览渲染落在两次按键之间
+    const pausedKeys = '456789abcdefghijklmnopqrstuvwx'
+    const paused = await typeAndMeasure(page, pausedKeys, 260)
+    test.info().annotations.push({ type: 'latency-ms', description: JSON.stringify({ burst, paused }) })
+
+    expect(await editorValue(page)).toContain(burstKeys + pausedKeys)
+    expect(burst.median).toBeLessThan(50)
+    expect(burst.p95).toBeLessThan(50)
+    expect(paused.median).toBeLessThan(50)
+    expect(paused.p95).toBeLessThan(50)
+  })
 })
 
 test('10k 行文档：Ctrl+End 跳到尚未渲染的末段后仍可输入', async ({ page }) => {

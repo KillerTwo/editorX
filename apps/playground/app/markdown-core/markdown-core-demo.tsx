@@ -7,7 +7,10 @@ import {
   createRenderer,
   createScrollSync,
   renderDiagrams,
+  type HtmlCount,
+  type RenderedSection,
   type RenderResult,
+  type WordCount,
 } from '@editorx/markdown-core'
 import { ThemeProvider, useTheme } from '@editorx/theme'
 import { Button, ThemeToggle } from '@editorx/ui'
@@ -15,6 +18,7 @@ import { useEffect, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from './sample'
 
 const PREVIEW_DELAY = 200
+const STATS_TIMEOUT = 300
 
 function buildSection(doc: Document, html: string, index: number): HTMLElement {
   const el = doc.createElement('div')
@@ -39,9 +43,24 @@ function patchPreview(container: HTMLElement, result: RenderResult, previous: st
   previous.splice(0, previous.length, ...items)
 }
 
-interface DemoApi {
-  engine: ClEditEngine
-  renderNow(full: boolean): void
+function yieldToMain(): Promise<void> {
+  const scheduler = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler
+  if (scheduler?.yield) return scheduler.yield()
+  return new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+interface IdleDeadlineLike {
+  didTimeout: boolean
+  timeRemaining(): number
+}
+
+function whenIdle(cb: (deadline: IdleDeadlineLike) => void): () => void {
+  if (typeof requestIdleCallback === 'function') {
+    const id = requestIdleCallback(cb, { timeout: STATS_TIMEOUT })
+    return () => cancelIdleCallback(id)
+  }
+  const id = setTimeout(() => cb({ didTimeout: true, timeRemaining: () => 0 }), 0)
+  return () => clearTimeout(id)
 }
 
 interface Stats {
@@ -49,6 +68,47 @@ interface Stats {
   lines: number
   htmlWords: number
   paragraphs: number
+}
+
+/**
+ * Sums per-section counts, cached by section source/HTML. Equal to counting the whole document: sections split at
+ * line starts (no word spans two sections) and each is rendered inside its own block wrapper.
+ */
+function createStatsCounter() {
+  const md = new Map<string, WordCount>()
+  const html = new Map<string, HtmlCount>()
+  const prune = <T,>(cache: Map<string, T>, used: Set<string>) => {
+    for (const key of cache.keys()) if (!used.has(key)) cache.delete(key)
+  }
+  return {
+    /** Returns null when `hasTime()` runs out before every section is counted; finished sections stay cached. */
+    count(sections: readonly RenderedSection[], hasTime: () => boolean): Stats | null {
+      const usedMd = new Set<string>()
+      const usedHtml = new Set<string>()
+      const stats: Stats = { mdWords: 0, lines: 1, htmlWords: 0, paragraphs: 0 }
+      for (const section of sections) {
+        let words = md.get(section.text)
+        let markup = html.get(section.html)
+        if ((!words || !markup) && !hasTime()) return null
+        if (!words) md.set(section.text, (words = countWords(section.text)))
+        if (!markup) html.set(section.html, (markup = countHtml(section.html)))
+        usedMd.add(section.text)
+        usedHtml.add(section.html)
+        stats.mdWords += words.words
+        stats.lines += words.lines - 1
+        stats.htmlWords += markup.words
+        stats.paragraphs += markup.paragraphs
+      }
+      prune(md, usedMd)
+      prune(html, usedHtml)
+      return stats
+    },
+  }
+}
+
+interface DemoApi {
+  engine: ClEditEngine
+  renderNow(full: boolean): void
 }
 
 function Workbench() {
@@ -68,44 +128,70 @@ function Workbench() {
     const previewEl = previewRef.current!
     const renderer = createRenderer()
     const engine = new ClEditEngine()
+    const counter = createStatsCounter()
     const previous: string[] = []
     let timer: ReturnType<typeof setTimeout> | undefined
+    let generation = 0
+    let disposed = false
+    let cancelStats = () => {}
+    let refreshFrame = 0
 
     engine.mount(editorEl, { value: SAMPLE, placeholder: '开始写作…' })
     const sync = createScrollSync(engine, editorEl, scrollEl)
-    const onPreviewLoad = () => sync.refresh()
-    scrollEl.addEventListener('load', onPreviewLoad, true)
+    const refreshSoon = () => {
+      cancelAnimationFrame(refreshFrame)
+      refreshFrame = requestAnimationFrame(() => sync.refresh())
+    }
+    scrollEl.addEventListener('load', refreshSoon, true)
+    scrollEl.addEventListener('error', refreshSoon, true)
 
-    const renderNow = (full: boolean) => {
+    const countStats = (sections: readonly RenderedSection[], current: number) => {
+      cancelStats()
+      cancelStats = whenIdle((deadline) => {
+        if (current !== generation) return
+        const next = counter.count(sections, () => deadline.didTimeout || deadline.timeRemaining() > 2)
+        if (next) setStats(next)
+        else countStats(sections, current)
+      })
+    }
+
+    // Each step runs in its own task so a pending keystroke is never blocked behind the whole preview update.
+    const renderNow = async (full: boolean) => {
       clearTimeout(timer)
+      const current = ++generation
+      const stale = () => disposed || current !== generation
+      const result = renderer.render(engine.getValue())
+      await yieldToMain()
+      if (stale()) return
       if (full) previous.length = 0
-      const value = engine.getValue()
-      const result = renderer.render(value)
       patchPreview(previewEl, result, previous)
-      const md = countWords(value)
-      const html = countHtml(result.html)
-      setStats({ mdWords: md.words, lines: md.lines, htmlWords: html.words, paragraphs: html.paragraphs })
-      sync.refresh()
-      void renderDiagrams(previewEl, { theme: themeRef.current }).then(() => sync.refresh())
+      refreshSoon()
+      void renderDiagrams(previewEl, { theme: themeRef.current }).then(refreshSoon)
+      countStats(result.sections, current)
     }
 
     const updateCursor = () => setCursor(engine.getCursorPosition())
     const offChange = engine.on('change', () => {
+      generation++
       setChangeCount((c) => c + 1)
       updateCursor()
       clearTimeout(timer)
-      timer = setTimeout(() => renderNow(false), PREVIEW_DELAY)
+      timer = setTimeout(() => void renderNow(false), PREVIEW_DELAY)
     })
     const offSelection = engine.on('selectionChange', updateCursor)
-    renderNow(true)
+    void renderNow(true)
     updateCursor()
-    apiRef.current = { engine, renderNow }
+    apiRef.current = { engine, renderNow: (full) => void renderNow(full) }
 
     return () => {
+      disposed = true
       clearTimeout(timer)
+      cancelStats()
+      cancelAnimationFrame(refreshFrame)
       offChange()
       offSelection()
-      scrollEl.removeEventListener('load', onPreviewLoad, true)
+      scrollEl.removeEventListener('load', refreshSoon, true)
+      scrollEl.removeEventListener('error', refreshSoon, true)
       sync.destroy()
       engine.destroy()
       previewEl.innerHTML = ''
