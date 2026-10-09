@@ -64,7 +64,8 @@ async function loadInHostPage(script: string): Promise<{ tokens: number; apiLoad
   }
 }
 
-describe.skipIf(!hasDist)('built dist in a host page', () => {
+// bundling the full dist and parsing it in jsdom exceeds 5s under monorepo-wide parallel test load
+describe.skipIf(!hasDist)('built dist in a host page', { timeout: 30_000 }, () => {
   it('harness detects Prism auto-highlighting (control)', async () => {
     expect((await loadInHostPage(bundle(`import 'prismjs'`))).tokens).toBeGreaterThan(0)
   })
