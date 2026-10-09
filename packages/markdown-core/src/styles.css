@@ -54,11 +54,14 @@
   background: var(--ex-color-md-mark-bg);
 }
 
-.ex-md-code,
-.ex-md-fence {
+.ex-md-code {
   color: var(--ex-color-md-code);
   background: var(--ex-color-md-code-bg);
   border-radius: var(--ex-radius-sm);
+}
+
+.ex-md-fence {
+  color: var(--ex-color-md-code);
 }
 
 .ex-md-math,
@@ -109,6 +112,10 @@
   margin: var(--ex-space-6) 0 var(--ex-space-3);
   font-weight: 600;
   line-height: 1.4;
+}
+
+.ex-preview > .ex-preview-section:first-child > :first-child {
+  margin-top: 0;
 }
 
 .ex-preview h1 { font-size: 1.75em; }
@@ -201,12 +208,11 @@
   background: var(--ex-color-md-mark-bg);
 }
 
-.ex-preview ul:has(> li > input[type='checkbox']) {
-  padding-left: var(--ex-space-5);
+.ex-preview .ex-task-list-item {
   list-style: none;
 }
 
-.ex-preview li > input[type='checkbox'] {
+.ex-preview .ex-task-list-item-checkbox {
   margin: 0 var(--ex-space-2) 0 0;
   vertical-align: middle;
 }
@@ -215,6 +221,24 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: var(--ex-space-1) 0;
+}
+
+.ex-preview .ex-math-block,
+.ex-preview .ex-embed {
+  margin: 0 0 var(--ex-space-4);
+  overflow-x: auto;
+}
+
+.ex-preview .katex-error {
+  font-family: var(--ex-font-family-mono);
+  color: var(--ex-color-error);
+}
+
+.ex-preview .ex-mermaid-error,
+.ex-preview .ex-flowchart-error {
+  color: var(--ex-color-error);
+  text-align: left;
+  white-space: pre-wrap;
 }
 
 /* Mermaid SVG 自带内联 <style> 配色，这里只负责布局 */
