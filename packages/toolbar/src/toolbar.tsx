@@ -3,6 +3,7 @@ import { ChevronDown, Ellipsis } from 'lucide-react'
 import {
   Fragment,
   memo,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -10,7 +11,6 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type ReactElement,
-  type ReactNode,
 } from 'react'
 import { cx } from './cx'
 import { ExtensionErrorBoundary } from './error-boundary'
@@ -46,9 +46,21 @@ export interface ToolbarProps {
   className?: string
 }
 
-/** 在错误边界内部调用扩展的 render，使 render 函数本身抛出的异常也能被截获 */
-function ExtensionSlot({ render }: { render: () => ReactNode }) {
-  return <>{render()}</>
+function findItem(groups: readonly ResolvedGroup[], extension: string, id: string): ResolvedItem | undefined {
+  const search = (children: readonly ResolvedChild[]): ResolvedItem | undefined => {
+    for (const child of children) {
+      if (isSeparator(child)) continue
+      if (child.extension === extension && child.item.id === id) return child
+      const found = search(child.children ?? [])
+      if (found) return found
+    }
+    return undefined
+  }
+  for (const group of groups) {
+    const found = search(group)
+    if (found) return found
+  }
+  return undefined
 }
 
 function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, className }: ToolbarProps) {
@@ -58,7 +70,13 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
   const groupRefs = useRef<Array<HTMLDivElement | null>>([])
   const [fit, setFit] = useState(groups.length)
   const [focusKey, setFocusKey] = useState<string | null>(null)
-  const [dialog, setDialog] = useState<ResolvedItem | null>(null)
+  const [dialogKey, setDialogKey] = useState<{ extension: string; id: string } | null>(null)
+  const dialog = dialogKey ? findItem(groups, dialogKey.extension, dialogKey.id) : undefined
+  const dialogGone = dialogKey !== null && dialog === undefined
+
+  useEffect(() => {
+    if (dialogGone) setDialogKey(null)
+  }, [dialogGone])
 
   const report =
     onError ??
@@ -81,6 +99,7 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
       setFit(fitGroups(widths, available, DIVIDER_WIDTH, MORE_WIDTH))
     }
     measure()
+    if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(measure)
     observer.observe(root)
     return () => observer.disconnect()
@@ -105,12 +124,28 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
         report(resolved.extension, error)
       }
     } else if (item.type === 'modal' || item.type === 'popover') {
-      setDialog(resolved)
+      setDialogKey({ extension: resolved.extension, id: resolved.item.id })
     }
   }
 
-  const menuItems = (children: readonly ResolvedChild[]): DropdownItem[] =>
-    flattenChildren(children).map((child) =>
+  /** 展平后的菜单里，禁用的 dropdown（含只读规则）其子项一并禁用 */
+  const disabledItems = (children: readonly ResolvedChild[]) => {
+    const disabled = new Set<ResolvedItem>()
+    const walk = (list: readonly ResolvedChild[], parentDisabled: boolean) => {
+      for (const child of list) {
+        if (isSeparator(child)) continue
+        const off = parentDisabled || isItemDisabled(child, ctx, readOnly)
+        if (off) disabled.add(child)
+        if (child.children) walk(child.children, off)
+      }
+    }
+    walk(children, false)
+    return disabled
+  }
+
+  const menuItems = (children: readonly ResolvedChild[]): DropdownItem[] => {
+    const disabled = disabledItems(children)
+    return flattenChildren(children).map((child) =>
       isSeparator(child)
         ? { key: child.key, label: '', separator: true }
         : {
@@ -118,9 +153,10 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
             label: resolveText(child.item.title, m),
             icon: child.item.icon,
             extra: child.item.type === 'button' && child.item.shortcut ? formatShortcut(child.item.shortcut, mac) : undefined,
-            disabled: isItemDisabled(child, ctx, readOnly),
+            disabled: disabled.has(child),
           },
     )
+  }
 
   const selectFrom = (children: readonly ResolvedChild[], key: string) => {
     const found = flattenChildren(children).find((c): c is ResolvedItem => !isSeparator(c) && c.item.id === key)
@@ -163,9 +199,7 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
         <Popover
           key={item.id}
           content={(close) => (
-            <ExtensionErrorBoundary name={resolved.extension} onError={report}>
-              <ExtensionSlot render={() => item.render(ctx, close)} />
-            </ExtensionErrorBoundary>
+            <ExtensionErrorBoundary name={resolved.extension} onError={report} render={() => item.render(ctx, close)} />
           )}
         >
           {withTip}
@@ -253,14 +287,16 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
       {dialog && dialogItem && (
         <Modal
           open
-          onClose={() => setDialog(null)}
+          onClose={() => setDialogKey(null)}
           title={resolveText(dialogItem.title, m)}
           width={dialogItem.type === 'modal' ? dialogItem.width : undefined}
           closeLabel={m.dialog.close}
         >
-          <ExtensionErrorBoundary name={dialog.extension} onError={report}>
-            <ExtensionSlot render={() => dialogItem.render(ctx, () => setDialog(null))} />
-          </ExtensionErrorBoundary>
+          <ExtensionErrorBoundary
+            name={dialog.extension}
+            onError={report}
+            render={() => dialogItem.render(ctx, () => setDialogKey(null))}
+          />
         </Modal>
       )}
     </div>

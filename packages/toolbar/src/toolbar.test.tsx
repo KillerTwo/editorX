@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@editorx/theme'
 import { ToastProvider } from '@editorx/ui'
 import type { ReactNode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EditorExtension, ExtensionContext, ToolbarButton, ToolbarDropdown } from './extension'
 import { resolveToolbar } from './layout'
 import { zhCN } from './messages'
@@ -303,5 +303,179 @@ describe('Toolbar', () => {
       ),
     )
     expect(screen.getByRole('button', { name: '加粗' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('active/disabled 抛错按 false 处理，不崩溃', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const ext: EditorExtension = {
+      name: 'flaky',
+      toolbar: [
+        {
+          type: 'button',
+          id: 'flaky',
+          title: '不稳定',
+          icon: <span>F</span>,
+          active: () => { throw new Error('active') },
+          disabled: () => { throw new Error('disabled') },
+          run: vi.fn(),
+        },
+      ],
+    }
+    setup([ext])
+    const button = screen.getByRole('button', { name: '不稳定' })
+    expect(button).toHaveAttribute('aria-pressed', 'false')
+    expect(button).toBeEnabled()
+  })
+
+  it('只读时 dropdown 触发器与菜单项（非 allowReadOnly）均禁用', async () => {
+    const ext: EditorExtension = {
+      name: 'ro-menu',
+      toolbar: [
+        { type: 'dropdown', id: 'list', title: '列表', label: '列表', items: [{ type: 'button', id: 'ol', title: '有序', run: vi.fn() }] },
+        {
+          type: 'dropdown',
+          id: 'export',
+          title: '导出',
+          label: '导出',
+          allowReadOnly: true,
+          items: [
+            { type: 'button', id: 'pdf', title: 'PDF', allowReadOnly: true, run: vi.fn() },
+            { type: 'button', id: 'edit', title: '编辑', run: vi.fn() },
+          ],
+        },
+      ],
+    }
+    setup([ext], undefined, makeCtx(), true)
+    expect(screen.getByRole('button', { name: '列表' })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: '导出' }))
+    const menu = await screen.findByRole('menu', { name: '导出' })
+    expect(within(menu).getByRole('menuitem', { name: 'PDF' })).toBeEnabled()
+    expect(within(menu).getByRole('menuitem', { name: '编辑' })).toBeDisabled()
+  })
+
+  it('溢出到「更多」的 dropdown 子项继承父级 disabled 与只读规则', async () => {
+    mockWidths(100, 150)
+    const ext: EditorExtension = {
+      name: 'nested',
+      toolbar: [
+        { type: 'button', id: 'first', title: '第一', icon: <span>1</span>, allowReadOnly: true, run: vi.fn() },
+        {
+          type: 'dropdown',
+          id: 'off',
+          title: '关闭的菜单',
+          disabled: () => true,
+          items: [{ type: 'button', id: 'child', title: '子项', run: vi.fn() }],
+        },
+        {
+          type: 'dropdown',
+          id: 'ro',
+          title: '只读菜单',
+          items: [{ type: 'button', id: 'roChild', title: '只读子项', allowReadOnly: true, run: vi.fn() }],
+        },
+      ],
+    }
+    setup([ext], [['first'], ['off'], ['ro']], makeCtx(), true)
+    await userEvent.click(screen.getByRole('button', { name: '更多' }))
+    const menu = await screen.findByRole('menu', { name: '更多' })
+    expect(within(menu).getByRole('menuitem', { name: '子项' })).toBeDisabled()
+    expect(within(menu).getByRole('menuitem', { name: '只读子项' })).toBeDisabled()
+  })
+
+  it('打开的对话框对应条目从 groups 消失时关闭', async () => {
+    const groups = resolveToolbar([core], undefined, md)
+    const ctx = makeCtx()
+    const { rerender } = wrap(<Toolbar groups={groups} ctx={ctx} />)
+    await userEvent.click(screen.getByRole('button', { name: '表格' }))
+    expect(await screen.findByRole('dialog', { name: '表格' })).toBeInTheDocument()
+    const without = resolveToolbar(
+      [{ ...core, toolbar: core.toolbar!.filter((item) => item.type !== 'modal') }],
+      undefined,
+      md,
+    )
+    act(() =>
+      rerender(
+        <ThemeProvider defaultTheme="light" storageKey={false}>
+          <ToastProvider>
+            <Toolbar groups={without} ctx={ctx} />
+          </ToastProvider>
+        </ThemeProvider>,
+      ),
+    )
+    expect(screen.queryByRole('dialog')).toBeNull()
+    act(() =>
+      rerender(
+        <ThemeProvider defaultTheme="light" storageKey={false}>
+          <ToastProvider>
+            <Toolbar groups={groups} ctx={ctx} />
+          </ToastProvider>
+        </ThemeProvider>,
+      ),
+    )
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('打开的 popover 对应条目消失时一并关闭', async () => {
+    const pop: EditorExtension = {
+      name: 'pop',
+      toolbar: [{ type: 'popover', id: 'emoji', title: '表情', icon: <span>E</span>, render: () => <p>表情面板</p> }],
+    }
+    const ctx = makeCtx()
+    const { rerender } = wrap(<Toolbar groups={resolveToolbar([core, pop], undefined, md)} ctx={ctx} />)
+    await userEvent.click(screen.getByRole('button', { name: '表情' }))
+    expect(await screen.findByText('表情面板')).toBeInTheDocument()
+    act(() =>
+      rerender(
+        <ThemeProvider defaultTheme="light" storageKey={false}>
+          <ToastProvider>
+            <Toolbar groups={resolveToolbar([core], undefined, md)} ctx={ctx} />
+          </ToastProvider>
+        </ThemeProvider>,
+      ),
+    )
+    expect(screen.queryByText('表情面板')).toBeNull()
+  })
+
+  describe('ResizeObserver', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('回调触发重新测量，卸载时 disconnect', () => {
+      const size = { group: 100, toolbar: 400 }
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains('ex-toolbar__group') ? size.group : 0
+      })
+      vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(function (this: Element) {
+        return this.classList.contains('ex-toolbar') ? size.toolbar : 0
+      })
+      let callback: (() => void) | undefined
+      const disconnect = vi.fn()
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb: () => void) {
+            callback = cb
+          }
+          observe() {}
+          unobserve() {}
+          disconnect = disconnect
+        },
+      )
+      const { unmount } = setup([core], [['bold'], ['italic'], ['list']])
+      expect(screen.getAllByRole('group', { hidden: true }).some((g) => g.classList.contains('is-overflow'))).toBe(false)
+      size.toolbar = 250
+      act(() => callback!())
+      expect(screen.getAllByRole('group', { hidden: true })[1]).toHaveClass('is-overflow')
+      expect(screen.getByRole('button', { name: '更多' })).toBeInTheDocument()
+      unmount()
+      expect(disconnect).toHaveBeenCalled()
+    })
+
+    it('环境不支持 ResizeObserver 时只测量一次且不崩溃', () => {
+      mockWidths(100, 250)
+      vi.stubGlobal('ResizeObserver', undefined)
+      setup([core], [['bold'], ['italic'], ['list']])
+      expect(screen.getAllByRole('group', { hidden: true })[1]).toHaveClass('is-overflow')
+    })
   })
 })
