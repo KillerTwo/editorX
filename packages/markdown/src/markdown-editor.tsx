@@ -38,7 +38,7 @@ import { drawDiagramsForExport } from './export-html'
 import { isolateFullscreen } from './fullscreen'
 import { ModeTabs } from './mode-tabs'
 import { PanelHost } from './panels/panel-host'
-import { scrollToHeading } from './panels/scroll-to-heading'
+import { createHeadingJumper } from './panels/scroll-to-heading'
 import { SideRail } from './panels/side-rail'
 import { useEditorRuntime } from './runtime'
 import { clampSplit, SPLIT_VAR, Splitter } from './splitter'
@@ -147,6 +147,16 @@ function EditorShell({
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const live = useLatest({ adapters, messages, notify, title, readOnly, theme: resolved, viewMode })
+  const [headingJumper] = useState(() =>
+    createHeadingJumper(() => ({
+      viewMode: live.current.viewMode,
+      engine,
+      editorHost: hostRef.current,
+      previewEl: previewRef.current,
+      previewScroller: previewScrollRef.current,
+    })),
+  )
+  useEffect(() => () => headingJumper.cancel(), [headingJumper])
 
   const allExtensions = useStableArray(useMemo(() => [...coreExtensions, ...extensions], [coreExtensions, extensions]))
   /** 同名替换与 editors 过滤后的扩展；setup、embeds、工具栏、快捷键都只看它 */
@@ -204,15 +214,7 @@ function EditorShell({
       notify: (message, type) => live.current.notify(message, type),
       uploadImages: (files) => uploader.upload(files),
       getLiveHtml: () => previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html,
-      scrollToHeading: (id) =>
-        scrollToHeading({
-          id,
-          viewMode: live.current.viewMode,
-          engine,
-          editorHost: hostRef.current,
-          previewEl: previewRef.current,
-          previewScroller: previewScrollRef.current,
-        }),
+      scrollToHeading: (id) => headingJumper.jump(id),
       hasPanel: (id) => panelIdsRef.current.has(id),
       openToolbarDialog: (id) => toolbarRef.current?.openDialog(id) ?? false,
       // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
