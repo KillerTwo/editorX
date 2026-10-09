@@ -58,15 +58,21 @@ body {
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: auto;
 }
 
-.pg-compare__stage iframe,
-.pg-compare__stage img {
+.pg-compare__stage iframe {
   width: 100%;
   height: 100%;
   border: 0;
-  object-fit: contain;
-  object-position: top left;
+}
+
+.pg-compare__stage img {
+  width: auto;
+  height: auto;
+  max-width: none;
+  object-fit: none;
+  align-self: flex-start;
 }
 
 .pg-compare__stage--side > * {
@@ -74,9 +80,14 @@ body {
   min-width: 0;
 }
 
+.pg-compare__stage--side img {
+  flex: none;
+}
+
 .pg-compare__stage--overlay img {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   pointer-events: none;
 }
 

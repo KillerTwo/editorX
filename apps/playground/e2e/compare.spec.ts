@@ -8,7 +8,13 @@ test('对照页渲染目标 iframe 与透明度滑块', async ({ page }) => {
   await expect(page.getByRole('radio', { name: '并排' })).toBeVisible()
 })
 
-test('无参考图时显示放置提示', async ({ page }) => {
+test('显式 ref 不存在时显示未找到提示', async ({ page }) => {
   await page.goto('/compare?ref=__missing__.png')
+  await expect(page.getByText('未找到参考截图')).toBeVisible()
   await expect(page.getByText('public/reference/')).toBeVisible()
+})
+
+test('外站 target 被替换为 /showcase', async ({ page }) => {
+  await page.goto('/compare?target=https://example.com')
+  await expect(page.locator('iframe[title="目标页面"]')).toHaveAttribute('src', '/showcase')
 })

@@ -25,6 +25,7 @@ test('Toast 提示可见', async ({ page }) => {
 })
 
 test('视觉基线：明亮模式', async ({ page }) => {
+  await expect(page.locator('.ex-root').first()).toHaveAttribute('data-ex-theme', 'light')
   await expect(page).toHaveScreenshot('showcase-light.png', { fullPage: true })
 })
 
@@ -33,4 +34,17 @@ test('视觉基线：暗黑模式', async ({ page }) => {
   await page.goto('/showcase')
   await expect(page.locator('.ex-root').first()).toHaveAttribute('data-ex-theme', 'dark')
   await expect(page).toHaveScreenshot('showcase-dark.png', { fullPage: true })
+})
+
+test('暗色系统首屏即为暗色（无闪烁）', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, colorScheme: 'dark' })
+  try {
+    const page = await context.newPage()
+    await page.goto('/showcase')
+    await expect(page.locator('.ex-root').first()).toHaveAttribute('data-ex-theme', 'system')
+    const background = await page.locator('.pg-page').evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(background).toBe('rgb(24, 25, 28)')
+  } finally {
+    await context.close()
+  }
 })

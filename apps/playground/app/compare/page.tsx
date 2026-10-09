@@ -2,6 +2,8 @@ import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { CompareView } from './compare-view'
 
+const DEFAULT_TARGET = '/showcase'
+
 async function listReferences(): Promise<string[]> {
   try {
     const files = await readdir(path.join(process.cwd(), 'public', 'reference'))
@@ -11,13 +13,32 @@ async function listReferences(): Promise<string[]> {
   }
 }
 
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value
+}
+
+// browsers treat `//host` and `/\host` as protocol-relative URLs
+function sanitizeTarget(value: string | undefined): string {
+  return value && /^\/(?![/\\])/.test(value) ? value : DEFAULT_TARGET
+}
+
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; target?: string }>
+  searchParams: Promise<{ ref?: string | string[]; target?: string | string[] }>
 }) {
-  const { ref, target } = await searchParams
+  const params = await searchParams
+  const ref = first(params.ref) || undefined
+  const target = sanitizeTarget(first(params.target))
   const references = await listReferences()
-  const selected = ref && references.includes(ref) ? ref : references[0]
-  return <CompareView references={references} selected={selected} target={target ?? '/showcase'} />
+  const found = ref === undefined || references.includes(ref)
+  const selected = ref === undefined ? references[0] : found ? ref : undefined
+  return (
+    <CompareView
+      references={references}
+      selected={selected}
+      missingRef={found ? undefined : ref}
+      target={target}
+    />
+  )
 }

@@ -6,10 +6,11 @@ import { useState } from 'react'
 interface CompareViewProps {
   references: string[]
   selected?: string
+  missingRef?: string
   target: string
 }
 
-export function CompareView({ references, selected, target }: CompareViewProps) {
+export function CompareView({ references, selected, missingRef, target }: CompareViewProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'overlay' | 'side'>('overlay')
   const [opacity, setOpacity] = useState(50)
@@ -35,7 +36,13 @@ export function CompareView({ references, selected, target }: CompareViewProps) 
         </label>
         <label>
           目标路径{' '}
-          <input defaultValue={target} onBlur={(e) => navigate({ target: e.target.value })} />
+          <input
+            key={target}
+            defaultValue={target}
+            onBlur={(e) => {
+              if (e.target.value !== target) navigate({ target: e.target.value })
+            }}
+          />
         </label>
         <span role="radiogroup" aria-label="对比模式">
           <label><input type="radio" name="mode" checked={mode === 'overlay'} onChange={() => setMode('overlay')} />叠加</label>
@@ -59,7 +66,14 @@ export function CompareView({ references, selected, target }: CompareViewProps) 
           <img src={`/reference/${selected}`} alt="CSDN 参考截图" style={{ opacity: mode === 'overlay' ? opacity / 100 : 1 }} />
         ) : (
           <p className="pg-compare__empty">
-            未找到参考截图：请将登录 CSDN 后截取的图片放入 <code>apps/playground/public/reference/</code>
+            {missingRef ? (
+              <>
+                未找到参考截图 <code>{missingRef}</code>。
+              </>
+            ) : (
+              '暂无参考截图。'
+            )}
+            请将登录 CSDN 后截取的图片放入 <code>apps/playground/public/reference/</code>
           </p>
         )}
       </div>
