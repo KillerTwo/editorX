@@ -808,9 +808,12 @@ export function PanelHost({
       aria-label={resolveText(current.panel.title, m)}
       data-panel={current.panel.id}
     >
-      <ExtensionErrorBoundary key={current.panel.id} name={current.extension} onError={onError}>
-        {current.panel.render(ctx)}
-      </ExtensionErrorBoundary>
+      <ExtensionErrorBoundary
+        key={current.panel.id}
+        name={current.extension}
+        onError={onError}
+        render={() => current.panel.render(ctx)}
+      />
     </aside>
   )
 }
