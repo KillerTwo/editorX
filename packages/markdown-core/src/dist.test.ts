@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 interface DomWindow {
   document: Document
+  __api?: { createRenderer?: unknown }
   close(): void
 }
 type JsdomCtor = new (html: string, options: Record<string, unknown>) => { window: DomWindow }
@@ -44,7 +45,7 @@ function bundle(contents: string): string {
   return output.replace(/<\/script/gi, '<\\/script')
 }
 
-async function highlightedTokensAfterLoad(script: string): Promise<number> {
+async function loadInHostPage(script: string): Promise<{ tokens: number; apiLoaded: boolean }> {
   const { window } = new JSDOM(
     `<!doctype html><html><body><pre><code class="language-js">const a = 1</code></pre><script>${script}</script></body></html>`,
     { runScripts: 'dangerously', pretendToBeVisual: true },
@@ -54,7 +55,10 @@ async function highlightedTokensAfterLoad(script: string): Promise<number> {
       await new Promise((done) => window.document.addEventListener('DOMContentLoaded', done))
     }
     await new Promise((done) => setTimeout(done, 50))
-    return window.document.querySelectorAll('code .token').length
+    return {
+      tokens: window.document.querySelectorAll('code .token').length,
+      apiLoaded: typeof window.__api?.createRenderer === 'function',
+    }
   } finally {
     window.close()
   }
@@ -62,12 +66,14 @@ async function highlightedTokensAfterLoad(script: string): Promise<number> {
 
 describe.skipIf(!hasDist)('built dist in a host page', () => {
   it('harness detects Prism auto-highlighting (control)', async () => {
-    expect(await highlightedTokensAfterLoad(bundle(`import 'prismjs'`))).toBeGreaterThan(0)
+    expect((await loadInHostPage(bundle(`import 'prismjs'`))).tokens).toBeGreaterThan(0)
   })
 
   it('does not let Prism auto-highlight the host page', async () => {
     const script = bundle(`import * as api from './dist/index.js'\nwindow.__api = api`)
-    expect(await highlightedTokensAfterLoad(script)).toBe(0)
+    const { tokens, apiLoaded } = await loadInHostPage(script)
+    expect(apiLoaded).toBe(true)
+    expect(tokens).toBe(0)
   })
 })
 

@@ -1,3 +1,4 @@
+import { decodeBase64Utf8 } from '../renderer/base64'
 import { escapeHtml } from '../renderer/escape'
 import type { RenderResult } from '../types'
 import { htmlToMarkdown } from './html-to-markdown'
@@ -14,13 +15,36 @@ export function exportMarkdown(md: string): Blob {
   return new Blob([md], { type: 'text/markdown;charset=utf-8' })
 }
 
+const DIAGRAM_PLACEHOLDER = /<div class="ex-(mermaid|flowchart)" data-ex-diagram="([^"]*)"[^>]*><\/div>/g
+
+function decodeDiagramSource(encoded: string): string {
+  try {
+    return decodeBase64Utf8(encoded)
+  } catch {
+    return encoded
+  }
+}
+
+function diagramPlaceholdersToCode(html: string): string {
+  return html.replace(DIAGRAM_PLACEHOLDER, (_match, kind: string, encoded: string) => {
+    const lang = kind === 'mermaid' ? 'mermaid' : 'flow'
+    return `<pre><code class="language-${lang}">${escapeHtml(decodeDiagramSource(encoded))}</code></pre>`
+  })
+}
+
+/**
+ * Unrendered diagram placeholders are exported as their source code blocks. Callers wanting
+ * rendered SVG should pass `{ ...result, html: previewEl.innerHTML }` after `renderDiagrams`
+ * resolves; already-rendered diagram blocks are kept as-is.
+ */
 export function exportHtml(result: RenderResult, opts: ExportHtmlOptions): string {
+  const body = diagramPlaceholdersToCode(result.html)
   const head = [
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
     `<title>${escapeHtml(opts.title)}</title>`,
   ]
-  if (result.html.includes('class="katex')) {
+  if (body.includes('class="katex')) {
     head.push(`<link rel="stylesheet" href="${escapeHtml(opts.katexCssHref ?? KATEX_CSS_HREF)}">`)
   }
   if (opts.css) head.push(`<style>${opts.css.replace(/<\/style/gi, '<\\/style')}</style>`)
@@ -32,7 +56,7 @@ export function exportHtml(result: RenderResult, opts: ExportHtmlOptions): strin
     '</head>',
     '<body>',
     '<article class="ex-preview">',
-    result.html,
+    body,
     '</article>',
     '</body>',
     '</html>',

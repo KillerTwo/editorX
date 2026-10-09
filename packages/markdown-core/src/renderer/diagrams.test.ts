@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FLOWCHART_THEMES, renderDiagrams } from './diagrams'
 import { renderFlowchartPlaceholder, renderMermaidPlaceholder } from './fences'
+import { sanitizeMermaidSvg } from './sanitize'
 
 const mermaidMock = vi.hoisted(() => ({
   initialize: vi.fn(),
@@ -207,5 +208,26 @@ describe('renderDiagrams — flowchart.js', () => {
     await renderDiagrams(container, { theme: 'dark' })
     expect(container.querySelector('.ex-mermaid svg')).not.toBeNull()
     expect(container.querySelector('.ex-flowchart svg')).not.toBeNull()
+  })
+})
+
+describe('sanitizeMermaidSvg', () => {
+  it('strips event handlers and javascript: links but keeps the scoped <style>', () => {
+    const el = document.createElement('div')
+    el.innerHTML = sanitizeMermaidSvg(
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="alert(1)">' +
+        '<style>#m .node{fill:red}</style>' +
+        '<g onclick="alert(2)"><a href="javascript:alert(3)"><text>a</text></a>' +
+        '<a xlink:href="javascript:alert(4)"><text>b</text></a></g></svg>',
+    )
+    const svg = el.querySelector('svg')!
+    expect(svg.hasAttribute('onload')).toBe(false)
+    expect(el.querySelector('g')!.hasAttribute('onclick')).toBe(false)
+    expect(el.querySelector('style')?.textContent).toBe('#m .node{fill:red}')
+    for (const a of Array.from(el.querySelectorAll('a'))) {
+      expect(a.getAttribute('href') ?? '').not.toMatch(/javascript:/i)
+      expect(a.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ?? '').not.toMatch(/javascript:/i)
+    }
+    expect(el.innerHTML).not.toMatch(/javascript:|onload|onclick/i)
   })
 })

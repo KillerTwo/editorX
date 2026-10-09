@@ -196,4 +196,33 @@ describe('runCommand / execCommand', () => {
     execCommand(fake.engine, 'bold')
     expect(fake.calls).toEqual(['undo', 'redo', 'replace 0 1 "**x**"', 'select 2 3', 'focus'])
   })
+
+  it('normalizes a backward selection before transforming', () => {
+    const fake = fakeEngine('a x b', { start: 3, end: 2 })
+    const seen: Selection[] = []
+    runCommand(fake.engine, (state: TextState) => {
+      seen.push(state.selection)
+      return commands.bold(state)
+    })
+    expect(seen).toEqual([{ start: 2, end: 3 }])
+    expect(fake.value()).toBe('a **x** b')
+  })
+
+  it('reads the engine value only once', () => {
+    const fake = fakeEngine('x', { start: 0, end: 1 })
+    const getValue = vi.spyOn(fake.engine, 'getValue')
+    runCommand(fake.engine, commands.bold)
+    expect(getValue).toHaveBeenCalledTimes(1)
+    expect(fake.value()).toBe('**x**')
+  })
+})
+
+describe('table command bounds', () => {
+  it.each([
+    [{ rows: Number.NaN, cols: Number.NaN }],
+    [{ rows: Number.POSITIVE_INFINITY, cols: Number.NEGATIVE_INFINITY }],
+  ])('falls back to default rows/cols for non-finite args: %o', (args) => {
+    expect(() => commands.table(st('«»'), args)).not.toThrow()
+    expect(commands.table(st('«»'), args)).toEqual(commands.table(st('«»')))
+  })
 })

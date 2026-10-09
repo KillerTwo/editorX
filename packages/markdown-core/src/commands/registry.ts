@@ -67,8 +67,11 @@ export function minimalDiff(a: string, b: string): { start: number; end: number;
 }
 
 export function runCommand<A>(engine: EditorEngine, transform: CommandTransform<A>, args?: A): void {
-  const next = transform({ text: engine.getValue(), selection: engine.getSelection() }, args)
-  const diff = minimalDiff(engine.getValue(), next.text)
+  const text = engine.getValue()
+  const { start, end } = engine.getSelection()
+  const selection = start <= end ? { start, end } : { start: end, end: start }
+  const next = transform({ text, selection }, args)
+  const diff = minimalDiff(text, next.text)
   if (diff) engine.replace(diff.start, diff.end, diff.text)
   engine.setSelection(next.selection.start, next.selection.end)
   engine.focus()

@@ -78,6 +78,24 @@ describe('export / import', () => {
     expect(html).toContain('<style>p{color:red}<\\/style><script></style>')
   })
 
+  it('exports unrendered diagrams as escaped source code blocks', () => {
+    const result = createRenderer().render(
+      '```mermaid\ngraph TD\nA-->B<b>\n```\n\n```flow\nst=>start: S&\n```\n',
+    )
+    const html = exportHtml(result, { title: 't' })
+    expect(html).toContain('<pre><code class="language-mermaid">graph TD\nA--&gt;B&lt;b&gt;\n</code></pre>')
+    expect(html).toContain('<pre><code class="language-flow">st=&gt;start: S&amp;\n</code></pre>')
+    expect(html).not.toContain('data-ex-diagram')
+  })
+
+  it('keeps already-rendered diagram blocks and falls back to the raw payload on bad base64', () => {
+    const rendered = '<div class="ex-mermaid" data-ex-diagram="Z3JhcGg=" data-ex-rendered-theme="light"><svg><text>ok</text></svg></div>'
+    const broken = '<div class="ex-flowchart" data-ex-diagram="%%%"></div>'
+    const html = exportHtml({ html: rendered + broken, sections: [], toc: [] }, { title: 't' })
+    expect(html).toContain(rendered)
+    expect(html).toContain('<pre><code class="language-flow">%%%</code></pre>')
+  })
+
   it('omits the KaTeX stylesheet when there is no math', () => {
     const html = exportHtml(createRenderer().render('plain'), { title: 't' })
     expect(html).not.toContain('katex')

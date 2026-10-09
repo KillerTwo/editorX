@@ -117,7 +117,7 @@ export function codeBlock(state: TextState, args?: CodeBlockArgs): TextState {
 }
 
 function clampCount(value: number | undefined, fallback: number): number {
-  return Math.max(1, Math.floor(value ?? fallback))
+  return Math.max(1, Math.floor(value !== undefined && Number.isFinite(value) ? value : fallback))
 }
 
 export function table(state: TextState, args?: TableArgs): TextState {
