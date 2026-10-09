@@ -1,1 +1,67 @@
-/* @editorx/markdown：编辑器外壳样式（Task 7 起填充，3b 按 CSDN 校准） */
+/* @editorx/markdown：编辑器外壳结构样式 */
+.ex-mde-theme { display: contents; }
+
+.ex-mde {
+  display: flex;
+  box-sizing: border-box;
+  height: var(--ex-mde-height, 100%);
+  min-height: 0;
+}
+
+.ex-mde-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ex-color-surface);
+}
+
+.ex-mde-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ex-space-3);
+  padding: var(--ex-space-3) var(--ex-space-3) 0;
+}
+
+.ex-mde-header__end { display: flex; align-items: center; gap: var(--ex-space-2); }
+.ex-mde-modes { display: flex; gap: var(--ex-space-3); }
+
+.ex-mde-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ex-space-1);
+  height: 32px;
+  padding: 0 var(--ex-space-3);
+  border: 0;
+  border-radius: var(--ex-radius-md);
+  background: var(--ex-color-surface-hover);
+  color: var(--ex-color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ex-mde-mode.is-active { background: var(--ex-color-text); color: var(--ex-color-surface); }
+.ex-mde-mode:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: 2px; }
+
+.ex-mde-body { position: relative; display: flex; flex: 1; min-height: 0; }
+
+.ex-mde-editor,
+.ex-mde-preview-pane {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ex-mde-editor[hidden],
+.ex-mde-preview-pane[hidden] {
+  display: none;
+}
+
+.ex-mde[data-view='split'] .ex-mde-preview-pane { border-left: 1px solid var(--ex-color-border); }
+.ex-mde-preview { box-sizing: border-box; padding: var(--ex-space-4) var(--ex-space-6); }
