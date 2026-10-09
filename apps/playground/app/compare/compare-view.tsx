@@ -14,6 +14,14 @@ export function CompareView({ references, selected, missingRef, target }: Compar
   const router = useRouter()
   const [mode, setMode] = useState<'overlay' | 'side'>('overlay')
   const [opacity, setOpacity] = useState(50)
+  // iframe 取参考图原始尺寸，叠加时逐像素对齐；舞台可滚动，控制栏不挤占
+  const [refSize, setRefSize] = useState<{ ref: string; width: number; height: number } | null>(null)
+  const size = refSize && refSize.ref === selected ? refSize : null
+  const measure = (img: HTMLImageElement | null) => {
+    if (!img || !selected || !img.complete || img.naturalWidth === 0) return
+    if (size?.width === img.naturalWidth && size.height === img.naturalHeight) return
+    setRefSize({ ref: selected, width: img.naturalWidth, height: img.naturalHeight })
+  }
 
   const navigate = (next: { ref?: string; target?: string }) => {
     const params = new URLSearchParams()
@@ -61,9 +69,20 @@ export function CompareView({ references, selected, missingRef, target }: Compar
         </label>
       </div>
       <div className={`pg-compare__stage pg-compare__stage--${mode}`}>
-        <iframe title="目标页面" src={target} />
+        <iframe
+          title="目标页面"
+          src={target}
+          style={size ? { flex: 'none', width: size.width, height: size.height } : undefined}
+        />
         {selected ? (
-          <img src={`/reference/${selected}`} alt="CSDN 参考截图" style={{ opacity: mode === 'overlay' ? opacity / 100 : 1 }} />
+          <img
+            key={selected}
+            ref={measure}
+            src={`/reference/${selected}`}
+            alt="CSDN 参考截图"
+            style={{ opacity: mode === 'overlay' ? opacity / 100 : 1 }}
+            onLoad={(e) => measure(e.currentTarget)}
+          />
         ) : (
           <p className="pg-compare__empty">
             {missingRef ? (

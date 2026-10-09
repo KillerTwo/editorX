@@ -68,6 +68,7 @@ body {
 }
 
 .pg-compare__stage img {
+  flex: none;
   width: auto;
   height: auto;
   max-width: none;
