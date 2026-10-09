@@ -71,6 +71,7 @@
   --ex-color-pub-fill: light-dark(#f2f2f2, #2e2f34);
   --ex-color-pub-check: light-dark(#006fff, #3b8eff);
   --ex-color-pub-check-modal: light-dark(#409eff, #409eff);
+  --ex-color-pub-option-modal: light-dark(#555666, #b8b9c4);
   --ex-color-pub-link: light-dark(#006fff, #5aa0ff);
   --ex-color-pub-link-modal: light-dark(#4ea1db, #6cb6ea);
   --ex-color-pub-verified: light-dark(#73bd88, #73bd88);
@@ -220,6 +221,7 @@
     --ex-color-pub-fill: #f2f2f2;
     --ex-color-pub-check: #006fff;
     --ex-color-pub-check-modal: #409eff;
+    --ex-color-pub-option-modal: #555666;
     --ex-color-pub-link: #006fff;
     --ex-color-pub-link-modal: #4ea1db;
     --ex-color-pub-verified: #73bd88;
@@ -313,6 +315,7 @@
     --ex-color-pub-fill: #2e2f34;
     --ex-color-pub-check: #3b8eff;
     --ex-color-pub-check-modal: #409eff;
+    --ex-color-pub-option-modal: #b8b9c4;
     --ex-color-pub-link: #5aa0ff;
     --ex-color-pub-link-modal: #6cb6ea;
     --ex-color-pub-verified: #73bd88;
@@ -407,6 +410,7 @@
       --ex-color-pub-fill: #2e2f34;
       --ex-color-pub-check: #3b8eff;
       --ex-color-pub-check-modal: #409eff;
+      --ex-color-pub-option-modal: #b8b9c4;
       --ex-color-pub-link: #5aa0ff;
       --ex-color-pub-link-modal: #6cb6ea;
       --ex-color-pub-verified: #73bd88;

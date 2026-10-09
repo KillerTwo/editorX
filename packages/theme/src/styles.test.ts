@@ -168,6 +168,7 @@ const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-pub-fill', '#f2f2f2', '#2e2f34'],
   ['--ex-color-pub-check', '#006fff', '#3b8eff'],
   ['--ex-color-pub-check-modal', '#409eff', '#409eff'],
+  ['--ex-color-pub-option-modal', '#555666', '#b8b9c4'],
   ['--ex-color-pub-link', '#006fff', '#5aa0ff'],
   ['--ex-color-pub-link-modal', '#4ea1db', '#6cb6ea'],
   ['--ex-color-pub-verified', '#73bd88', '#73bd88'],
