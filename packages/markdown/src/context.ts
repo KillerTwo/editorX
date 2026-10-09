@@ -1,5 +1,12 @@
 import { htmlToMarkdown, type EditorEngine, type Renderer } from '@editorx/markdown-core'
-import type { EditorAdapters, ExtensionContext, InsertContent, Messages, NotifyType } from '@editorx/toolbar'
+import type {
+  EditorAdapters,
+  ExtensionContext,
+  InsertContent,
+  Messages,
+  NotifyType,
+  ToolbarDialogResult,
+} from '@editorx/toolbar'
 import { createCommandRegistry } from './commands'
 import { registerMarkdownInternals } from './internals'
 import type { EditorStore } from './store'
@@ -19,8 +26,8 @@ export interface MarkdownContextDeps {
   scrollToHeading?(id: string): boolean
   /** 默认始终为 true */
   hasPanel?(id: string): boolean
-  /** 默认始终为 false */
-  openToolbarDialog?(id: string): boolean
+  /** 默认始终为 'missing' */
+  openToolbarDialog?(id: string, extension?: string): ToolbarDialogResult
   renderExportHtml(): Promise<string>
   /** 默认始终为 true */
   isMounted?(): boolean
@@ -123,7 +130,7 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
     toggleFullscreen: () => store.set({ fullscreen: !store.get().fullscreen }),
     scrollToHeading: (id) => deps.scrollToHeading?.(id) ?? false,
     hasPanel: (id) => deps.hasPanel?.(id) ?? true,
-    openToolbarDialog: (id) => deps.openToolbarDialog?.(id) ?? false,
+    openToolbarDialog: (id, extension) => deps.openToolbarDialog?.(id, extension) ?? 'missing',
     isMounted: () => deps.isMounted?.() ?? true,
   })
   return ctx

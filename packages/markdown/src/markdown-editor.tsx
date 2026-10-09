@@ -216,7 +216,7 @@ function EditorShell({
       getLiveHtml: () => previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html,
       scrollToHeading: (id) => headingJumper.jump(id),
       hasPanel: (id) => panelIdsRef.current.has(id),
-      openToolbarDialog: (id) => toolbarRef.current?.openDialog(id) ?? false,
+      openToolbarDialog: (id, ext) => toolbarRef.current?.openDialog(id, ext) ?? 'missing',
       // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
       renderExportHtml: async () => {
         await runtime.flush()

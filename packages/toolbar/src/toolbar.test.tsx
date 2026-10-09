@@ -654,31 +654,72 @@ describe('Toolbar', () => {
 
     it('按 id 打开 modal 条目（含下拉中的嵌套条目）', async () => {
       const ref = setupWithRef()
-      let opened = false
+      let opened = ''
       act(() => {
         opened = ref.current!.openDialog('table')
       })
-      expect(opened).toBe(true)
+      expect(opened).toBe('opened')
       const dialog = await screen.findByRole('dialog', { name: '表格' })
       await userEvent.click(within(dialog).getByRole('button', { name: '插入' }))
       act(() => {
         opened = ref.current!.openDialog('tbl')
       })
-      expect(opened).toBe(true)
+      expect(opened).toBe('opened')
       expect(await screen.findByRole('dialog', { name: '嵌套表格' })).toHaveTextContent('嵌套内容')
     })
 
-    it('非 modal、不存在或禁用（只读）的条目返回 false，不打开对话框', () => {
+    it('非 modal 或不存在的条目返回 missing，不打开对话框', () => {
       const ref = setupWithRef()
-      expect(ref.current!.openDialog('bold')).toBe(false)
-      expect(ref.current!.openDialog('emoji')).toBe(false)
-      expect(ref.current!.openDialog('missing')).toBe(false)
+      expect(ref.current!.openDialog('bold')).toBe('missing')
+      expect(ref.current!.openDialog('emoji')).toBe('missing')
+      expect(ref.current!.openDialog('missing')).toBe('missing')
+      expect(ref.current!.openDialog('table', 'nested-dialog')).toBe('missing')
       expect(screen.queryByRole('dialog')).toBeNull()
     })
 
-    it('只读时不打开', () => {
+    it('只读时返回 disabled，不打开', () => {
       const ref = setupWithRef(true)
-      expect(ref.current!.openDialog('table')).toBe(false)
+      expect(ref.current!.openDialog('table')).toBe('disabled')
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+
+    it('其他扩展更早出现的同 id 按钮不影响打开指定扩展的 modal', async () => {
+      const ref = createRef<ToolbarHandle>()
+      const hostRun = vi.fn()
+      const host: EditorExtension = {
+        name: 'host',
+        toolbar: [{ type: 'button', id: 'link', title: '宿主链接', icon: <span>H</span>, run: hostRun }],
+      }
+      const linkExt: EditorExtension = {
+        name: 'core:link',
+        toolbar: [{ type: 'modal', id: 'link', title: '链接对话框', icon: <span>L</span>, render: () => <p>链接内容</p> }],
+      }
+      wrap(<Toolbar ref={ref} groups={resolveToolbar([host, linkExt], undefined, md)} ctx={makeCtx()} />)
+      let opened = ''
+      act(() => {
+        opened = ref.current!.openDialog('link', 'core:link')
+      })
+      expect(opened).toBe('opened')
+      expect(await screen.findByRole('dialog', { name: '链接对话框' })).toHaveTextContent('链接内容')
+      expect(hostRun).not.toHaveBeenCalled()
+    })
+
+    it('所在下拉禁用时返回 disabled', () => {
+      const ref = createRef<ToolbarHandle>()
+      const ext: EditorExtension = {
+        name: 'off',
+        toolbar: [
+          {
+            type: 'dropdown',
+            id: 'insert-off',
+            title: '插入',
+            disabled: () => true,
+            items: [{ type: 'modal', id: 'tbl-off', title: '嵌套表格', render: () => <p>x</p> }],
+          },
+        ],
+      }
+      wrap(<Toolbar ref={ref} groups={resolveToolbar([ext], undefined, md)} ctx={makeCtx()} />)
+      expect(ref.current!.openDialog('tbl-off')).toBe('disabled')
       expect(screen.queryByRole('dialog')).toBeNull()
     })
   })

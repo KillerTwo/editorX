@@ -4,6 +4,7 @@ import { renderDiagrams } from '@editorx/markdown-core'
 import type { EditorExtension } from '@editorx/toolbar'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { editorContent, editorRoot, previewEl, renderEditor } from '../test-utils'
+import { linkExtension, markdownCoreExtensions } from '.'
 
 vi.mock('@editorx/markdown-core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@editorx/markdown-core')>()),
@@ -126,6 +127,21 @@ describe('内置扩展', () => {
     renderEditor({ defaultValue: 'x', readOnly: true })
     fireEvent.keyDown(editorContent(), { key: 'L', code: 'KeyL', ctrlKey: true, shiftKey: true })
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('链接对话框条目禁用时 Ctrl+Shift+L 什么都不做', () => {
+    const disabledLink: EditorExtension = {
+      ...linkExtension,
+      toolbar: linkExtension.toolbar?.map((item) => (item.type === 'modal' ? { ...item, disabled: () => true } : item)),
+    }
+    const { handle } = renderEditor({
+      defaultValue: 'x',
+      coreExtensions: markdownCoreExtensions.map((ext) => (ext === linkExtension ? disabledLink : ext)),
+    })
+    act(() => handle().getEngine().setSelection(0, 1))
+    fireEvent.keyDown(editorContent(), { key: 'L', code: 'KeyL', ctrlKey: true, shiftKey: true })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(handle().getValue()).toBe('x')
   })
 
   it('布局中没有链接按钮时 Ctrl+Shift+L 回退为直接插入链接语法', () => {

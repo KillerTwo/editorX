@@ -37,9 +37,15 @@ const MORE_WIDTH = 49
 const MORE_KEY = '__more'
 const NAV_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Home', 'End'])
 
+/** `openDialog` 的结果：已打开 / 条目存在但已禁用（含所在下拉禁用）/ 布局中没有该 modal 条目 */
+export type ToolbarDialogResult = 'opened' | 'disabled' | 'missing'
+
 export interface ToolbarHandle {
-  /** 打开 id 对应的 modal 条目（含下拉中的嵌套条目）；条目不存在、不是 modal 或已禁用时返回 false */
-  openDialog(id: string): boolean
+  /**
+   * 打开 id 对应的 modal 条目（含下拉中的嵌套条目）。只匹配 `type: 'modal'` 的条目；
+   * 给出 `extension` 时还需扩展名一致（避免同 id 的其他扩展条目抢先匹配）。
+   */
+  openDialog(id: string, extension?: string): ToolbarDialogResult
 }
 
 export interface ToolbarProps {
@@ -157,7 +163,7 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
       const next = fitGroups(widths, available, DIVIDER_WIDTH, MORE_WIDTH)
       const active = document.activeElement
       const focusedGroup = active ? groupRefs.current.findIndex((g) => g?.contains(active)) : -1
-      if (focusedGroup >= next && focusedGroup < groups.length) focusMoreRef.current = true
+      focusMoreRef.current = focusedGroup >= next && focusedGroup < groups.length
       setFit(next)
     }
     measure()
@@ -172,24 +178,24 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
   const visible = Math.min(fit, groups.length)
 
   useLayoutEffect(() => {
-    if (!focusMoreRef.current) return
+    const focusMore = focusMoreRef.current
     focusMoreRef.current = false
-    moreRef.current?.focus()
+    if (focusMore) moreRef.current?.focus()
   }, [visible])
 
   useImperativeHandle(
     ref,
     () => ({
-      openDialog: (id) => {
+      openDialog: (id, extension) => {
         const found = searchGroups(
           groups,
-          (r) => r.item.id === id,
+          (r) => r.item.id === id && r.item.type === 'modal' && (!extension || r.extension === extension),
           (r) => isItemDisabled(r, ctx, readOnly),
         )
-        if (!found || found.item.item.type !== 'modal') return false
-        if (found.parentDisabled || isItemDisabled(found.item, ctx, readOnly)) return false
+        if (!found) return 'missing'
+        if (found.parentDisabled || isItemDisabled(found.item, ctx, readOnly)) return 'disabled'
         setDialogKey({ extension: found.item.extension, id })
-        return true
+        return 'opened'
       },
     }),
     [groups, ctx, readOnly],
