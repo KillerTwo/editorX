@@ -1,0 +1,59 @@
+.ex-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ex-space-1);
+  height: 32px;
+  padding: 0 var(--ex-space-4);
+  border: 1px solid var(--ex-color-border);
+  border-radius: var(--ex-radius-pill);
+  background: var(--ex-color-surface);
+  color: var(--ex-color-text);
+  font: inherit;
+  font-size: var(--ex-font-size-md);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--ex-transition), background-color var(--ex-transition), border-color var(--ex-transition);
+}
+.ex-btn:hover:not(:disabled) { border-color: var(--ex-color-primary); color: var(--ex-color-primary); }
+.ex-btn:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: 2px; }
+.ex-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.ex-btn--sm { height: 28px; padding: 0 var(--ex-space-3); font-size: var(--ex-font-size-sm); }
+.ex-btn--lg { height: 36px; padding: 0 var(--ex-space-5); font-size: var(--ex-font-size-lg); }
+.ex-btn--primary { background: var(--ex-color-primary); border-color: var(--ex-color-primary); color: #fff; }
+.ex-btn--primary:hover:not(:disabled) { background: var(--ex-color-primary-hover); border-color: var(--ex-color-primary-hover); color: #fff; }
+.ex-btn--primary:active:not(:disabled) { background: var(--ex-color-primary-active); border-color: var(--ex-color-primary-active); }
+.ex-btn--text { border-color: transparent; background: transparent; padding: 0 var(--ex-space-2); }
+.ex-btn--text:hover:not(:disabled) { border-color: transparent; background: var(--ex-color-surface-hover); color: var(--ex-color-text); }
+.ex-btn__icon { display: inline-flex; }
+.ex-btn__spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ex-spin 0.8s linear infinite;
+}
+@keyframes ex-spin { to { transform: rotate(360deg); } }
+
+.ex-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ex-space-1);
+  height: 24px;
+  padding: 0 var(--ex-space-2);
+  border-radius: var(--ex-radius-md);
+  background: var(--ex-color-surface-hover);
+  color: var(--ex-color-text-secondary);
+  font-size: var(--ex-font-size-sm);
+}
+.ex-tag__close {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-text-muted);
+  cursor: pointer;
+}
+.ex-tag__close:hover { color: var(--ex-color-primary); }
