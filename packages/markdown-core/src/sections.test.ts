@@ -77,6 +77,42 @@ describe('splitSections', () => {
     expect(texts('# A\r\nx\r\n\r\nT\r\n===\r\n')).toEqual(['# A\r\nx\r\n\r\n', 'T\r\n===\r\n'])
   })
 
+  it('treats list-item paragraph continuation (lazy or indented) as not top-level', () => {
+    expect(texts('- item\n  continued\n---\n')).toEqual(['- item\n  continued\n---\n'])
+    expect(texts('- item\n  continued\n===\n')).toEqual(['- item\n  continued\n===\n'])
+    expect(texts('1. a\n\n   b\nT\n---\n')).toEqual(['1. a\n\n   b\nT\n---\n'])
+  })
+
+  it('treats lazy blockquote continuation as not top-level', () => {
+    expect(texts('> q\nlazy\n---\n')).toEqual(['> q\nlazy\n---\n'])
+    expect(texts('> q\nT\n===\n')).toEqual(['> q\nT\n===\n'])
+  })
+
+  it('does not split at headings inside list items or blockquotes', () => {
+    expect(texts('- item\n\n  # H\n  more\n')).toEqual(['- item\n\n  # H\n  more\n'])
+    expect(texts('- Title\n  ---\n')).toEqual(['- Title\n  ---\n'])
+    expect(texts('> ```\n> # x\n> ```\n')).toEqual(['> ```\n> # x\n> ```\n'])
+  })
+
+  it('splits at headings indented less than the list item content', () => {
+    expect(texts('- item\n\n # H\n')).toEqual(['- item\n\n', ' # H\n'])
+    expect(texts('- item\n# H\n')).toEqual(['- item\n', '# H\n'])
+    expect(texts('-\n\n  # H\n')).toEqual(['-\n\n', '  # H\n'])
+  })
+
+  it('splits at top-level headings after a blockquote ends', () => {
+    expect(texts('> q\n\nT\n---\n')).toEqual(['> q\n\n', 'T\n---\n'])
+  })
+
+  it('ends a fence inside a list item when the item ends', () => {
+    expect(texts('- a\n  ```\n  # x\n  ```\n# y\n')).toEqual(['- a\n  ```\n  # x\n  ```\n', '# y\n'])
+    expect(texts('- a\n  ```\n# y\n')).toEqual(['- a\n  ```\n', '# y\n'])
+  })
+
+  it('does not treat an indented code line as setext heading text', () => {
+    expect(texts('a\n\n    code\n---\n')).toEqual(['a\n\n    code\n---\n'])
+  })
+
   it('produces contiguous sections covering the whole text', () => {
     for (const md of [
       '',
