@@ -16,6 +16,23 @@
   --ex-color-info: light-dark(#4183f1, #4183f1);
   --ex-color-shadow-popover: light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5));
   --ex-color-shadow-modal: light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.6));
+  --ex-color-md-heading: light-dark(#1f5fbf, #7aa7f0);
+  --ex-color-md-marker: light-dark(#b4b5c2, #5f606b);
+  --ex-color-md-link: light-dark(#4183f1, #6ea1f5);
+  --ex-color-md-code: light-dark(#c7254e, #f08aa6);
+  --ex-color-md-code-bg: light-dark(#f3f3f6, #2b2c31);
+  --ex-color-md-quote: light-dark(#6a6b7a, #a0a1ad);
+  --ex-color-md-math: light-dark(#8e44ad, #c39bd3);
+  --ex-color-md-mark-bg: light-dark(#fff3b0, #5c4f12);
+  --ex-color-md-tag: light-dark(#2e8b57, #6fcf97);
+  --ex-color-code-bg: light-dark(#f6f8fa, #1e1f23);
+  --ex-color-code-text: light-dark(#24292e, #d4d4d8);
+  --ex-color-code-comment: light-dark(#6a737d, #7f8590);
+  --ex-color-code-keyword: light-dark(#d73a49, #ff7b72);
+  --ex-color-code-string: light-dark(#032f62, #a5d6ff);
+  --ex-color-code-number: light-dark(#005cc5, #79c0ff);
+  --ex-color-code-function: light-dark(#6f42c1, #d2a8ff);
+  --ex-color-code-tag: light-dark(#22863a, #7ee787);
 
   --ex-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'SF UI Text', Arial, sans-serif;
   --ex-font-family-mono: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
@@ -84,6 +101,23 @@
     --ex-color-info: #4183f1;
     --ex-color-shadow-popover: rgba(0, 0, 0, 0.12);
     --ex-color-shadow-modal: rgba(0, 0, 0, 0.16);
+    --ex-color-md-heading: #1f5fbf;
+    --ex-color-md-marker: #b4b5c2;
+    --ex-color-md-link: #4183f1;
+    --ex-color-md-code: #c7254e;
+    --ex-color-md-code-bg: #f3f3f6;
+    --ex-color-md-quote: #6a6b7a;
+    --ex-color-md-math: #8e44ad;
+    --ex-color-md-mark-bg: #fff3b0;
+    --ex-color-md-tag: #2e8b57;
+    --ex-color-code-bg: #f6f8fa;
+    --ex-color-code-text: #24292e;
+    --ex-color-code-comment: #6a737d;
+    --ex-color-code-keyword: #d73a49;
+    --ex-color-code-string: #032f62;
+    --ex-color-code-number: #005cc5;
+    --ex-color-code-function: #6f42c1;
+    --ex-color-code-tag: #22863a;
   }
 
   .ex-root[data-ex-theme='dark'] {
@@ -104,6 +138,23 @@
     --ex-color-info: #4183f1;
     --ex-color-shadow-popover: rgba(0, 0, 0, 0.5);
     --ex-color-shadow-modal: rgba(0, 0, 0, 0.6);
+    --ex-color-md-heading: #7aa7f0;
+    --ex-color-md-marker: #5f606b;
+    --ex-color-md-link: #6ea1f5;
+    --ex-color-md-code: #f08aa6;
+    --ex-color-md-code-bg: #2b2c31;
+    --ex-color-md-quote: #a0a1ad;
+    --ex-color-md-math: #c39bd3;
+    --ex-color-md-mark-bg: #5c4f12;
+    --ex-color-md-tag: #6fcf97;
+    --ex-color-code-bg: #1e1f23;
+    --ex-color-code-text: #d4d4d8;
+    --ex-color-code-comment: #7f8590;
+    --ex-color-code-keyword: #ff7b72;
+    --ex-color-code-string: #a5d6ff;
+    --ex-color-code-number: #79c0ff;
+    --ex-color-code-function: #d2a8ff;
+    --ex-color-code-tag: #7ee787;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -125,6 +176,23 @@
       --ex-color-info: #4183f1;
       --ex-color-shadow-popover: rgba(0, 0, 0, 0.5);
       --ex-color-shadow-modal: rgba(0, 0, 0, 0.6);
+      --ex-color-md-heading: #7aa7f0;
+      --ex-color-md-marker: #5f606b;
+      --ex-color-md-link: #6ea1f5;
+      --ex-color-md-code: #f08aa6;
+      --ex-color-md-code-bg: #2b2c31;
+      --ex-color-md-quote: #a0a1ad;
+      --ex-color-md-math: #c39bd3;
+      --ex-color-md-mark-bg: #5c4f12;
+      --ex-color-md-tag: #6fcf97;
+      --ex-color-code-bg: #1e1f23;
+      --ex-color-code-text: #d4d4d8;
+      --ex-color-code-comment: #7f8590;
+      --ex-color-code-keyword: #ff7b72;
+      --ex-color-code-string: #a5d6ff;
+      --ex-color-code-number: #79c0ff;
+      --ex-color-code-function: #d2a8ff;
+      --ex-color-code-tag: #7ee787;
     }
   }
 }

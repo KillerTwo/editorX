@@ -1,0 +1,337 @@
+/* ---------- 编辑区 ---------- */
+.ex-editor {
+  position: relative;
+  overflow: auto;
+  background: var(--ex-color-surface);
+}
+
+.ex-editor-content {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: var(--ex-space-4) var(--ex-space-5);
+  font-family: var(--ex-font-family-mono);
+  font-size: var(--ex-font-size-md);
+  line-height: 1.8;
+  color: var(--ex-color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 4;
+  outline: none;
+  caret-color: var(--ex-color-primary);
+}
+
+.ex-editor-content[data-empty]::before {
+  position: absolute;
+  content: attr(data-placeholder);
+  color: var(--ex-color-text-muted);
+  pointer-events: none;
+}
+
+.ex-md-heading {
+  color: var(--ex-color-md-heading);
+  font-weight: 600;
+}
+
+.ex-md-marker {
+  color: var(--ex-color-md-marker);
+  font-weight: normal;
+}
+
+.ex-md-strong {
+  font-weight: 600;
+}
+
+.ex-md-em {
+  font-style: italic;
+}
+
+.ex-md-strike {
+  color: var(--ex-color-text-muted);
+  text-decoration: line-through;
+}
+
+.ex-md-mark {
+  background: var(--ex-color-md-mark-bg);
+}
+
+.ex-md-code,
+.ex-md-fence {
+  color: var(--ex-color-md-code);
+  background: var(--ex-color-md-code-bg);
+  border-radius: var(--ex-radius-sm);
+}
+
+.ex-md-math,
+.ex-md-math-block {
+  color: var(--ex-color-md-math);
+}
+
+.ex-md-link,
+.ex-md-image,
+.ex-md-url {
+  color: var(--ex-color-md-link);
+}
+
+.ex-md-blockquote {
+  color: var(--ex-color-md-quote);
+}
+
+.ex-md-list > .ex-md-marker,
+.ex-md-task,
+.ex-md-hr {
+  color: var(--ex-color-primary);
+}
+
+.ex-md-tag {
+  color: var(--ex-color-md-tag);
+}
+
+.ex-md-comment {
+  color: var(--ex-color-text-muted);
+  font-style: italic;
+}
+
+/* ---------- 预览 ---------- */
+.ex-preview {
+  font-family: var(--ex-font-family);
+  font-size: var(--ex-font-size-lg);
+  line-height: 1.75;
+  color: var(--ex-color-text);
+  overflow-wrap: break-word;
+}
+
+.ex-preview h1,
+.ex-preview h2,
+.ex-preview h3,
+.ex-preview h4,
+.ex-preview h5,
+.ex-preview h6 {
+  margin: var(--ex-space-6) 0 var(--ex-space-3);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ex-preview h1 { font-size: 1.75em; }
+.ex-preview h2 { font-size: 1.5em; }
+.ex-preview h3 { font-size: 1.25em; }
+.ex-preview h4 { font-size: 1.125em; }
+.ex-preview h5 { font-size: 1em; }
+.ex-preview h6 { font-size: 0.875em; color: var(--ex-color-text-secondary); }
+
+.ex-preview p,
+.ex-preview ul,
+.ex-preview ol,
+.ex-preview blockquote,
+.ex-preview pre,
+.ex-preview table {
+  margin: 0 0 var(--ex-space-4);
+}
+
+.ex-preview a {
+  color: var(--ex-color-md-link);
+  text-decoration: none;
+}
+
+.ex-preview a:hover {
+  text-decoration: underline;
+}
+
+.ex-preview code {
+  padding: 0.1em 0.4em;
+  font-family: var(--ex-font-family-mono);
+  font-size: 0.875em;
+  color: var(--ex-color-md-code);
+  background: var(--ex-color-md-code-bg);
+  border-radius: var(--ex-radius-sm);
+}
+
+.ex-preview pre {
+  overflow: auto;
+  padding: var(--ex-space-4);
+  font-size: var(--ex-font-size-md);
+  line-height: 1.6;
+  color: var(--ex-color-code-text);
+  background: var(--ex-color-code-bg);
+  border-radius: var(--ex-radius-md);
+}
+
+.ex-preview pre code {
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+}
+
+.ex-preview blockquote {
+  padding: var(--ex-space-2) var(--ex-space-4);
+  color: var(--ex-color-text-secondary);
+  background: var(--ex-color-surface-hover);
+  border-left: 4px solid var(--ex-color-border);
+}
+
+.ex-preview table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.ex-preview th,
+.ex-preview td {
+  padding: var(--ex-space-2) var(--ex-space-3);
+  border: 1px solid var(--ex-color-border);
+}
+
+.ex-preview th {
+  font-weight: 600;
+  background: var(--ex-color-surface-hover);
+}
+
+.ex-preview hr {
+  margin: var(--ex-space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--ex-color-border);
+}
+
+.ex-preview img {
+  max-width: 100%;
+}
+
+.ex-preview mark {
+  color: inherit;
+  background: var(--ex-color-md-mark-bg);
+}
+
+.ex-preview ul:has(> li > input[type='checkbox']) {
+  padding-left: var(--ex-space-5);
+  list-style: none;
+}
+
+.ex-preview li > input[type='checkbox'] {
+  margin: 0 var(--ex-space-2) 0 0;
+  vertical-align: middle;
+}
+
+.ex-preview .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--ex-space-1) 0;
+}
+
+/* Mermaid SVG 自带内联 <style> 配色，这里只负责布局 */
+.ex-mermaid {
+  margin: 0 0 var(--ex-space-4);
+  overflow-x: auto;
+  text-align: center;
+}
+
+.ex-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* flowchart.js（raphael）颜色由 renderDiagrams 按主题传入，这里只负责布局 */
+.ex-flowchart {
+  margin: 0 0 var(--ex-space-4);
+  overflow-x: auto;
+  text-align: center;
+}
+
+.ex-flowchart svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 目录 */
+.ex-toc {
+  margin: 0 0 var(--ex-space-4);
+}
+
+.ex-toc-title {
+  margin: 0 0 var(--ex-space-2);
+  font-size: var(--ex-font-size-xl);
+  font-weight: 600;
+  color: var(--ex-color-text);
+}
+
+.ex-toc ul {
+  margin: 0;
+  padding-left: var(--ex-space-6);
+  list-style: disc;
+}
+
+.ex-toc ul ul {
+  list-style: circle;
+}
+
+.ex-toc a {
+  color: var(--ex-color-md-link);
+}
+
+/* 脚注（追加在最后一个预览段内部） */
+.ex-footnotes {
+  font-size: var(--ex-font-size-md);
+  color: var(--ex-color-text-secondary);
+}
+
+.ex-footnotes .footnotes-sep {
+  margin: var(--ex-space-6) 0 var(--ex-space-4);
+}
+
+.ex-footnotes .footnotes-list {
+  padding-left: var(--ex-space-6);
+}
+
+.ex-preview .footnote-ref a,
+.ex-footnotes .footnote-backref {
+  color: var(--ex-color-md-link);
+  text-decoration: none;
+}
+
+.ex-preview .token.comment,
+.ex-preview .token.prolog,
+.ex-preview .token.doctype,
+.ex-preview .token.cdata {
+  color: var(--ex-color-code-comment);
+  font-style: italic;
+}
+
+.ex-preview .token.keyword,
+.ex-preview .token.boolean,
+.ex-preview .token.important,
+.ex-preview .token.atrule,
+.ex-preview .token.deleted {
+  color: var(--ex-color-code-keyword);
+}
+
+.ex-preview .token.string,
+.ex-preview .token.char,
+.ex-preview .token.attr-value,
+.ex-preview .token.regex,
+.ex-preview .token.url {
+  color: var(--ex-color-code-string);
+}
+
+.ex-preview .token.number,
+.ex-preview .token.constant,
+.ex-preview .token.symbol,
+.ex-preview .token.property {
+  color: var(--ex-color-code-number);
+}
+
+.ex-preview .token.function,
+.ex-preview .token.class-name {
+  color: var(--ex-color-code-function);
+}
+
+.ex-preview .token.tag,
+.ex-preview .token.selector,
+.ex-preview .token.attr-name,
+.ex-preview .token.builtin,
+.ex-preview .token.inserted {
+  color: var(--ex-color-code-tag);
+}
+
+.ex-preview .token.operator,
+.ex-preview .token.punctuation {
+  color: var(--ex-color-code-text);
+}
