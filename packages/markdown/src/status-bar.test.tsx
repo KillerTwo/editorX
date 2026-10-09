@@ -53,6 +53,31 @@ describe('autoSaveInterval', () => {
     expect(onSaveDraft).toHaveBeenCalledTimes(1)
   })
 
+  it('保存状态实时区域在首次保存前已存在且可见；保存中 aria-busy', async () => {
+    let resolve!: () => void
+    const onSaveDraft = vi.fn(() => new Promise<void>((r) => (resolve = r)))
+    const { handle } = renderEditor({ defaultValue: 'a', adapters: { onSaveDraft } })
+    const live = saveText()
+    expect(live).toHaveAttribute('aria-live', 'polite')
+    expect(live).toBeEmptyDOMElement()
+    expect(getComputedStyle(live).display).not.toBe('none')
+    expect(live).not.toHaveAttribute('aria-busy')
+    act(() => handle().getEngine().replace(1, 1, 'b'))
+    let pending!: Promise<boolean>
+    act(() => {
+      pending = handle().saveDraft()
+    })
+    expect(saveText()).toBe(live)
+    expect(live).toHaveAttribute('aria-busy', 'true')
+    expect(live).toHaveTextContent('保存中')
+    await act(async () => {
+      resolve()
+      await pending
+    })
+    expect(live).not.toHaveAttribute('aria-busy')
+    expect(live).toHaveTextContent(/^文章已保存\d{2}:\d{2}:\d{2}$/)
+  })
+
   it('保存失败：toast 提示并在状态栏显示「保存失败」', async () => {
     const onSaveDraft = vi.fn(async () => {
       throw new Error('网络')

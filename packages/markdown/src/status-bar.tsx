@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { formatMessage, useMessages } from '@editorx/toolbar'
 import type { ReactNode } from 'react'
 import { useEditorState, type EditorStore } from './store'
 import type { ViewMode } from './types'
@@ -35,7 +35,7 @@ export function StatusBar({
       : save.status === 'error'
         ? s.saveFailed
         : save.status === 'saved' && save.savedAt !== null
-          ? `${s.saved}${formatSavedTime(save.savedAt)}`
+          ? formatMessage(s.saved, { time: formatSavedTime(save.savedAt) })
           : ''
 
   return (
@@ -46,7 +46,7 @@ export function StatusBar({
       </div>
       {center !== undefined && <div className="ex-mde-status__center">{center}</div>}
       <div className="ex-mde-status__end">
-        <span className="ex-mde-status__save" aria-live="polite">
+        <span className="ex-mde-status__save" aria-live="polite" aria-busy={save.status === 'saving' || undefined}>
           {saveText}
         </span>
         {end}

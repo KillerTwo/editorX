@@ -17,7 +17,7 @@ export type ViewMode = 'edit' | 'split' | 'preview'
 export interface MarkdownEditorHandle {
   focus(): void
   getValue(): string
-  /** 替换全部内容（清空撤销历史），不触发 onChange */
+  /** 替换全部内容（清空撤销历史），不触发 onChange；同时把内容记为已保存（下次编辑前不会自动保存） */
   setValue(markdown: string): void
   /** 当前内容的渲染 HTML（图表为占位块） */
   getHtml(): string
@@ -26,7 +26,10 @@ export interface MarkdownEditorHandle {
   runCommand(name: string, args?: unknown): boolean
   /** 在光标处插入（html 会转为 Markdown） */
   insert(content: InsertContent): void
-  /** 立即保存草稿（无改动也保存）；未配置 onSaveDraft 或失败时返回 false */
+  /**
+   * 立即保存草稿（无改动也保存）；未配置 onSaveDraft 或失败时返回 false。
+   * 已有保存进行中时排队一次后续保存，返回的 Promise 以后续保存的结果完成；可能在编辑器卸载后才完成。
+   */
   saveDraft(): Promise<boolean>
   getEngine(): EditorEngine
 }
@@ -41,6 +44,9 @@ export interface MarkdownEditorSlots {
 }
 
 export interface MarkdownEditorProps {
+  /**
+   * 受控内容。外部改动视同编辑（会被自动保存）；载入已保存的草稿请用 `ref.setValue`，它会把内容记为已保存。
+   */
   value?: string
   defaultValue?: string
   /** 防抖渲染完成后调用，html 为同一次渲染结果；卸载时若有尚未发出的编辑，会同步再调用一次 */

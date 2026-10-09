@@ -62,6 +62,12 @@ export function createDraftSaver(deps: DraftSaverDeps): DraftSaver {
           return true
         },
         (error: unknown) => {
+          // 期间 markSaved 过：失败的是旧内容，不把当前（已保存的）文档标成失败
+          if (startedAt !== generation) {
+            deps.store.set({ save: { status: prevStatus === 'error' ? 'idle' : prevStatus, savedAt } })
+            if (force) deps.onError(error, { repeated: false })
+            return false
+          }
           deps.store.set({ save: { status: 'error', savedAt } })
           deps.onError(error, { repeated: !force && prevStatus === 'error' })
           return false
@@ -90,6 +96,8 @@ export function createDraftSaver(deps: DraftSaverDeps): DraftSaver {
     markSaved(markdown) {
       saved = markdown
       generation++
+      const { status, savedAt } = deps.store.get().save
+      if (status === 'error') deps.store.set({ save: { status: 'idle', savedAt } })
     },
     isDirty: () => deps.getMarkdown() !== saved,
     save,

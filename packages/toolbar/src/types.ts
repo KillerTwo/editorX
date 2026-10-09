@@ -50,6 +50,10 @@ export type PublishPayload = EditorDocument & PublishSettings
 
 export interface EditorAdapters {
   uploadImage?(file: File, onProgress?: (p: number) => void): Promise<{ url: string }>
+  /**
+   * 自动保存（仅 Markdown 有改动时）与 `saveDraft()` 调用。不会并发调用：进行中时的请求合并为一次后续调用；
+   * 若已排队，可能在编辑器卸载后才调用。reject 表示保存失败。
+   */
   onSaveDraft?(doc: EditorDocument): Promise<void>
   onPublish?(payload: PublishPayload): Promise<void>
   searchTags?(keyword: string): Promise<string[]>

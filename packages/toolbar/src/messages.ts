@@ -104,7 +104,7 @@ export const zhCN = deepFreeze({
     line: '当前行',
     column: '当前列',
     saving: '保存中…',
-    saved: '文章已保存',
+    saved: '文章已保存{time}',
     saveFailed: '保存失败',
   },
   panels: {

@@ -144,6 +144,34 @@ describe('createDraftSaver', () => {
     expect(await saver.save()).toBe(true)
   })
 
+  it('失败后 markSaved（载入新文档）：状态不再是 error', async () => {
+    const adapter = vi.fn<SaveDraft>(async () => {
+      throw new Error('网络')
+    })
+    const { saver, store, setValue } = setup(adapter)
+    setValue('b')
+    expect(await saver.save()).toBe(false)
+    expect(store.get().save.status).toBe('error')
+    setValue('载入')
+    saver.markSaved('载入')
+    expect(store.get().save.status).toBe('idle')
+  })
+
+  it('保存进行中 markSaved 后旧保存失败：不显示 error、非手动保存不提示', async () => {
+    let reject!: (error: unknown) => void
+    const adapter = vi.fn<SaveDraft>(() => new Promise<void>((_, r) => (reject = r)))
+    const { saver, store, onError, setValue } = setup(adapter)
+    setValue('b')
+    const pending = saver.save()
+    setValue('载入')
+    saver.markSaved('载入')
+    reject(new Error('网络'))
+    expect(await pending).toBe(false)
+    expect(store.get().save.status).toBe('idle')
+    expect(onError).not.toHaveBeenCalled()
+    expect(saver.isDirty()).toBe(false)
+  })
+
   it('没有 onSaveDraft 时什么都不做', async () => {
     const { saver, store, setValue, getDocument } = setup(undefined)
     setValue('b')
