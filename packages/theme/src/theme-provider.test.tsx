@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { ThemeProvider, useTheme } from './theme-provider'
 
@@ -98,6 +99,39 @@ describe('ThemeProvider', () => {
   it('合并自定义 className', () => {
     render(<ThemeProvider defaultTheme="light" className="host"><Probe /></ThemeProvider>)
     expect(root()).toHaveClass('ex-root', 'host')
+  })
+
+  it('SSR：system 模式输出 data-ex-theme="system"，显式模式输出对应值', () => {
+    expect(renderToString(<ThemeProvider><span /></ThemeProvider>)).toContain('data-ex-theme="system"')
+    expect(renderToString(<ThemeProvider defaultTheme="dark"><span /></ThemeProvider>)).toContain(
+      'data-ex-theme="dark"',
+    )
+  })
+
+  it('localStorage.getItem 抛错时正常渲染并使用 defaultTheme', () => {
+    const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied')
+    })
+    try {
+      render(<ThemeProvider defaultTheme="dark"><Probe /></ThemeProvider>)
+      expect(root()).toHaveAttribute('data-ex-theme', 'dark')
+      expect(screen.getByTestId('mode')).toHaveTextContent('dark')
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('localStorage.setItem 抛错时切换主题不抛错', async () => {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota')
+    })
+    try {
+      render(<ThemeProvider defaultTheme="light"><Probe /></ThemeProvider>)
+      await userEvent.click(screen.getByText('to-dark'))
+      expect(root()).toHaveAttribute('data-ex-theme', 'dark')
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('Provider 外调用 useTheme 抛错', () => {

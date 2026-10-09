@@ -21,6 +21,23 @@ const DARK_QUERY = '(prefers-color-scheme: dark)'
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
+function readStoredMode(key: string): ThemeMode | null {
+  try {
+    const stored = window.localStorage.getItem(key)
+    return isThemeMode(stored) ? stored : null
+  } catch {
+    return null
+  }
+}
+
+function writeStoredMode(key: string, mode: ThemeMode): void {
+  try {
+    window.localStorage.setItem(key, mode)
+  } catch {
+    // storage unavailable (private mode, quota): keep the in-memory theme only
+  }
+}
+
 export function ThemeProvider({
   theme,
   defaultTheme = 'system',
@@ -33,12 +50,17 @@ export function ThemeProvider({
   const [innerMode, setInnerMode] = useState<ThemeMode>(defaultTheme)
   const [systemDark, setSystemDark] = useState(false)
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
+  const [mounted, setMounted] = useState(false)
   const mode = isControlled ? theme : innerMode
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
     if (isControlled || !storageKey) return
-    const stored = window.localStorage.getItem(storageKey)
-    if (isThemeMode(stored)) setInnerMode(stored)
+    const stored = readStoredMode(storageKey)
+    if (stored) setInnerMode(stored)
   }, [isControlled, storageKey])
 
   useEffect(() => {
@@ -53,7 +75,7 @@ export function ThemeProvider({
     (next: ThemeMode) => {
       if (!isControlled) {
         setInnerMode(next)
-        if (storageKey) window.localStorage.setItem(storageKey, next)
+        if (storageKey) writeStoredMode(storageKey, next)
       }
       onThemeChange?.(next)
     },
@@ -68,7 +90,10 @@ export function ThemeProvider({
 
   return (
     <ThemeContext.Provider value={value}>
-      <div className={className ? `ex-root ${className}` : 'ex-root'} data-ex-theme={resolved}>
+      <div
+        className={className ? `ex-root ${className}` : 'ex-root'}
+        data-ex-theme={!mounted && mode === 'system' ? 'system' : resolved}
+      >
         {children}
         <div className="ex-portal" ref={setPortalRoot} />
       </div>

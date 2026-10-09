@@ -1,20 +1,21 @@
-.ex-root,
-.ex-root[data-ex-theme='light'] {
-  --ex-color-primary: #fc5531;
-  --ex-color-primary-hover: #ff6d4e;
-  --ex-color-primary-active: #e64a29;
-  --ex-color-text: #222226;
-  --ex-color-text-secondary: #555666;
-  --ex-color-text-muted: #999aaa;
-  --ex-color-bg: #f5f6f7;
-  --ex-color-surface: #ffffff;
-  --ex-color-surface-hover: #f0f0f5;
-  --ex-color-border: #e8e8ed;
-  --ex-color-mask: rgba(0, 0, 0, 0.45);
-  --ex-color-success: #2ea121;
-  --ex-color-warning: #ff9900;
-  --ex-color-error: #f0473a;
-  --ex-color-info: #4183f1;
+.ex-root {
+  --ex-color-primary: light-dark(#fc5531, #fc5531);
+  --ex-color-primary-hover: light-dark(#ff6d4e, #ff7556);
+  --ex-color-primary-active: light-dark(#e64a29, #e04a2a);
+  --ex-color-text: light-dark(#222226, #e8e8ed);
+  --ex-color-text-secondary: light-dark(#555666, #b8b9c4);
+  --ex-color-text-muted: light-dark(#999aaa, #7d7e8a);
+  --ex-color-bg: light-dark(#f5f6f7, #18191c);
+  --ex-color-surface: light-dark(#ffffff, #232428);
+  --ex-color-surface-hover: light-dark(#f0f0f5, #2e2f34);
+  --ex-color-border: light-dark(#e8e8ed, #3a3b41);
+  --ex-color-mask: light-dark(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.6));
+  --ex-color-success: light-dark(#2ea121, #2ea121);
+  --ex-color-warning: light-dark(#ff9900, #ff9900);
+  --ex-color-error: light-dark(#f0473a, #f0473a);
+  --ex-color-info: light-dark(#4183f1, #4183f1);
+  --ex-color-shadow-popover: light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5));
+  --ex-color-shadow-modal: light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.6));
 
   --ex-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'SF UI Text', Arial, sans-serif;
   --ex-font-family-mono: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
@@ -35,8 +36,8 @@
   --ex-space-5: 20px;
   --ex-space-6: 24px;
 
-  --ex-shadow-popover: 0 2px 12px rgba(0, 0, 0, 0.12);
-  --ex-shadow-modal: 0 4px 24px rgba(0, 0, 0, 0.16);
+  --ex-shadow-popover: 0 2px 12px var(--ex-color-shadow-popover);
+  --ex-shadow-modal: 0 4px 24px var(--ex-color-shadow-modal);
 
   --ex-z-popover: 1000;
   --ex-z-modal: 1100;
@@ -48,21 +49,11 @@
 }
 
 .ex-root[data-ex-theme='dark'] {
-  --ex-color-primary: #fc5531;
-  --ex-color-primary-hover: #ff7556;
-  --ex-color-primary-active: #e04a2a;
-  --ex-color-text: #e8e8ed;
-  --ex-color-text-secondary: #b8b9c4;
-  --ex-color-text-muted: #7d7e8a;
-  --ex-color-bg: #18191c;
-  --ex-color-surface: #232428;
-  --ex-color-surface-hover: #2e2f34;
-  --ex-color-border: #3a3b41;
-  --ex-color-mask: rgba(0, 0, 0, 0.6);
-  --ex-shadow-popover: 0 2px 12px rgba(0, 0, 0, 0.5);
-  --ex-shadow-modal: 0 4px 24px rgba(0, 0, 0, 0.6);
-
   color-scheme: dark;
+}
+
+.ex-root[data-ex-theme='system'] {
+  color-scheme: light dark;
 }
 
 .ex-root {
