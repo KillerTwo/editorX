@@ -46,8 +46,10 @@ describe('markdown styles.css', () => {
   it('CSDN 外壳关键尺寸', () => {
     expect(css).toMatch(/\.ex-mde-main \{[^}]*border-radius: var\(--ex-radius-lg\);/)
     expect(css).toMatch(/\.ex-mde-header \{[^}]*padding: 12px 12px 0;/)
-    expect(css).toMatch(/\.ex-mde-modes \{[^}]*gap: 14px;/)
-    expect(css).toMatch(/\.ex-mde-mode \{[^}]*height: 32px;[^}]*border-radius: var\(--ex-radius-lg\);[^}]*font-weight: 600;/)
+    expect(css).toMatch(/\.ex-mde-modes \{[^}]*gap: 12px;/)
+    expect(css).toMatch(
+      /\.ex-mde-mode \{[^}]*gap: 6px;[^}]*height: 32px;[^}]*padding: 0 11\.5px 0 12px;[^}]*border-radius: var\(--ex-radius-lg\);[^}]*font-family: var\(--ex-mde-font-family\);[^}]*font-weight: 600;[^}]*letter-spacing: 0\.5px;/,
+    )
     expect(css).toMatch(/\.ex-mde-toolbar \{[^}]*height: 39px;[^}]*margin-top: 17px;[^}]*padding: 0 10px;/)
     expect(css).toMatch(/\.ex-mde-status \{[^}]*padding: 9px 24px 12px 25px;[^}]*font-size: 12px;[^}]*line-height: 21px;/)
     expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)

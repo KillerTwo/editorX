@@ -35,23 +35,26 @@
 
 .ex-mde-modes {
   display: flex;
-  gap: 14px;
+  gap: 12px;
 }
 
+/* 参考页签宽 119/74/74：Arial 粗体的「Markdown」比参考窄约 4px，用 0.5px 字距补齐；右 padding 少 0.5px 抵消末字字距 */
 .ex-mde-mode {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   height: 32px;
-  padding: 0 12px;
+  padding: 0 11.5px 0 12px;
   border: 0;
   border-radius: var(--ex-radius-lg);
   background: var(--ex-color-mde-tab-bg);
   color: var(--ex-color-mde-chrome-text);
   font: inherit;
+  font-family: var(--ex-mde-font-family);
   font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.5px;
   cursor: pointer;
 }
 
