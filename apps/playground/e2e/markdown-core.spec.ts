@@ -314,6 +314,7 @@ async function latencyStats(page: Page) {
     median: sorted[Math.floor(sorted.length / 2)]!,
     p95: sorted[Math.ceil(sorted.length * 0.95) - 1]!,
     max: sorted.at(-1)!,
+    samples: samples.map((s) => Math.round(s)),
   }
 }
 

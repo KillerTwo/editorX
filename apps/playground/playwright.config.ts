@@ -16,8 +16,15 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: chromium, grepInvert: /@perf/ },
-    // Latency tests run alone, after everything else, so parallel workers don't skew them.
-    { name: 'chromium-perf', use: chromium, grep: /@perf/, workers: 1, dependencies: ['chromium'] },
+    // Latency tests run alone, after everything else, so parallel workers don't skew them. Tracing is off: its
+    // per-action DOM snapshots of the 10k-line document run on the page's main thread and add 40-280ms outliers.
+    {
+      name: 'chromium-perf',
+      use: { ...chromium, trace: 'off' },
+      grep: /@perf/,
+      workers: 1,
+      dependencies: ['chromium'],
+    },
   ],
   webServer: {
     command: 'pnpm start',
