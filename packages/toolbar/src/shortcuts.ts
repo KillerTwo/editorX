@@ -110,6 +110,15 @@ export function formatShortcut(spec: string, mac: boolean): string {
   return [(p.mod || p.ctrl) && 'Ctrl', p.meta && 'Win', p.alt && 'Alt', p.shift && 'Shift', key].filter(Boolean).join('+')
 }
 
+/** 字面量 process.env.NODE_ENV 供打包器替换；无打包器时 process 不存在，按生产环境处理 */
+function isDev(): boolean {
+  try {
+    return process.env.NODE_ENV !== 'production'
+  } catch {
+    return false
+  }
+}
+
 export function collectShortcuts(extensions: readonly EditorExtension[], options: ResolveOptions): ShortcutBinding[] {
   const bindings = new Map<string, ShortcutBinding>()
   const add = (spec: string, binding: Omit<ShortcutBinding, 'key' | 'parsed'>) => {
@@ -122,7 +131,7 @@ export function collectShortcuts(extensions: readonly EditorExtension[], options
     }
     const key = normalizeShortcut(parsed)
     const previous = bindings.get(key)
-    if (previous && previous.extension !== binding.extension && process.env.NODE_ENV !== 'production') {
+    if (previous && previous.extension !== binding.extension && isDev()) {
       console.warn(`[editorx] 快捷键 ${key} 被扩展 ${binding.extension} 覆盖（原为 ${previous.extension}）`)
     }
     // 删除后重新插入：等价写法（如 Windows 上的 mod-b 与 ctrl-b）按插入顺序倒序匹配时后注册者优先
