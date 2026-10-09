@@ -5556,6 +5556,8 @@ git commit -m "feat(markdown): 图片粘贴/拖拽上传与失败重试" -m "粘
 - Modify: `packages/markdown/src/types.ts`、`packages/markdown/src/index.ts`、`packages/markdown/src/styles.css`
 - Test: `packages/markdown/src/context.test.ts`、`packages/markdown/src/core-extensions/core-extensions.test.tsx`
 
+> **执行注意（Task 7/8 修复轮之后补充）：** 下文 `markdown-editor.tsx` 全文写于 Task 7/8 修复轮之前。"Rewrite" 时以当前文件为底稿按差异合入，不得丢失：卸载时同步 flush 待发 `onChange`（runtime）、主题外壳首渲染即确定是否自建 `ThemeProvider`、`ref.setValue` 挂载前生效、CRLF 归一比较、uploader 的 `attach/detach` 与 `isReadOnly`、粘贴时 `text/plain` 非空不拦截、`observeFailedPlaceholders`、`UploadFailures` 的 `readOnly/onEmptied`。导出 HTML 时 `getLiveHtml` 在编辑视图下拿到的是未渲染图表的占位，导出前需先渲染图表。
+
 **Interfaces:**
 - Consumes: Task 4/5 全部 toolbar API；Task 7 runtime/store；Task 8 uploader。
 - Produces:
@@ -6548,6 +6550,7 @@ import { ModeTabs } from './mode-tabs'
 import { useEditorRuntime } from './runtime'
 import { createEditorStore, useEditorState } from './store'
 import type { MarkdownEditorProps } from './types'
+import { observeFailedPlaceholders } from './uploads/failed-marker'
 import { UploadFailures } from './uploads/upload-failures'
 import { createUploader, imageFiles } from './uploads/uploader'
 import { useControllableState } from './use-controllable'
@@ -6649,6 +6652,7 @@ function EditorShell({
       getAdapters: () => live.current.adapters,
       getMessages: () => live.current.messages,
       notify: (message, type) => live.current.notify(message, type),
+      isReadOnly: () => live.current.readOnly,
     }),
   )
 
@@ -6694,17 +6698,27 @@ function EditorShell({
   const fullscreen = useEditorState(store, (s) => s.fullscreen)
 
   useEffect(() => {
+    const detach = uploader.attach(hostRef.current)
+    const unmark = previewRef.current
+      ? observeFailedPlaceholders(previewRef.current, () => live.current.messages.upload.failed)
+      : () => {}
     const take = (files: FileList | null | undefined, e: Event) => {
       const images = imageFiles(files)
       if (images.length === 0 || !live.current.adapters.uploadImage) return
       e.preventDefault()
       void uploader.upload(images)
     }
-    const offPaste = engine.on('paste', (e) => take(e.clipboardData?.files, e))
+    const offPaste = engine.on('paste', (e) => {
+      // Office 复制会在文本之外附带整块截图：有文本时按文本粘贴
+      if ((e.clipboardData?.getData('text/plain') ?? '').trim() !== '') return
+      take(e.clipboardData?.files, e)
+    })
     const offDrop = engine.on('drop', (e) => take(e.dataTransfer?.files, e))
     return () => {
       offPaste()
       offDrop()
+      unmark()
+      detach()
     }
   }, [engine, uploader, live])
 
@@ -6766,7 +6780,13 @@ function EditorShell({
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>
         </div>
-        <UploadFailures store={store} onRetry={(id) => void uploader.retry(id)} onRemove={uploader.remove} />
+        <UploadFailures
+          store={store}
+          readOnly={readOnly}
+          onRetry={(id) => void uploader.retry(id)}
+          onRemove={uploader.remove}
+          onEmptied={() => engine.focus()}
+        />
       </div>
     </div>
   )
