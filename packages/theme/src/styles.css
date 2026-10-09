@@ -62,3 +62,69 @@
   line-height: 1.5;
   color: var(--ex-color-text);
 }
+
+/* Static values must mirror the light-dark() pairs above */
+@supports not (color: light-dark(#000, #fff)) {
+  .ex-root,
+  .ex-root[data-ex-theme='light'] {
+    --ex-color-primary: #fc5531;
+    --ex-color-primary-hover: #ff6d4e;
+    --ex-color-primary-active: #e64a29;
+    --ex-color-text: #222226;
+    --ex-color-text-secondary: #555666;
+    --ex-color-text-muted: #999aaa;
+    --ex-color-bg: #f5f6f7;
+    --ex-color-surface: #ffffff;
+    --ex-color-surface-hover: #f0f0f5;
+    --ex-color-border: #e8e8ed;
+    --ex-color-mask: rgba(0, 0, 0, 0.45);
+    --ex-color-success: #2ea121;
+    --ex-color-warning: #ff9900;
+    --ex-color-error: #f0473a;
+    --ex-color-info: #4183f1;
+    --ex-color-shadow-popover: rgba(0, 0, 0, 0.12);
+    --ex-color-shadow-modal: rgba(0, 0, 0, 0.16);
+  }
+
+  .ex-root[data-ex-theme='dark'] {
+    --ex-color-primary: #fc5531;
+    --ex-color-primary-hover: #ff7556;
+    --ex-color-primary-active: #e04a2a;
+    --ex-color-text: #e8e8ed;
+    --ex-color-text-secondary: #b8b9c4;
+    --ex-color-text-muted: #7d7e8a;
+    --ex-color-bg: #18191c;
+    --ex-color-surface: #232428;
+    --ex-color-surface-hover: #2e2f34;
+    --ex-color-border: #3a3b41;
+    --ex-color-mask: rgba(0, 0, 0, 0.6);
+    --ex-color-success: #2ea121;
+    --ex-color-warning: #ff9900;
+    --ex-color-error: #f0473a;
+    --ex-color-info: #4183f1;
+    --ex-color-shadow-popover: rgba(0, 0, 0, 0.5);
+    --ex-color-shadow-modal: rgba(0, 0, 0, 0.6);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .ex-root[data-ex-theme='system'] {
+      --ex-color-primary: #fc5531;
+      --ex-color-primary-hover: #ff7556;
+      --ex-color-primary-active: #e04a2a;
+      --ex-color-text: #e8e8ed;
+      --ex-color-text-secondary: #b8b9c4;
+      --ex-color-text-muted: #7d7e8a;
+      --ex-color-bg: #18191c;
+      --ex-color-surface: #232428;
+      --ex-color-surface-hover: #2e2f34;
+      --ex-color-border: #3a3b41;
+      --ex-color-mask: rgba(0, 0, 0, 0.6);
+      --ex-color-success: #2ea121;
+      --ex-color-warning: #ff9900;
+      --ex-color-error: #f0473a;
+      --ex-color-info: #4183f1;
+      --ex-color-shadow-popover: rgba(0, 0, 0, 0.5);
+      --ex-color-shadow-modal: rgba(0, 0, 0, 0.6);
+    }
+  }
+}
