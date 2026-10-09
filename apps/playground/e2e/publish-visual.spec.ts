@@ -29,6 +29,11 @@ async function openModal(page: Page, scheme: Scheme) {
   await page.goto('/publish?mode=modal')
   const dialog = page.getByRole('dialog', { name: '发布文章' })
   await expect(dialog).toBeVisible()
+  // 页面加载即打开时关闭按钮的初始焦点会显示 focus-visible 外框；像用户一样关掉再用鼠标点开
+  await dialog.locator('.ex-modal__footer').getByRole('button', { name: '取消' }).click()
+  await expect(dialog).toBeHidden()
+  await page.getByRole('button', { name: '打开发布弹窗' }).click()
+  await expect(dialog).toBeVisible()
   await expect(page.locator('.ex-root').first()).toHaveAttribute('data-ex-theme', scheme)
   await expect(dialog.getByText('您暂时不能添加分类专栏!')).toBeVisible()
   const thumbs = dialog.locator('.ex-pub-cover__thumb img')

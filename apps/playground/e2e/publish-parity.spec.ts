@@ -38,6 +38,8 @@ const MODAL_ROWS: Array<[field: string, top: number, height: number]> = [
   ['activity', 697, 74],
 ]
 
+const radio = (page: Page, field: string, index: number) => row(page, field).locator('.ex-radio').nth(index)
+
 async function dotsX(page: Page, field: string) {
   const dots = row(page, field).locator('.ex-radio__dot')
   return Promise.all((await dots.all()).map(async (dot) => (await box(dot)).x))
@@ -82,6 +84,9 @@ test.describe('内联卡片（12-36-05，2554×1310，滚到底）', () => {
     const control = await box(row(page, 'tags').locator('.ex-pub-item__control'))
     near(control.x, L + 128, 1, '控件列 x')
     near(control.width, 648, 1, '控件列宽')
+    // 参考图：「*」墨迹 x 958–961 紧贴标签文字，帮助图标墨迹 x 963–976
+    near((await box(row(page, 'tags').locator('.ex-pub-item__required'))).x, L + 96, 1, '必填星号 x')
+    near((await box(row(page, 'tags').locator('.ex-pub-item__help'))).x, L + 101, 1, '帮助图标 x')
 
     const add = await box(page.locator('.ex-pub-tag-add'))
     near(add.y, 251, 1, '添加标签 y')
@@ -114,6 +119,9 @@ test.describe('内联卡片（12-36-05，2554×1310，滚到底）', () => {
     await expectDots('articleType', [128, 231, 313])
     await expectDots('visibility', [128, 238, 348, 458])
     await expectDots('multiPlatform', [128, 196])
+    await expect(radio(page, 'articleType', 0)).toHaveCSS('color', 'rgb(26, 26, 26)')
+    await expect(radio(page, 'articleType', 1)).toHaveCSS('color', 'rgb(96, 98, 102)')
+    await expect(radio(page, 'visibility', 3)).toHaveCSS('color', 'rgb(96, 98, 102)')
 
     const declaration = await box(row(page, 'declaration').locator('.ex-select'))
     near(declaration.x, L + 128, 1, '创作声明 x')
@@ -145,6 +153,12 @@ test.describe('内联卡片（12-36-05，2554×1310，滚到底）', () => {
       near(b.y, 1254, 1, `${action}.y`)
       near(b.height, 40, 0.5, `${action}.height`)
     }
+    // 参考图：「定时发布」文字墨迹止于 x 1661，「›」墨迹 x 1669–1675、y 1268–1279
+    const chevron = await box(page.locator('.ex-pub-bar [data-action="schedule"] .ex-pub-action__chevron'))
+    near(chevron.x, L + 807.5, 1, '定时发布 › x')
+    near(chevron.width, 7, 0.5, '定时发布 › 宽')
+    near(chevron.height, 12, 0.5, '定时发布 › 高')
+    near(chevron.y + chevron.height / 2, 1274, 1, '定时发布 › 中心 y')
   })
 })
 
@@ -196,6 +210,15 @@ test.describe('发布弹窗（12-36-37，2554×1312）', () => {
     const textarea = await box(row(page, 'summary').locator('textarea'))
     near(textarea.width, 600, 0.5, '摘要框宽')
     near(textarea.height, 58, 0.5, '摘要框高')
+
+    // 参考图：只有多平台发布一行的单选组比控件列右移 4px，选项间距仍为最小宽 75 + 32
+    const multi = await dotsX(page, 'multiPlatform')
+    expect(multi).toHaveLength(2)
+    near(multi[0]! - M, 124, 1, 'multiPlatform 单选0.x')
+    near(multi[1]! - M, 231, 1, 'multiPlatform 单选1.x')
+    await expect(radio(page, 'articleType', 0)).toHaveCSS('color', 'rgb(64, 158, 255)')
+    await expect(radio(page, 'articleType', 1)).toHaveCSS('color', 'rgb(85, 86, 102)')
+    await expect(radio(page, 'visibility', 3)).toHaveCSS('color', 'rgb(85, 86, 102)')
 
     const declaration = await box(row(page, 'declaration').locator('.ex-select'))
     near(declaration.x, M + 110, 1, '创作声明 x')
