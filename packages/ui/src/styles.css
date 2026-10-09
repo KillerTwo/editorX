@@ -101,3 +101,71 @@
 .ex-dropdown__item:focus-visible { background: var(--ex-color-surface-hover); outline: none; }
 .ex-dropdown__item:disabled { color: var(--ex-color-text-muted); cursor: not-allowed; }
 .ex-dropdown__icon { display: inline-flex; color: var(--ex-color-text-secondary); }
+
+.ex-modal-mask {
+  z-index: var(--ex-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ex-color-mask);
+}
+.ex-modal {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px);
+  border-radius: var(--ex-radius-lg);
+  background: var(--ex-color-surface);
+  color: var(--ex-color-text);
+  box-shadow: var(--ex-shadow-modal);
+}
+.ex-modal:focus { outline: none; }
+.ex-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ex-space-4) var(--ex-space-6);
+}
+.ex-modal__title { margin: 0; font-size: var(--ex-font-size-lg); font-weight: 600; }
+.ex-modal__close {
+  display: inline-flex;
+  margin-left: auto;
+  padding: var(--ex-space-1);
+  border: 0;
+  border-radius: var(--ex-radius-md);
+  background: transparent;
+  color: var(--ex-color-text-muted);
+  cursor: pointer;
+}
+.ex-modal__close:hover { background: var(--ex-color-surface-hover); color: var(--ex-color-text); }
+.ex-modal__body { flex: 1; overflow: auto; padding: 0 var(--ex-space-6) var(--ex-space-4); }
+.ex-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ex-space-3);
+  padding: var(--ex-space-3) var(--ex-space-6) var(--ex-space-5);
+}
+
+.ex-tabs { display: flex; gap: var(--ex-space-6); border-bottom: 1px solid var(--ex-color-border); }
+.ex-tabs__tab {
+  position: relative;
+  padding: var(--ex-space-2) 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+.ex-tabs__tab:hover:not(:disabled) { color: var(--ex-color-text); }
+.ex-tabs__tab:disabled { color: var(--ex-color-text-muted); cursor: not-allowed; }
+.ex-tabs__tab:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: 2px; }
+.ex-tabs__tab.is-active { color: var(--ex-color-text); font-weight: 600; }
+.ex-tabs__tab.is-active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--ex-color-primary);
+}
