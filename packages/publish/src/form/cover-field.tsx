@@ -7,7 +7,7 @@ import {
 } from '@editorx/toolbar'
 import { RadioGroup } from '@editorx/ui'
 import { Trash2 } from 'lucide-react'
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import type { AdapterState } from '../adapter-state'
 import { cx } from '../cx'
 import { PlusIcon } from '../icons'
@@ -43,7 +43,15 @@ export function CoverField(props: CoverFieldProps) {
   const [slot, setSlot] = useState(0)
   const [crop, setCrop] = useState<{ src: string; name: string } | null>(null)
   const [uploading, setUploading] = useState<number | null>(null)
+  const cropRef = useLatest(crop)
   const capacity = COVER_CAPACITY[cover.mode]
+
+  useEffect(
+    () => () => {
+      if (cropRef.current) URL.revokeObjectURL(cropRef.current.src)
+    },
+    [cropRef],
+  )
 
   const chooseFile = (index: number) => {
     setSlot(index)

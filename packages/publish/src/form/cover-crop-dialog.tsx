@@ -1,6 +1,6 @@
 import { errorMessage, formatMessage, useMessages } from '@editorx/toolbar'
 import { Button, cropImage, ImageCropper, Modal, type CropArea } from '@editorx/ui'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export const COVER_ASPECT = 16 / 9
 export const COVER_OUTPUT = { width: 640, height: 360 } as const
@@ -16,28 +16,44 @@ export function CoverCropDialog({ src, onCancel, onConfirm, onError }: CoverCrop
   const m = useMessages()
   const [crop, setCrop] = useState<{ src: string; area: CropArea } | null>(null)
   const [busy, setBusy] = useState(false)
+  const run = useRef(0)
+  useEffect(() => {
+    const runs = run
+    return () => {
+      runs.current++
+    }
+  }, [])
   const area = crop?.src === src ? crop.area : null
+  const cancel = () => {
+    run.current++
+    onCancel()
+  }
   const confirm = async () => {
     if (!area) return
+    const token = ++run.current
     setBusy(true)
+    let blob: Blob
     try {
-      onConfirm(await cropImage(src, area, COVER_OUTPUT))
+      blob = await cropImage(src, area, COVER_OUTPUT)
     } catch (error) {
+      if (token !== run.current) return
       setBusy(false)
       onError(formatMessage(m.publish.errors.upload, { message: errorMessage(error) }))
+      return
     }
+    if (token === run.current) onConfirm(blob)
   }
   return (
     <Modal
       open
-      onClose={onCancel}
+      onClose={cancel}
       title={m.publish.cover.cropTitle}
       width={528}
       className="ex-pub-crop"
       closeLabel={m.dialog.close}
       footer={
         <>
-          <Button onClick={onCancel}>{m.publish.actions.cancel}</Button>
+          <Button onClick={cancel}>{m.publish.actions.cancel}</Button>
           <Button variant="primary" disabled={!area} loading={busy} onClick={() => void confirm()}>
             {m.dialog.confirm}
           </Button>

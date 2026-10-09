@@ -140,6 +140,49 @@ describe('CoverField', () => {
     expect(uploadImage).not.toHaveBeenCalled()
   })
 
+  it('裁剪进行中取消：之后导出成功也不上传', async () => {
+    let finish!: (blob: Blob) => void
+    vi.mocked(cropImage).mockImplementationOnce(() => new Promise<Blob>((resolve) => (finish = resolve)))
+    const uploadImage = vi.fn<(file: File) => Promise<{ url: string }>>(async () => ({ url: '/uploaded.png' }))
+    const { container } = renderWithProviders(<Cover uploadImage={uploadImage} />)
+    chooseFile(container)
+    const dialog = await screen.findByRole('dialog', { name: '裁剪封面' })
+    loadCropImage()
+    await userEvent.click(screen.getByRole('button', { name: '确定' }))
+    await userEvent.click(screen.getByRole('button', { name: '取消' }))
+    expect(dialog).not.toBeInTheDocument()
+    finish(new Blob(['png'], { type: 'image/png' }))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(uploadImage).not.toHaveBeenCalled()
+    expect(screen.getByTestId('cover')).toHaveTextContent(/^single:$/)
+  })
+
+  it('裁剪进行中取消：之后导出失败也不报错', async () => {
+    let fail!: (error: Error) => void
+    vi.mocked(cropImage).mockImplementationOnce(() => new Promise<Blob>((_, reject) => (fail = reject)))
+    const onError = vi.fn()
+    const { container } = renderWithProviders(<Cover onError={onError} />)
+    chooseFile(container)
+    await screen.findByRole('dialog', { name: '裁剪封面' })
+    loadCropImage()
+    await userEvent.click(screen.getByRole('button', { name: '确定' }))
+    await userEvent.click(screen.getByRole('button', { name: '关闭' }))
+    fail(new Error('图片已释放'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  it('裁剪弹窗打开时卸载：只释放一次当前临时链接，打开期间图片可用', async () => {
+    const { container, unmount } = renderWithProviders(<Cover />)
+    chooseFile(container)
+    await screen.findByRole('dialog', { name: '裁剪封面' })
+    expect(document.querySelector('.ex-cropper__image')).toHaveAttribute('src', 'blob:cover')
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled()
+    unmount()
+    expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1)
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:cover')
+  })
+
   it('缺 uploadImage：hidden 不渲染上传框，disabled 禁用', () => {
     const { unmount } = renderWithProviders(<Cover uploadState="hidden" uploadImage={undefined} />)
     expect(screen.queryByRole('button', { name: '从本地上传' })).toBeNull()
