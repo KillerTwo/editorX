@@ -22,6 +22,7 @@ describe('@editorx/markdown-core public API', () => {
         'exportMarkdown',
         'importFile',
         'KATEX_CSS_HREF',
+        'patchPreview',
       ]),
     )
   })
