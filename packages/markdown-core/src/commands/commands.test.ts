@@ -158,6 +158,8 @@ function fakeEngine(initial: string, selection: Selection) {
     focus: () => {
       calls.push('focus')
     },
+    setReadOnly: vi.fn(),
+    setPlaceholder: vi.fn(),
     on: () => () => {},
     getSectionOffsets: () => [],
     getCursorPosition: () => {

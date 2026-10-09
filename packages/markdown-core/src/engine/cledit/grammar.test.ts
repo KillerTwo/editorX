@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { highlightMarkdown } from './grammar'
+import { highlightMarkdown, markdownGrammar } from './grammar'
 
 function render(md: string): HTMLDivElement {
   const div = document.createElement('div')
@@ -88,5 +88,25 @@ describe('highlightMarkdown', () => {
   it('公式块（多行与单行）', () => {
     expect(text(render('$$\na+b\n$$'), '.ex-md-math-block')).toEqual(['$$\na+b\n$$'])
     expect(text(render('$$a+b$$'), '.ex-md-math-block')).toEqual(['$$a+b$$'])
+  })
+})
+
+describe('markdownGrammar', () => {
+  it('导出的语法对象逐层冻结（正则除外），冻结后仍可高亮', () => {
+    const grammar = markdownGrammar as Record<string, unknown>
+    expect(Object.isFrozen(grammar)).toBe(true)
+    expect(Object.isFrozen(grammar['list'])).toBe(true)
+    expect(Object.isFrozen((grammar['list'] as { inside: object }).inside)).toBe(true)
+    expect(Object.isFrozen(grammar['math-block'])).toBe(true)
+    expect(Object.isFrozen((grammar['h1'] as { pattern: RegExp }).pattern)).toBe(false)
+    expect(() => {
+      'use strict'
+      grammar['extra'] = /x/
+    }).toThrow(TypeError)
+    const html = highlightMarkdown('# **a** `b`\n- [x] c\n```js\nd\n```')
+    expect(html).toContain('ex-md-h1')
+    expect(html).toContain('ex-md-task')
+    expect(html).toContain('ex-md-fence')
+    expect(highlightMarkdown('# **a** `b`\n- [x] c\n```js\nd\n```')).toBe(html)
   })
 })

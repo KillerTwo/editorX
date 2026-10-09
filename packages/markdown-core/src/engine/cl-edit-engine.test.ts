@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { splitSections } from '../sections'
+import type { EngineOptions, Selection } from '../types'
 import { ClEditEngine } from './cl-edit-engine'
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
-function setup(value = '', extra: { placeholder?: string; readOnly?: boolean } = {}) {
+function setup(value = '', extra: Omit<EngineOptions, 'value'> = {}) {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const engine = new ClEditEngine()
@@ -88,6 +89,15 @@ describe('ClEditEngine 挂载', () => {
     expect(content.hasAttribute('data-empty')).toBe(true)
     engine.setValue('x')
     expect(content.hasAttribute('data-empty')).toBe(false)
+  })
+
+  it('aria-label 与 aria-placeholder 来自挂载选项', () => {
+    const { content } = setup('', { placeholder: '请输入', ariaLabel: 'Markdown 编辑区' })
+    expect(content.getAttribute('aria-label')).toBe('Markdown 编辑区')
+    expect(content.getAttribute('aria-placeholder')).toBe('请输入')
+    const plain = setup('x').content
+    expect(plain.hasAttribute('aria-label')).toBe(false)
+    expect(plain.hasAttribute('aria-placeholder')).toBe(false)
   })
 
   it('destroy 移除内容并停止派发事件', async () => {
@@ -569,5 +579,152 @@ describe('ClEditEngine 输入', () => {
       ['drop', drop],
       ['scroll', { scrollTop: 0 }],
     ])
+  })
+
+  it('on() 的回调参数按事件推断类型', () => {
+    const { engine } = setup('a')
+    const seen: Array<[string, unknown]> = []
+    engine.on('change', (value) => {
+      expectTypeOf(value).toEqualTypeOf<string>()
+      seen.push(['change', value])
+    })
+    engine.on('selectionChange', (sel) => {
+      expectTypeOf(sel).toEqualTypeOf<Selection>()
+      seen.push(['selectionChange', sel])
+    })
+    engine.on('scroll', (e) => expectTypeOf(e).toEqualTypeOf<{ scrollTop: number }>())
+    engine.replace(1, 1, 'b')
+    expect(seen).toEqual([
+      ['change', 'ab'],
+      ['selectionChange', { start: 2, end: 2 }],
+    ])
+  })
+})
+
+describe('ClEditEngine 生命周期', () => {
+  it('destroy 后重新 mount：订阅仍有效，用户输入照常派发 change', async () => {
+    const { host, engine, changes } = setup('abc')
+    engine.destroy()
+    expect(engine.getValue()).toBe('abc')
+    engine.mount(host, { value: 'abc' })
+    const content = engine.contentElement!
+    content.focus()
+    typeInto(textNodeContaining(content, 'abc'), 'abc', 'X')
+    await flush()
+    expect(changes).toEqual(['abcX'])
+  })
+
+  it('对已挂载引擎再次 mount 不丢订阅', () => {
+    const { host, engine, changes } = setup('a')
+    engine.mount(host, { value: 'b' })
+    engine.replace(1, 1, 'c')
+    expect(changes).toEqual(['bc'])
+  })
+
+  it('以相同内容重新挂载时保留撤销历史，内容不同则清空', () => {
+    const { host, engine } = setup('a')
+    engine.replace(1, 1, 'b')
+    engine.destroy()
+    engine.mount(host, { value: 'ab' })
+    engine.undo()
+    expect(engine.getValue()).toBe('a')
+    engine.mount(host, { value: 'zzz' })
+    engine.undo()
+    expect(engine.getValue()).toBe('zzz')
+  })
+
+  it('setReadOnly 原地切换只读，保留内容、选区与撤销历史', () => {
+    const { engine, content } = setup('- a')
+    const got: unknown[] = []
+    engine.on('paste', (e) => got.push(e))
+    engine.on('drop', (e) => got.push(e))
+    engine.replace(3, 3, 'b')
+    content.focus()
+    engine.setSelection(4, 4)
+
+    engine.setReadOnly(true)
+    expect(engine.contentElement).toBe(content)
+    expect(content.getAttribute('contenteditable')).toBe('false')
+    expect(content.getAttribute('aria-readonly')).toBe('true')
+    expect(keydown(content, 'Enter').defaultPrevented).toBe(false)
+    expect(keydown(content, 'z', { ctrlKey: true }).defaultPrevented).toBe(false)
+    content.dispatchEvent(new Event('paste', { bubbles: true, cancelable: true }))
+    content.dispatchEvent(new Event('drop', { bubbles: true, cancelable: true }))
+    expect(got).toEqual([])
+    expect(engine.getValue()).toBe('- ab')
+    expect(engine.getSelection()).toEqual({ start: 4, end: 4 })
+
+    engine.setReadOnly(false)
+    expect(['plaintext-only', 'true']).toContain(content.getAttribute('contenteditable'))
+    expect(content.hasAttribute('aria-readonly')).toBe(false)
+    expect(engine.getSelection()).toEqual({ start: 4, end: 4 })
+    expect(keydown(content, 'Enter').defaultPrevented).toBe(true)
+    expect(engine.getValue()).toBe('- ab\n- ')
+    engine.undo()
+    engine.undo()
+    expect(engine.getValue()).toBe('- a')
+    content.dispatchEvent(new Event('paste', { bubbles: true, cancelable: true }))
+    expect(got).toHaveLength(1)
+  })
+
+  it('setReadOnly 在挂载前调用也生效，mount 选项优先', () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const engine = new ClEditEngine()
+    engine.setReadOnly(true)
+    engine.setPlaceholder('稍后挂载')
+    engine.mount(host, { value: '' })
+    const content = engine.contentElement!
+    expect(content.getAttribute('contenteditable')).toBe('false')
+    expect(content.dataset.placeholder).toBe('稍后挂载')
+    engine.mount(host, { value: '', readOnly: false, placeholder: '选项' })
+    expect(engine.contentElement!.getAttribute('contenteditable')).not.toBe('false')
+    expect(engine.contentElement!.dataset.placeholder).toBe('选项')
+  })
+
+  it('setPlaceholder 原地更新 data-placeholder / aria-placeholder，不影响空状态', () => {
+    const { engine, content } = setup('')
+    expect(content.hasAttribute('data-placeholder')).toBe(false)
+    engine.setPlaceholder('写点什么')
+    expect(content.dataset.placeholder).toBe('写点什么')
+    expect(content.getAttribute('aria-placeholder')).toBe('写点什么')
+    expect(content.hasAttribute('data-empty')).toBe(true)
+    engine.setPlaceholder(undefined)
+    expect(content.hasAttribute('data-placeholder')).toBe(false)
+    expect(content.hasAttribute('aria-placeholder')).toBe(false)
+    expect(engine.contentElement).toBe(content)
+  })
+
+  it('setAriaLabel 原地更新 aria-label', () => {
+    const { engine, content } = setup('')
+    engine.setAriaLabel('正文')
+    expect(content.getAttribute('aria-label')).toBe('正文')
+    engine.setAriaLabel(undefined)
+    expect(content.hasAttribute('aria-label')).toBe(false)
+  })
+})
+
+describe('ClEditEngine 撤销边界', () => {
+  it('setSelection 改变光标后再输入是新的一步撤销', async () => {
+    const { engine, content } = setup('abc')
+    content.focus()
+    typeInto(textNodeContaining(content, 'abc'), 'abc', 'X')
+    await flush()
+    engine.setSelection(0, 0)
+    typeInto(textNodeContaining(content, 'abcX'), '', 'Y')
+    await flush()
+    expect(engine.getValue()).toBe('YabcX')
+    engine.undo()
+    expect(engine.getValue()).toBe('abcX')
+  })
+
+  it('setValue 传入相同内容时不清空撤销、不重建 DOM', () => {
+    const { engine, content } = setup('a')
+    engine.replace(1, 1, 'b')
+    const section = content.querySelector('.ex-editor-section')
+    engine.setValue('ab')
+    expect(content.querySelector('.ex-editor-section')).toBe(section)
+    engine.undo()
+    expect(engine.getValue()).toBe('a')
   })
 })

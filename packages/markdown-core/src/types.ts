@@ -1,9 +1,25 @@
 export interface Selection { start: number; end: number }
 export interface TextState { text: string; selection: Selection }
 
-export interface EngineOptions { value: string; placeholder?: string; readOnly?: boolean }
+export interface EngineOptions {
+  value: string
+  placeholder?: string
+  readOnly?: boolean
+  /** Accessible name of the textbox (`aria-label`). */
+  ariaLabel?: string
+}
 export interface SectionOffset { start: number; end: number; top: number; height: number }
-export type EngineEvent = 'change' | 'selectionChange' | 'scroll' | 'paste' | 'drop'
+/** Payload of each engine event. */
+export interface EngineEventMap {
+  /** The new value (same as `getValue()`); not emitted by `setValue`. */
+  change: string
+  /** Normalized selection (`start <= end`). */
+  selectionChange: Selection
+  scroll: { scrollTop: number }
+  paste: ClipboardEvent
+  drop: DragEvent
+}
+export type EngineEvent = keyof EngineEventMap
 export type Unsubscribe = () => void
 
 export interface EditorEngine {
@@ -17,7 +33,11 @@ export interface EditorEngine {
   undo(): void
   redo(): void
   focus(): void
-  on(event: EngineEvent, cb: (payload: unknown) => void): Unsubscribe
+  /** Toggles read-only in place, keeping value, selection and undo history. */
+  setReadOnly(readOnly: boolean): void
+  /** Sets or (with `undefined`) removes the placeholder in place. */
+  setPlaceholder(text: string | undefined): void
+  on<E extends EngineEvent>(event: E, cb: (payload: EngineEventMap[E]) => void): Unsubscribe
   getSectionOffsets(): SectionOffset[]
   getCursorPosition(): { line: number; column: number }
 }

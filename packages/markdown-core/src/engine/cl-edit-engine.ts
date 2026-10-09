@@ -3,6 +3,7 @@ import { closesFence, openFence } from '../sections'
 import type {
   EditorEngine,
   EngineEvent,
+  EngineEventMap,
   EngineOptions,
   SectionOffset,
   Selection,
@@ -66,6 +67,10 @@ function documentBoundary(e: KeyboardEvent): boolean | null {
  * to the document boundaries itself (see {@link documentBoundary}) because native navigation cannot enter skipped
  * sections. Known limitation: PageUp/PageDown move by estimated heights across not-yet-rendered sections, so the
  * distance per page can differ from the visible page height (the caret still lands on a valid position).
+ *
+ * Lifecycle: `destroy()` only detaches from the DOM. The value, undo history and `on()` subscriptions survive it, so
+ * the same instance can be mounted again (e.g. by a React effect that re-runs); remounting with the current value
+ * keeps the undo history. Read-only state, placeholder and aria-label can be changed in place while mounted.
  */
 export class ClEditEngine implements EditorEngine {
   private host: HTMLElement | null = null
@@ -78,6 +83,8 @@ export class ClEditEngine implements EditorEngine {
   private lastSelection: Selection = { start: 0, end: 0 }
   private composing = false
   private readOnly = false
+  private placeholder: string | undefined
+  private ariaLabel: string | undefined
   private releaseTab = false
   private isolateNextSync = false
   private readonly listeners = new Map<EngineEvent, Set<Listener>>()
@@ -95,6 +102,7 @@ export class ClEditEngine implements EditorEngine {
     return this.composing
   }
 
+  /** Options left out keep their current state (from an earlier mount or setter); a different value clears undo. */
   mount(el: HTMLElement, opts: EngineOptions): void {
     if (this.host) this.destroy()
     const doc = el.ownerDocument
@@ -104,19 +112,17 @@ export class ClEditEngine implements EditorEngine {
     content.setAttribute('aria-multiline', 'true')
     content.setAttribute('spellcheck', 'false')
     content.tabIndex = 0
-    if (opts.placeholder) content.dataset.placeholder = opts.placeholder
-    this.readOnly = opts.readOnly ?? false
-    if (this.readOnly) {
-      content.setAttribute('contenteditable', 'false')
-      content.setAttribute('aria-readonly', 'true')
-    } else {
-      content.setAttribute('contenteditable', editableMode(doc))
-    }
+    this.content = content
+    this.readOnly = opts.readOnly ?? this.readOnly
+    this.placeholder = opts.placeholder ?? this.placeholder
+    this.ariaLabel = opts.ariaLabel ?? this.ariaLabel
+    this.applyReadOnly()
+    this.applyPlaceholder()
+    this.applyAriaLabel()
     el.classList.add('ex-editor')
     el.appendChild(content)
 
     this.host = el
-    this.content = content
     this.highlighter = new Highlighter(content, {
       ...(this.options.highlight ? { highlight: this.options.highlight } : {}),
       lineHeight: measureLineHeight(content),
@@ -125,17 +131,25 @@ export class ClEditEngine implements EditorEngine {
     this.watcher = new Watcher(content, () => {
       if (!this.composing) this.syncFromDom()
     })
-    this.value = normalize(opts.value)
-    this.lastSelection = { start: 0, end: 0 }
+    const text = normalize(opts.value)
+    if (text === this.value) {
+      this.lastSelection = this.clamp(this.lastSelection, text.length)
+      this.undoMgr.breakMerge()
+    } else {
+      this.value = text
+      this.lastSelection = { start: 0, end: 0 }
+      this.undoMgr.clear()
+    }
     this.releaseTab = false
     this.isolateNextSync = false
-    this.undoMgr.clear()
     this.render(true)
     this.watcher.start()
     this.bindEvents(el, content)
   }
 
+  /** Detaches from the DOM. Keeps the value, undo history and `on()` subscriptions for a later `mount()`. */
   destroy(): void {
+    this.flushDom()
     for (const cleanup of this.cleanups) cleanup()
     this.cleanups = []
     this.watcher?.stop()
@@ -147,16 +161,37 @@ export class ClEditEngine implements EditorEngine {
     this.selection = null
     this.watcher = null
     this.composing = false
-    this.listeners.clear()
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    if (readOnly === this.readOnly) return
+    if (readOnly) this.flushDom()
+    this.readOnly = readOnly
+    this.releaseTab = false
+    const { start, end } = this.readSelection()
+    this.applyReadOnly()
+    if (this.selection?.hasFocus()) this.selection.set(start, end)
+  }
+
+  setPlaceholder(text: string | undefined): void {
+    this.placeholder = text
+    this.applyPlaceholder()
+  }
+
+  setAriaLabel(label: string | undefined): void {
+    this.ariaLabel = label
+    this.applyAriaLabel()
   }
 
   getValue(): string {
     return this.value
   }
 
+  /** Does not emit `change`; setting the current value is a no-op (undo history and DOM are kept). */
   setValue(md: string, opts: { keepUndo?: boolean } = {}): void {
     this.flushDom()
     const text = normalize(md)
+    if (text === this.value) return
     const before = this.readSelection()
     const after = this.clamp(before, text.length)
     const change = diffRange(this.value, text)
@@ -186,6 +221,8 @@ export class ClEditEngine implements EditorEngine {
 
   setSelection(start: number, end: number): void {
     const sel = this.clamp({ start, end }, this.value.length)
+    const prev = this.readSelection()
+    if (prev.start !== sel.start || prev.end !== sel.end) this.undoMgr.breakMerge()
     this.lastSelection = sel
     this.selection?.set(sel.start, sel.end)
     this.emit('selectionChange', this.getSelection())
@@ -221,15 +258,16 @@ export class ClEditEngine implements EditorEngine {
     this.selection?.set(this.lastSelection.start, this.lastSelection.end)
   }
 
-  on(event: EngineEvent, cb: (payload: unknown) => void): Unsubscribe {
+  on<E extends EngineEvent>(event: E, cb: (payload: EngineEventMap[E]) => void): Unsubscribe {
     let set = this.listeners.get(event)
     if (!set) {
       set = new Set()
       this.listeners.set(event, set)
     }
-    set.add(cb)
+    const listener = cb as Listener
+    set.add(listener)
     return () => {
-      set.delete(cb)
+      set.delete(listener)
     }
   }
 
@@ -243,9 +281,40 @@ export class ClEditEngine implements EditorEngine {
     })
   }
 
-  private emit(event: EngineEvent, payload: unknown): void {
+  private emit<E extends EngineEvent>(event: E, payload: EngineEventMap[E]): void {
     const set = this.listeners.get(event)
     if (set) for (const cb of [...set]) cb(payload)
+  }
+
+  private applyReadOnly(): void {
+    const { content } = this
+    if (!content) return
+    if (this.readOnly) {
+      content.setAttribute('contenteditable', 'false')
+      content.setAttribute('aria-readonly', 'true')
+    } else {
+      content.setAttribute('contenteditable', editableMode(content.ownerDocument))
+      content.removeAttribute('aria-readonly')
+    }
+  }
+
+  private applyPlaceholder(): void {
+    const { content, placeholder } = this
+    if (!content) return
+    if (placeholder) {
+      content.dataset.placeholder = placeholder
+      content.setAttribute('aria-placeholder', placeholder)
+    } else {
+      delete content.dataset.placeholder
+      content.removeAttribute('aria-placeholder')
+    }
+  }
+
+  private applyAriaLabel(): void {
+    const { content, ariaLabel } = this
+    if (!content) return
+    if (ariaLabel) content.setAttribute('aria-label', ariaLabel)
+    else content.removeAttribute('aria-label')
   }
 
   private clamp(sel: Selection, length: number): Selection {
@@ -436,7 +505,7 @@ export class ClEditEngine implements EditorEngine {
     }
     listen(content, 'keydown', (e) => this.onKeydown(e))
     listen(content, 'beforeinput', (e) => {
-      if (this.composing) return
+      if (this.composing || this.readOnly) return
       if (e.inputType !== 'historyUndo' && e.inputType !== 'historyRedo') return
       e.preventDefault()
       if (e.inputType === 'historyUndo') this.undo()
@@ -460,7 +529,7 @@ export class ClEditEngine implements EditorEngine {
     listen(content, 'mousedown', () => {
       this.releaseTab = false
     })
-    const forward = (event: 'paste' | 'drop', e: Event) => {
+    const forward = <E extends 'paste' | 'drop'>(event: E, e: EngineEventMap[E]) => {
       if (this.readOnly) return
       this.isolateNextSync = true
       this.undoMgr.breakMerge()

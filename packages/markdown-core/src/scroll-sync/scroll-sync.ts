@@ -8,6 +8,13 @@ export interface ScrollSyncOptions {
   lockMs?: number
 }
 
+export interface ScrollSync {
+  /** Removes all listeners and observers; later calls to either method are no-ops. */
+  destroy(): void
+  /** Re-measures both panes and re-aligns from the last scrolled side. Call after each preview render. */
+  refresh(): void
+}
+
 /**
  * Two-way scroll sync between the editor and the preview.
  *
@@ -17,7 +24,8 @@ export interface ScrollSyncOptions {
  * Section sizes are cached and invalidated on `change`, container resizes and editor sections' `content-visibility`
  * state changes. Call `refresh()` after every
  * preview render and after late preview content growth (images loading, diagrams rendering), which a
- * container-level ResizeObserver cannot see.
+ * container-level ResizeObserver cannot see. `engine.setValue()` does not emit `change`, so also call `refresh()`
+ * after it (normally via the preview render that follows).
  *
  * Neither pane may use `scroll-behavior: smooth`: animated writes outlive the source lock and can ping-pong.
  * The ResizeObserver's initial observation schedules an editor → preview sync right after mount, which
@@ -28,7 +36,7 @@ export function createScrollSync(
   editorScrollEl: HTMLElement,
   previewEl: HTMLElement,
   opts: ScrollSyncOptions = {},
-): { destroy(): void; refresh(): void } {
+): ScrollSync {
   const lockMs = opts.lockMs ?? 100
   let pairs: SectionPair[] | null = null
   let lastSource: ScrollSide = 'editor'
@@ -112,7 +120,6 @@ export function createScrollSync(
   resizeObserver?.observe(previewEl)
 
   return {
-    /** Re-measures both panes and re-aligns from the last scrolled side. Call after each preview render. */
     refresh() {
       if (destroyed) return
       scheduleSync.cancel()

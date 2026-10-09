@@ -24,7 +24,16 @@ function atxHeading(level: number): Prism.GrammarValue {
   }
 }
 
-export const markdownGrammar: Prism.Grammar = {
+// RegExps stay unfrozen: Prism writes their `lastIndex` while tokenizing.
+function deepFreeze<T extends object>(value: T): Readonly<T> {
+  for (const child of Object.values(value)) {
+    if (child && typeof child === 'object' && !(child instanceof RegExp) && !Object.isFrozen(child)) deepFreeze(child)
+  }
+  return Object.freeze(value)
+}
+
+/** Read-only: frozen down to (but excluding) its RegExps. Extend a copy instead of mutating it. */
+export const markdownGrammar: Readonly<Prism.Grammar> = deepFreeze<Prism.Grammar>({
   fence: {
     pattern: /^(`{3,}|~{3,})[^\n]*(?:\n[\s\S]*?\n\1[ \t]*$|[\s\S]*)/m,
     inside: { marker: /^(?:`{3,}|~{3,}).*$/m },
@@ -54,7 +63,7 @@ export const markdownGrammar: Prism.Grammar = {
   table: { pattern: /^[ \t]*\|.*$/m, inside: { marker: /\|/, ...inline } },
   'link-def': { pattern: /^ {0,3}\[[^\]\n]+\]:[ \t]*\S.*$/m, alias: 'link' },
   ...inline,
-}
+})
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

@@ -2,6 +2,7 @@ export type {
   EditorEngine,
   EmbedDef,
   EngineEvent,
+  EngineEventMap,
   EngineOptions,
   RenderedSection,
   Renderer,
@@ -39,6 +40,6 @@ export { countHtml, countWords, type HtmlCount, type WordCount } from './utils/c
 export { htmlToMarkdown } from './utils/html-to-markdown'
 export { exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF, type ExportHtmlOptions } from './utils/io'
 export { ClEditEngine, highlightMarkdown, markdownGrammar } from './engine'
-export type { ClEditEngineOptions } from './engine'
+export type { ClEditEngineOptions, UndoManagerOptions } from './engine'
 export { buildPairs, createScrollSync, mapScrollTop, measurePreviewSections, syncScrollTop } from './scroll-sync'
-export type { Dimension, ScrollRange, ScrollSide, ScrollSyncOptions, SectionPair } from './scroll-sync'
+export type { Dimension, ScrollRange, ScrollSide, ScrollSync, ScrollSyncOptions, SectionPair } from './scroll-sync'
