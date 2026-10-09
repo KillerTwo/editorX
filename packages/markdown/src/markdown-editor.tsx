@@ -1,19 +1,22 @@
 import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
 import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
-import { MessagesProvider, useMessages, type EditorDocument } from '@editorx/toolbar'
-import { ToastProvider } from '@editorx/ui'
-import { useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { MessagesProvider, useMessages, type EditorAdapters, type EditorDocument } from '@editorx/toolbar'
+import { ToastProvider, useToast } from '@editorx/ui'
+import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createCommandRegistry } from './commands'
 import { cx } from './cx'
 import { ModeTabs } from './mode-tabs'
 import { useEditorRuntime } from './runtime'
 import { createEditorStore } from './store'
 import type { MarkdownEditorProps } from './types'
+import { UploadFailures } from './uploads/upload-failures'
+import { createUploader, imageFiles } from './uploads/uploader'
 import { useControllableState } from './use-controllable'
 import { useLatest } from './use-latest'
 
 const createDefaultEngine = (): EditorEngine => new ClEditEngine()
 const NO_RENDERER_OPTIONS: RendererOptions = {}
+const NO_ADAPTERS: EditorAdapters = {}
 
 function LocalizedToasts({ children }: { children: ReactNode }) {
   const m = useMessages()
@@ -51,6 +54,7 @@ function EditorShell({
   defaultValue = '',
   onChange,
   title = '',
+  adapters = NO_ADAPTERS,
   viewMode: viewModeProp,
   defaultViewMode = 'split',
   onViewModeChange,
@@ -73,6 +77,17 @@ function EditorShell({
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const titleRef = useLatest(title)
+  const { notify } = useToast()
+  const live = useLatest({ adapters, messages, notify })
+  const [uploader] = useState(() =>
+    createUploader({
+      engine,
+      store,
+      getAdapters: () => live.current.adapters,
+      getMessages: () => live.current.messages,
+      notify: (message, type) => live.current.notify(message, type),
+    }),
+  )
 
   const runtime = useEditorRuntime({
     engine,
@@ -91,6 +106,23 @@ function EditorShell({
     rendererOptions: NO_RENDERER_OPTIONS,
     onChange,
   })
+
+  useEffect(() => {
+    const detach = uploader.attach()
+    const take = (files: FileList | null | undefined, e: Event) => {
+      const images = imageFiles(files)
+      if (images.length === 0 || !live.current.adapters.uploadImage) return
+      e.preventDefault()
+      void uploader.upload(images)
+    }
+    const offPaste = engine.on('paste', (e) => take(e.clipboardData?.files, e))
+    const offDrop = engine.on('drop', (e) => take(e.dataTransfer?.files, e))
+    return () => {
+      offPaste()
+      offDrop()
+      detach()
+    }
+  }, [engine, uploader, live])
 
   useImperativeHandle(
     ref,
@@ -124,6 +156,7 @@ function EditorShell({
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>
         </div>
+        <UploadFailures store={store} onRetry={(id) => void uploader.retry(id)} onRemove={uploader.remove} />
       </div>
     </div>
   )

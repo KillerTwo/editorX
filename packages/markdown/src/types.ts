@@ -1,6 +1,6 @@
 import type { EditorEngine } from '@editorx/markdown-core'
 import type { ThemeMode } from '@editorx/theme'
-import type { DeepPartial, EditorDocument, Messages } from '@editorx/toolbar'
+import type { DeepPartial, EditorAdapters, EditorDocument, Messages } from '@editorx/toolbar'
 import type { ReactNode, Ref } from 'react'
 
 export type ViewMode = 'edit' | 'split' | 'preview'
@@ -30,6 +30,8 @@ export interface MarkdownEditorProps {
   onChange?(markdown: string, html: string): void
   /** 写入 getDocument().title */
   title?: string
+  /** 宿主能力（图片上传、保存草稿等）；缺失项对应功能按 missingAdapter 隐藏/禁用 */
+  adapters?: EditorAdapters
   viewMode?: ViewMode
   defaultViewMode?: ViewMode
   onViewModeChange?(mode: ViewMode): void

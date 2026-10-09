@@ -65,3 +65,28 @@
 
 .ex-mde[data-view='split'] .ex-mde-preview-pane { border-left: 1px solid var(--ex-color-border); }
 .ex-mde-preview { box-sizing: border-box; padding: var(--ex-space-4) var(--ex-space-6); }
+
+.ex-mde-uploads {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--ex-space-1);
+  margin: 0;
+  padding: var(--ex-space-2) var(--ex-space-6);
+  border-top: 1px solid var(--ex-color-border);
+  list-style: none;
+  color: var(--ex-color-error);
+  font-size: var(--ex-font-size-sm);
+}
+
+.ex-mde-uploads__item { display: flex; align-items: center; gap: var(--ex-space-2); }
+.ex-mde-uploads__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ex-mde-uploads__action {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-primary);
+  font: inherit;
+  cursor: pointer;
+}
