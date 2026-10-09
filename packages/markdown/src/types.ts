@@ -57,7 +57,10 @@ export interface MarkdownEditorProps {
   toolbarLayout?: ToolbarLayout
   /** 缺失 adapter 的扩展：隐藏（默认）或禁用 */
   missingAdapter?: MissingAdapterPolicy
-  /** 自动保存间隔（ms），需 adapters.onSaveDraft；0 或不设置为关闭。只在内容变化后保存 */
+  /**
+   * 自动保存间隔（ms），需 adapters.onSaveDraft；0、不设置、非有限值或超过 2147483647 为关闭。
+   * 只在内容变化后保存；连续自动保存失败只提示一次（状态栏持续显示失败）。
+   */
   autoSaveInterval?: number
   viewMode?: ViewMode
   defaultViewMode?: ViewMode

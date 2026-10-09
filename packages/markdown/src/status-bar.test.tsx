@@ -1,6 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { MarkdownEditor } from './markdown-editor'
 import { formatSavedTime } from './status-bar'
 import { renderEditor } from './test-utils'
 
@@ -83,6 +84,45 @@ describe('autoSaveInterval', () => {
     const engine = handle().getEngine()
     unmount()
     engine.setValue('b')
+    expect(engine.getValue()).toBe('b')
+    await sleep(100)
+    expect(onSaveDraft).not.toHaveBeenCalled()
+  })
+
+  it('连续自动保存失败只提示一次；之后手动保存失败再次提示', async () => {
+    const onSaveDraft = vi.fn(async () => {
+      throw new Error('网络')
+    })
+    const { handle } = renderEditor({ defaultValue: 'a', autoSaveInterval: 30, adapters: { onSaveDraft } })
+    act(() => handle().getEngine().replace(1, 1, 'b'))
+    await waitFor(() => expect(onSaveDraft.mock.calls.length).toBeGreaterThanOrEqual(3))
+    expect(screen.getAllByText('保存失败：网络')).toHaveLength(1)
+    expect(saveText()).toHaveTextContent('保存失败')
+    await act(async () => {
+      await handle().saveDraft()
+    })
+    expect(screen.getAllByText('保存失败：网络')).toHaveLength(2)
+  })
+
+  it('autoSaveInterval 变化：旧定时器清除，按新值保存；0 关闭', async () => {
+    const onSaveDraft = vi.fn(async () => {})
+    const props = { defaultValue: 'a', adapters: { onSaveDraft } }
+    const { handle, rerender, ref } = renderEditor({ ...props, autoSaveInterval: 30 })
+    const view = (autoSaveInterval: number) => (
+      <MarkdownEditor ref={ref} defaultTheme="light" themeStorageKey={false} {...props} autoSaveInterval={autoSaveInterval} />
+    )
+    rerender(view(0))
+    act(() => handle().getEngine().replace(1, 1, 'b'))
+    await sleep(100)
+    expect(onSaveDraft).not.toHaveBeenCalled()
+    rerender(view(20))
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledTimes(1))
+  })
+
+  it.each([Infinity, 2 ** 31])('超出范围的间隔（%s）关闭自动保存', async (autoSaveInterval) => {
+    const onSaveDraft = vi.fn(async () => {})
+    const { handle } = renderEditor({ defaultValue: 'a', autoSaveInterval, adapters: { onSaveDraft } })
+    act(() => handle().getEngine().replace(1, 1, 'b'))
     await sleep(100)
     expect(onSaveDraft).not.toHaveBeenCalled()
   })

@@ -52,6 +52,7 @@ import { useLatest } from './use-latest'
 const createDefaultEngine = (): EditorEngine => new ClEditEngine()
 const NO_ADAPTERS: EditorAdapters = {}
 const NO_EXTENSIONS: readonly EditorExtension[] = []
+const MAX_TIMER_DELAY = 2_147_483_647
 
 /** 字面量 process.env.NODE_ENV 供打包器替换；无打包器时 process 不存在，按生产环境处理 */
 function isDev(): boolean {
@@ -231,8 +232,8 @@ function EditorShell({
       getMarkdown: () => engine.getValue(),
       getDocument: () => ctx.getDocument(),
       getAdapter: () => live.current.adapters.onSaveDraft,
-      onError: (error) => {
-        if (!mountedRef.current) return
+      onError: (error, { repeated }) => {
+        if (repeated || !mountedRef.current) return
         const m = live.current.messages
         live.current.notify(formatMessage(m.errors.save, { message: errorMessage(error) }), 'error')
       },
@@ -245,7 +246,8 @@ function EditorShell({
   }, [saver, engine])
 
   useEffect(() => {
-    if (!(autoSaveInterval > 0)) return
+    // setInterval 把超出 32 位或非有限的间隔当作约 0ms，会变成空转循环
+    if (!(autoSaveInterval > 0 && autoSaveInterval <= MAX_TIMER_DELAY)) return
     const timer = setInterval(() => void saver.save(), autoSaveInterval)
     return () => clearInterval(timer)
   }, [saver, autoSaveInterval])
