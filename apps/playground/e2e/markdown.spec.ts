@@ -141,6 +141,17 @@ test('目录面板：自定义标题、层级字号、点击跳转预览', async
   await expect(target).toBeInViewport()
 })
 
+test('目录面板：图表未就位时立即跳转，图表撑高预览后仍对准目标', async ({ page }) => {
+  await page.goto('/markdown?fixture=csdn&view=preview&panel=toc')
+  const panel = page.getByRole('complementary', { name: '目录' })
+  const button = panel.getByRole('button', { name: '导入', exact: true })
+  await expect(button).toBeVisible()
+  await button.click()
+  await expect(preview(page).locator('.ex-mermaid svg').first()).toBeAttached()
+  await expect(preview(page).locator('.ex-flowchart svg').first()).toBeAttached()
+  await expect(preview(page).getByRole('heading', { name: '导入', exact: true })).toBeInViewport()
+})
+
 test('目录面板：Markdown 模式跳转编辑区', async ({ page }) => {
   await open(page, '?fixture=csdn&view=edit&panel=toc')
   const panel = page.getByRole('complementary', { name: '目录' })
