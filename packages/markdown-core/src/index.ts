@@ -17,3 +17,4 @@ export type {
 export { splitSections } from './sections'
 export { createRenderer } from './renderer/renderer'
 export { isFlowchartJs } from './renderer/fences'
+export { FLOWCHART_THEMES, renderDiagrams, type RenderDiagramsOptions } from './renderer/diagrams'

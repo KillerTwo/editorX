@@ -1,0 +1,172 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { FLOWCHART_THEMES, renderDiagrams } from './diagrams'
+import { renderFlowchartPlaceholder, renderMermaidPlaceholder } from './fences'
+
+const mermaidMock = vi.hoisted(() => ({
+  initialize: vi.fn(),
+  render: vi.fn(),
+}))
+
+const flowchartMock = vi.hoisted(() => ({
+  parse: vi.fn(),
+}))
+
+vi.mock('mermaid', () => ({ default: mermaidMock }))
+vi.mock('flowchart.js', () => ({ default: flowchartMock }))
+
+function mount(...sources: string[]): HTMLElement {
+  const container = document.createElement('div')
+  container.innerHTML = sources.map((source) => renderMermaidPlaceholder(source)).join('')
+  document.body.appendChild(container)
+  return container
+}
+
+function mountFlow(...sources: string[]): HTMLElement {
+  const container = document.createElement('div')
+  container.innerHTML = sources.map((source) => renderFlowchartPlaceholder(source)).join('')
+  document.body.appendChild(container)
+  return container
+}
+
+function blocks(container: HTMLElement, selector = '.ex-mermaid'): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(selector))
+}
+
+beforeEach(() => {
+  document.body.innerHTML = ''
+  mermaidMock.initialize.mockReset()
+  mermaidMock.render.mockReset()
+  mermaidMock.render.mockImplementation(async (_id: string, source: string) => {
+    if (source.includes('bad')) throw new Error('Parse error on line 1')
+    return { svg: `<svg data-src="ok" onload="alert(1)"><text>${source.trim()}</text><script>alert(1)</script></svg>` }
+  })
+  flowchartMock.parse.mockReset()
+  flowchartMock.parse.mockImplementation((code: string) => {
+    if (code.includes('bad')) throw new Error('Unknown symbol type')
+    return {
+      drawSVG: (host: HTMLElement, options: Record<string, string>) => {
+        expect(host.isConnected).toBe(true)
+        host.innerHTML = `<svg data-line="${options['line-color']}" data-font="${options['font-color']}"><text>${code.trim()}</text><script>x()</script></svg>`
+      },
+    }
+  })
+})
+
+describe('renderDiagrams', () => {
+  it('does nothing (and loads no diagram library) without placeholders', async () => {
+    const container = document.createElement('div')
+    container.innerHTML = '<p>no diagrams</p>'
+    await renderDiagrams(container, { theme: 'light' })
+    expect(mermaidMock.initialize).not.toHaveBeenCalled()
+    expect(flowchartMock.parse).not.toHaveBeenCalled()
+    expect(container.innerHTML).toBe('<p>no diagrams</p>')
+  })
+
+  it('replaces placeholders with sanitized svg and keeps the source attribute', async () => {
+    const container = mount('graph TD\nA-->B1\n')
+    await renderDiagrams(container, { theme: 'light' })
+
+    expect(mermaidMock.initialize).toHaveBeenCalledWith(
+      expect.objectContaining({ startOnLoad: false, securityLevel: 'strict', theme: 'default' }),
+    )
+    expect(mermaidMock.render).toHaveBeenCalledWith(expect.stringMatching(/^ex-mermaid-\d+$/), 'graph TD\nA-->B1\n')
+    const [block] = blocks(container)
+    expect(block!.querySelector('svg text')?.textContent).toBe('graph TD\nA-->B1')
+    expect(block!.querySelector('script')).toBeNull()
+    expect(block!.querySelector('svg')!.hasAttribute('onload')).toBe(false)
+    expect(block!.hasAttribute('data-ex-diagram')).toBe(true)
+    expect(block!.dataset.exRenderedTheme).toBe('light')
+  })
+
+  it('isolates errors to the failing block', async () => {
+    const container = mount('graph TD\nbad', 'graph TD\nC-->D2')
+    await renderDiagrams(container, { theme: 'light' })
+
+    const [broken, fine] = blocks(container)
+    expect(broken!.classList.contains('ex-mermaid--error')).toBe(true)
+    expect(broken!.querySelector('pre.ex-mermaid-error')?.textContent).toBe('Parse error on line 1')
+    expect(fine!.classList.contains('ex-mermaid--error')).toBe(false)
+    expect(fine!.querySelector('svg')).not.toBeNull()
+  })
+
+  it('re-renders with the dark theme and skips blocks already rendered for a theme', async () => {
+    const container = mount('graph TD\nE-->F3')
+    await renderDiagrams(container, { theme: 'light' })
+    expect(mermaidMock.render).toHaveBeenCalledTimes(1)
+
+    await renderDiagrams(container, { theme: 'dark' })
+    expect(mermaidMock.initialize).toHaveBeenLastCalledWith(expect.objectContaining({ theme: 'dark' }))
+    expect(mermaidMock.render).toHaveBeenCalledTimes(2)
+    expect(blocks(container)[0]!.dataset.exRenderedTheme).toBe('dark')
+
+    await renderDiagrams(container, { theme: 'dark' })
+    expect(mermaidMock.render).toHaveBeenCalledTimes(2)
+  })
+
+  it('reuses cached svg for the same source and theme', async () => {
+    await renderDiagrams(mount('graph TD\nG-->H4'), { theme: 'light' })
+    const second = mount('graph TD\nG-->H4')
+    await renderDiagrams(second, { theme: 'light' })
+    expect(mermaidMock.render).toHaveBeenCalledTimes(1)
+    expect(blocks(second)[0]!.querySelector('svg')).not.toBeNull()
+  })
+
+  it('serializes concurrent calls so themes do not interleave', async () => {
+    const a = mount('graph TD\nI-->J5')
+    const b = mount('graph TD\nK-->L6')
+    await Promise.all([renderDiagrams(a, { theme: 'light' }), renderDiagrams(b, { theme: 'dark' })])
+    const themes = mermaidMock.initialize.mock.calls.map(([config]) => (config as { theme: string }).theme)
+    expect(themes).toEqual(['default', 'dark'])
+    expect(blocks(a)[0]!.dataset.exRenderedTheme).toBe('light')
+    expect(blocks(b)[0]!.dataset.exRenderedTheme).toBe('dark')
+  })
+})
+
+describe('renderDiagrams — flowchart.js', () => {
+  it('renders ex-flowchart blocks with theme colors into sanitized svg', async () => {
+    const container = mountFlow('st=>start: A1\ne=>end: Z1\nst->e\n')
+    await renderDiagrams(container, { theme: 'light' })
+
+    expect(flowchartMock.parse).toHaveBeenCalledWith('st=>start: A1\ne=>end: Z1\nst->e\n')
+    expect(mermaidMock.initialize).not.toHaveBeenCalled()
+    const [block] = blocks(container, '.ex-flowchart')
+    const svg = block!.querySelector('svg')!
+    expect(svg.getAttribute('data-line')).toBe(FLOWCHART_THEMES.light['line-color'])
+    expect(svg.getAttribute('data-font')).toBe(FLOWCHART_THEMES.light['font-color'])
+    expect(block!.querySelector('script')).toBeNull()
+    expect(block!.dataset.exRenderedTheme).toBe('light')
+    expect(document.body.children).toHaveLength(1)
+  })
+
+  it('strips the flowchart header line before parsing', async () => {
+    await renderDiagrams(mountFlow('flowchart\nst=>start: A2\n'), { theme: 'light' })
+    expect(flowchartMock.parse).toHaveBeenCalledWith('st=>start: A2\n')
+  })
+
+  it('isolates flowchart errors to the failing block', async () => {
+    const container = mountFlow('bad=>start: X', 'st=>start: A3\n')
+    await renderDiagrams(container, { theme: 'light' })
+    const [broken, fine] = blocks(container, '.ex-flowchart')
+    expect(broken!.classList.contains('ex-flowchart--error')).toBe(true)
+    expect(broken!.querySelector('pre.ex-flowchart-error')?.textContent).toBe('Unknown symbol type')
+    expect(fine!.querySelector('svg')).not.toBeNull()
+  })
+
+  it('re-renders flowcharts with dark colors on theme change', async () => {
+    const container = mountFlow('st=>start: A4\n')
+    await renderDiagrams(container, { theme: 'light' })
+    await renderDiagrams(container, { theme: 'dark' })
+    expect(flowchartMock.parse).toHaveBeenCalledTimes(2)
+    const svg = blocks(container, '.ex-flowchart')[0]!.querySelector('svg')!
+    expect(svg.getAttribute('data-line')).toBe(FLOWCHART_THEMES.dark['line-color'])
+  })
+
+  it('renders mermaid and flowchart blocks in the same container', async () => {
+    const container = document.createElement('div')
+    container.innerHTML = renderMermaidPlaceholder('graph TD\nM-->N7') + renderFlowchartPlaceholder('st=>start: A7\n')
+    document.body.appendChild(container)
+    await renderDiagrams(container, { theme: 'dark' })
+    expect(container.querySelector('.ex-mermaid svg')).not.toBeNull()
+    expect(container.querySelector('.ex-flowchart svg')).not.toBeNull()
+  })
+})
