@@ -18,3 +18,20 @@ export { splitSections } from './sections'
 export { createRenderer } from './renderer/renderer'
 export { isFlowchartJs } from './renderer/fences'
 export { FLOWCHART_THEMES, renderDiagrams, type RenderDiagramsOptions } from './renderer/diagrams'
+export {
+  commands,
+  execCommand,
+  minimalDiff,
+  runCommand,
+  type CommandName,
+  type CommandTransform,
+} from './commands/registry'
+export {
+  MERMAID_TEMPLATES,
+  type CodeBlockArgs,
+  type HeadingArgs,
+  type MathArgs,
+  type MermaidArgs,
+  type TableArgs,
+} from './commands/block'
+export type { LinkArgs, PlaceholderArgs } from './commands/inline'
