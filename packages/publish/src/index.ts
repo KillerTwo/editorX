@@ -25,3 +25,11 @@ export type { PublishErrors, PublishField, PublishRule, PublishRules, RuleContex
 export { extractImages, extractSummary, htmlToText } from './extract'
 export { usePublishController } from './use-publish-controller'
 export type { PublishBusy, PublishController, PublishControllerOptions } from './use-publish-controller'
+export type {
+  AgreementLinks,
+  PublishBaseProps,
+  PublishModalProps,
+  PublishPanelProps,
+  PublishPanelSlots,
+  PublishVariant,
+} from './types'
