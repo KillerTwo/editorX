@@ -65,7 +65,7 @@ export {
 export type { ParsedShortcut, ShortcutBinding } from './shortcuts'
 export { isItemActive, isItemDisabled } from './item-state'
 export { Toolbar } from './toolbar'
-export type { ToolbarProps } from './toolbar'
+export type { ToolbarHandle, ToolbarProps } from './toolbar'
 export { ExtensionErrorBoundary } from './error-boundary'
 export type { ExtensionErrorBoundaryProps } from './error-boundary'
 export { useExtensionSetup, useStableArray } from './use-extension-setup'

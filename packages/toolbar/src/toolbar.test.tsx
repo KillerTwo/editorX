@@ -2,12 +2,12 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@editorx/theme'
 import { ToastProvider } from '@editorx/ui'
-import type { ReactNode } from 'react'
+import { createRef, type ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EditorExtension, ExtensionContext, ToolbarButton, ToolbarDropdown } from './extension'
 import { resolveToolbar } from './layout'
 import { zhCN } from './messages'
-import { Toolbar } from './toolbar'
+import { Toolbar, type ToolbarHandle } from './toolbar'
 
 function makeCtx(over: Partial<ExtensionContext> = {}): ExtensionContext {
   return {
@@ -631,6 +631,58 @@ describe('Toolbar', () => {
     expect(within(menu).getByRole('menuitem', { name: '正文' })).not.toHaveAttribute('aria-checked')
   })
 
+  describe('ref.openDialog', () => {
+    const nested: EditorExtension = {
+      name: 'nested-dialog',
+      toolbar: [
+        {
+          type: 'dropdown',
+          id: 'insert',
+          title: '插入',
+          items: [{ type: 'modal', id: 'tbl', title: '嵌套表格', render: () => <p>嵌套内容</p> }],
+        },
+        { type: 'popover', id: 'emoji', title: '表情', icon: <span>E</span>, render: () => <p>表情面板</p> },
+      ],
+    }
+
+    function setupWithRef(readOnly = false) {
+      const ref = createRef<ToolbarHandle>()
+      const groups = resolveToolbar([core, nested], undefined, md)
+      wrap(<Toolbar ref={ref} groups={groups} ctx={makeCtx()} readOnly={readOnly} />)
+      return ref
+    }
+
+    it('按 id 打开 modal 条目（含下拉中的嵌套条目）', async () => {
+      const ref = setupWithRef()
+      let opened = false
+      act(() => {
+        opened = ref.current!.openDialog('table')
+      })
+      expect(opened).toBe(true)
+      const dialog = await screen.findByRole('dialog', { name: '表格' })
+      await userEvent.click(within(dialog).getByRole('button', { name: '插入' }))
+      act(() => {
+        opened = ref.current!.openDialog('tbl')
+      })
+      expect(opened).toBe(true)
+      expect(await screen.findByRole('dialog', { name: '嵌套表格' })).toHaveTextContent('嵌套内容')
+    })
+
+    it('非 modal、不存在或禁用（只读）的条目返回 false，不打开对话框', () => {
+      const ref = setupWithRef()
+      expect(ref.current!.openDialog('bold')).toBe(false)
+      expect(ref.current!.openDialog('emoji')).toBe(false)
+      expect(ref.current!.openDialog('missing')).toBe(false)
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+
+    it('只读时不打开', () => {
+      const ref = setupWithRef(true)
+      expect(ref.current!.openDialog('table')).toBe(false)
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+  })
+
   describe('ResizeObserver', () => {
     afterEach(() => {
       vi.unstubAllGlobals()
@@ -665,6 +717,67 @@ describe('Toolbar', () => {
       expect(screen.getByRole('button', { name: '更多' })).toBeInTheDocument()
       unmount()
       expect(disconnect).toHaveBeenCalled()
+    })
+
+    /** 可变尺寸 + 只记录观察工具栏的 ResizeObserver（tooltip 的 floating-ui 也会创建观察器） */
+    function observeToolbar() {
+      const size = { group: 100, toolbar: 400 }
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains('ex-toolbar__group') ? size.group : 0
+      })
+      vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(function (this: Element) {
+        return this.classList.contains('ex-toolbar') ? size.toolbar : 0
+      })
+      const observed: Element[] = []
+      let callback: (() => void) | undefined
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(private cb: () => void) {}
+          observe(el: Element) {
+            if (el.classList.contains('ex-toolbar__group')) observed.push(el)
+            if (!el.classList.contains('ex-toolbar')) return
+            observed.push(el)
+            callback = this.cb
+          }
+          unobserve() {}
+          disconnect() {}
+        },
+      )
+      return { size, observed, resize: () => act(() => callback!()) }
+    }
+
+    it('同时观察各分组：分组变宽（如字体/语言加载后）时重新计算溢出', () => {
+      const { size, observed, resize } = observeToolbar()
+      setup([core], [['bold'], ['italic'], ['list']])
+      const groups = screen.getAllByRole('group', { hidden: true })
+      for (const group of groups) expect(observed).toContain(group)
+      expect(observed).toContain(screen.getByRole('toolbar'))
+      expect(groups[2]).not.toHaveClass('is-overflow')
+      size.group = 150
+      resize()
+      expect(groups[2]).toHaveClass('is-overflow')
+    })
+
+    it('获得焦点的条目所在分组移入「更多」时，焦点移到「更多」按钮', () => {
+      const { size, resize } = observeToolbar()
+      setup([core], [['bold'], ['italic'], ['list']])
+      act(() => screen.getByRole('button', { name: '斜体' }).focus())
+      size.toolbar = 250
+      resize()
+      const more = screen.getByRole('button', { name: '更多' })
+      expect(more).toHaveFocus()
+      expect(more).toHaveAttribute('tabindex', '0')
+    })
+
+    it('焦点不在溢出分组时不抢焦点', () => {
+      const { size, resize } = observeToolbar()
+      setup([core], [['bold'], ['italic'], ['list']])
+      const boldButton = screen.getByRole('button', { name: '加粗' })
+      act(() => boldButton.focus())
+      size.toolbar = 250
+      resize()
+      expect(boldButton).toHaveFocus()
     })
 
     it('环境不支持 ResizeObserver 时只测量一次且不崩溃', () => {

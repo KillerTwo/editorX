@@ -4,12 +4,14 @@ import {
   Fragment,
   memo,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
   type FocusEvent,
   type KeyboardEvent,
   type ReactElement,
+  type Ref,
 } from 'react'
 import { cx } from './cx'
 import { ExtensionErrorBoundary } from './error-boundary'
@@ -35,6 +37,11 @@ const MORE_WIDTH = 49
 const MORE_KEY = '__more'
 const NAV_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Home', 'End'])
 
+export interface ToolbarHandle {
+  /** 打开 id 对应的 modal 条目（含下拉中的嵌套条目）；条目不存在、不是 modal 或已禁用时返回 false */
+  openDialog(id: string): boolean
+}
+
 export interface ToolbarProps {
   groups: readonly ResolvedGroup[]
   ctx: ExtensionContext
@@ -44,33 +51,52 @@ export interface ToolbarProps {
   onError?(extension: string, error: unknown): void
   ariaLabel?: string
   className?: string
+  ref?: Ref<ToolbarHandle>
 }
 
-function findItem(groups: readonly ResolvedGroup[], extension: string, id: string): ResolvedItem | undefined {
-  const search = (children: readonly ResolvedChild[]): ResolvedItem | undefined => {
+interface ItemMatch {
+  item: ResolvedItem
+  /** 所在下拉（任一层）已禁用 */
+  parentDisabled: boolean
+}
+
+/** 深度优先查找首个匹配条目 */
+function searchGroups(
+  groups: readonly ResolvedGroup[],
+  match: (item: ResolvedItem) => boolean,
+  isDisabled: (item: ResolvedItem) => boolean = () => false,
+): ItemMatch | undefined {
+  const search = (children: readonly ResolvedChild[], parentDisabled: boolean): ItemMatch | undefined => {
     for (const child of children) {
       if (isSeparator(child)) continue
-      if (child.extension === extension && child.item.id === id) return child
-      const found = search(child.children ?? [])
+      if (match(child)) return { item: child, parentDisabled }
+      if (!child.children) continue
+      const found = search(child.children, parentDisabled || isDisabled(child))
       if (found) return found
     }
     return undefined
   }
   for (const group of groups) {
-    const found = search(group)
+    const found = search(group, false)
     if (found) return found
   }
   return undefined
 }
 
+const findItem = (groups: readonly ResolvedGroup[], extension: string, id: string) =>
+  searchGroups(groups, (r) => r.extension === extension && r.item.id === id)?.item
+
 /** 菜单项 key：不同扩展的嵌套条目 id 可能相同 */
 const menuKey = (resolved: ResolvedItem) => `${resolved.extension}:${resolved.item.id}`
 
-function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, className }: ToolbarProps) {
+function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, className, ref }: ToolbarProps) {
   const m = useMessages()
   const mac = useIsMacPlatform()
   const rootRef = useRef<HTMLDivElement>(null)
   const groupRefs = useRef<Array<HTMLDivElement | null>>([])
+  const moreRef = useRef<HTMLButtonElement>(null)
+  /** 获得焦点的条目所在分组即将溢出（随后设 inert 会丢失焦点）：渲染后把焦点交给「更多」 */
+  const focusMoreRef = useRef(false)
   const [fit, setFit] = useState(groups.length)
   const [focusKey, setFocusKey] = useState<string | null>(null)
   const [dialogKey, setDialogKey] = useState<{ extension: string; id: string } | null>(null)
@@ -128,16 +154,46 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
         return
       }
       const widths = groups.map((_, i) => groupRefs.current[i]?.offsetWidth ?? 0)
-      setFit(fitGroups(widths, available, DIVIDER_WIDTH, MORE_WIDTH))
+      const next = fitGroups(widths, available, DIVIDER_WIDTH, MORE_WIDTH)
+      const active = document.activeElement
+      const focusedGroup = active ? groupRefs.current.findIndex((g) => g?.contains(active)) : -1
+      if (focusedGroup >= next && focusedGroup < groups.length) focusMoreRef.current = true
+      setFit(next)
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return
+    // 分组宽度会在语言切换、字体加载后变化而工具栏宽度不变：分组也要观察
     const observer = new ResizeObserver(measure)
     observer.observe(root)
+    for (const group of groupRefs.current.slice(0, groups.length)) if (group) observer.observe(group)
     return () => observer.disconnect()
   }, [groups])
 
   const visible = Math.min(fit, groups.length)
+
+  useLayoutEffect(() => {
+    if (!focusMoreRef.current) return
+    focusMoreRef.current = false
+    moreRef.current?.focus()
+  }, [visible])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openDialog: (id) => {
+        const found = searchGroups(
+          groups,
+          (r) => r.item.id === id,
+          (r) => isItemDisabled(r, ctx, readOnly),
+        )
+        if (!found || found.item.item.type !== 'modal') return false
+        if (found.parentDisabled || isItemDisabled(found.item, ctx, readOnly)) return false
+        setDialogKey({ extension: found.item.extension, id })
+        return true
+      },
+    }),
+    [groups, ctx, readOnly],
+  )
   const overflow = groups.slice(visible)
   const tabbable = groups
     .slice(0, visible)
@@ -308,6 +364,7 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
           <Dropdown label={m.toolbar.more} items={menuItems(overflowList)} onSelect={(key) => selectFrom(overflowList, key)}>
             <Tooltip content={m.toolbar.more}>
               <button
+                ref={moreRef}
                 type="button"
                 data-item-id={MORE_KEY}
                 className="ex-toolbar__item ex-toolbar__more"
