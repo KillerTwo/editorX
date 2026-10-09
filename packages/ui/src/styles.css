@@ -169,3 +169,27 @@
   height: 2px;
   background: var(--ex-color-primary);
 }
+.ex-toast-stack {
+  position: fixed;
+  top: var(--ex-space-6);
+  left: 50%;
+  z-index: var(--ex-z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ex-space-2);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.ex-toast {
+  padding: var(--ex-space-2) var(--ex-space-4);
+  border-left: 3px solid var(--ex-color-info);
+  border-radius: var(--ex-radius-md);
+  background: var(--ex-color-surface);
+  color: var(--ex-color-text);
+  box-shadow: var(--ex-shadow-popover);
+  pointer-events: auto;
+}
+.ex-toast--success { border-left-color: var(--ex-color-success); }
+.ex-toast--warning { border-left-color: var(--ex-color-warning); }
+.ex-toast--error { border-left-color: var(--ex-color-error); }
