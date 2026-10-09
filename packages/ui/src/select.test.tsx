@@ -96,6 +96,17 @@ describe('Select', () => {
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 
+  it('仅传 labelledBy 时列表也以其为无障碍名称', async () => {
+    renderWithTheme(
+      <StrictMode>
+        <span id="decl-label">创作声明</span>
+        <Select labelledBy="decl-label" value={undefined} options={options} onChange={() => {}} />
+      </StrictMode>,
+    )
+    await userEvent.click(screen.getByRole('combobox', { name: '创作声明' }))
+    expect(await screen.findByRole('listbox', { name: '创作声明' })).toHaveAttribute('aria-labelledby', 'decl-label')
+  })
+
   it('Modal 内：Esc 先关列表，再关 Modal', async () => {
     const onClose = vi.fn()
     renderWithTheme(

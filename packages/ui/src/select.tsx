@@ -116,6 +116,7 @@ function SelectInner<V extends string>({
                 style={floatingStyles}
                 className={cx('ex-popover ex-select__list', layerClass, listClassName)}
                 aria-label={label}
+                aria-labelledby={label ? undefined : labelledBy}
                 {...getFloatingProps()}
               >
                 {options.map((option, index) => (
