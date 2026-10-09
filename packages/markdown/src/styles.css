@@ -78,6 +78,8 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  /* 内容左右 20% 按整个编辑区宽度计算，不受滚动条宽度影响 */
+  container-type: inline-size;
 }
 
 .ex-mde-editor,
@@ -98,7 +100,7 @@
 .ex-mde[data-view='split'] .ex-mde-preview-pane { background: var(--ex-color-mde-split-preview-bg); }
 
 .ex-mde .ex-editor-content {
-  padding: 16px 20%;
+  padding: 16px 20cqi;
   font-family: var(--ex-font-family);
   font-size: 15px;
   line-height: 1.65;
@@ -119,7 +121,7 @@
 
 .ex-mde-preview {
   box-sizing: border-box;
-  padding: 16px 20%;
+  padding: 16px 20cqi;
 }
 
 .ex-mde[data-view='split'] .ex-mde-preview { padding: 16px 40px; }
