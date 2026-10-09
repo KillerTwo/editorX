@@ -10,7 +10,7 @@ export default defineConfig({
     baseURL: 'http://localhost:3100',
     trace: 'retain-on-failure',
   },
-  // Visual baselines (`*-chromium-win32.png`) currently exist for Windows only; other platforms need their own.
+  // Visual baselines exist for Windows (`*-chromium-win32.png`) and macOS (`*-chromium-darwin.png`); other platforms need their own.
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.001, animations: 'disabled' },
   },
