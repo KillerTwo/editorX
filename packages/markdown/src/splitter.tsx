@@ -4,6 +4,7 @@ import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObjec
 export const SPLIT_MIN = 0.2
 export const SPLIT_MAX = 0.8
 const STEP = 0.02
+const PAGE_STEP = 0.1
 export const SPLIT_VAR = '--ex-mde-split'
 
 export function clampSplit(value: number): number {
@@ -25,10 +26,13 @@ export function Splitter({
   value,
   onChange,
   bodyRef,
+  controls,
 }: {
   value: number
   onChange(next: number): void
   bodyRef: RefObject<HTMLDivElement | null>
+  /** 被调整宽度的编辑区元素 id */
+  controls?: string
 }) {
   const m = useMessages()
   /** 拖动中为中止函数：恢复拖动前的比例并移除监听 */
@@ -37,16 +41,21 @@ export function Splitter({
   useEffect(() => () => abortRef.current?.(), [])
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (abortRef.current) return
     const next =
       e.key === 'ArrowLeft' || e.key === 'ArrowDown'
         ? value - STEP
         : e.key === 'ArrowRight' || e.key === 'ArrowUp'
           ? value + STEP
-          : e.key === 'Home'
-            ? SPLIT_MIN
-            : e.key === 'End'
-              ? SPLIT_MAX
-              : null
+          : e.key === 'PageDown'
+            ? value - PAGE_STEP
+            : e.key === 'PageUp'
+              ? value + PAGE_STEP
+              : e.key === 'Home'
+                ? SPLIT_MIN
+                : e.key === 'End'
+                  ? SPLIT_MAX
+                  : null
     if (next === null) return
     e.preventDefault()
     onChange(clampSplit(next))
@@ -71,8 +80,17 @@ export function Splitter({
       const next = splitFromPointer(ev.clientX, rect)
       if (next !== null && next !== current) apply(next)
     }
+    const doc = handle.ownerDocument
+    // 捕获阶段先于编辑器的 Esc（退出全屏）：拖动中 Esc 只取消拖动
+    const onDocKeyDown = (ev: globalThis.KeyboardEvent) => {
+      if (ev.key !== 'Escape') return
+      ev.preventDefault()
+      ev.stopPropagation()
+      cancel()
+    }
     const detach = () => {
       abortRef.current = null
+      doc.removeEventListener('keydown', onDocKeyDown, true)
       handle.removeEventListener('pointermove', move)
       handle.removeEventListener('pointerup', commit)
       handle.removeEventListener('pointercancel', cancel)
@@ -88,6 +106,7 @@ export function Splitter({
       apply(start)
     }
     abortRef.current = cancel
+    doc.addEventListener('keydown', onDocKeyDown, true)
     handle.addEventListener('pointermove', move)
     handle.addEventListener('pointerup', commit)
     handle.addEventListener('pointercancel', cancel)
@@ -103,6 +122,7 @@ export function Splitter({
       aria-valuemin={SPLIT_MIN * 100}
       aria-valuemax={SPLIT_MAX * 100}
       aria-valuenow={Math.round(value * 100)}
+      aria-controls={controls}
       className="ex-mde-splitter"
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}

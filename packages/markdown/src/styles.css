@@ -74,6 +74,7 @@
 .ex-mde-toolbar .ex-toolbar__item { color: var(--ex-color-mde-chrome-text); font-size: 13px; }
 .ex-mde-toolbar .ex-toolbar__item:disabled { color: var(--ex-color-mde-disabled-text); }
 .ex-mde-toolbar .ex-toolbar__item.is-active { color: var(--ex-color-primary); }
+.ex-mde-toolbar .ex-toolbar__item.is-active:disabled { color: var(--ex-color-mde-disabled-text); }
 
 /* ---------- 编辑区 / 预览区 ---------- */
 .ex-mde-body {
@@ -145,6 +146,11 @@
 .ex-mde .ex-md-task,
 .ex-mde .ex-md-hr {
   color: var(--ex-color-mde-body-marker);
+}
+
+/* 标记灰沿用 CSDN 的低对比度色值；用户要求高对比度时换成次要文字色 */
+@media (prefers-contrast: more) {
+  .ex-mde { --ex-color-mde-body-marker: var(--ex-color-text-secondary); }
 }
 
 /* @[TOC] 行：CSDN 整行以大号标记灰显示 */

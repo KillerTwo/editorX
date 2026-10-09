@@ -14,7 +14,7 @@ export function TocPanel({ ctx }: { ctx: ExtensionContext }) {
 
   return (
     <div className="ex-mde-toc">
-      <div className="ex-mde-panel__title">{title ?? m.panels.toc}</div>
+      <div className="ex-mde-panel__title" role="heading" aria-level={2}>{title ?? m.panels.toc}</div>
       {toc.length === 0 ? (
         <p className="ex-mde-toc__empty">{m.panels.tocEmpty}</p>
       ) : (

@@ -103,6 +103,7 @@
 .ex-dropdown__item:focus-visible { background: var(--ex-color-surface-hover); outline: none; }
 .ex-dropdown__item:disabled { color: var(--ex-color-text-muted); cursor: not-allowed; }
 .ex-dropdown__item.is-active { color: var(--ex-color-primary); }
+.ex-dropdown__item.is-active:disabled { color: var(--ex-color-text-muted); }
 .ex-dropdown__item.is-active .ex-dropdown__icon { color: inherit; }
 .ex-dropdown__icon { display: inline-flex; color: var(--ex-color-text-secondary); }
 

@@ -16,7 +16,7 @@ export interface ScrollToHeadingTarget {
  */
 export function scrollToHeading({ id, viewMode, engine, editorHost, previewEl, previewScroller }: ScrollToHeadingTarget): boolean {
   if (!previewEl) return false
-  const target = Array.from(previewEl.querySelectorAll<HTMLElement>('[id]')).find((el) => el.id === id)
+  const target = Array.from(previewEl.querySelectorAll<HTMLElement>(':is(h1,h2,h3,h4,h5,h6)[id]')).find((el) => el.id === id)
   if (!target) return false
   if (viewMode !== 'edit') {
     if (!previewScroller) return false

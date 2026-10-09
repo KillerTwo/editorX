@@ -49,6 +49,16 @@ describe('scrollToHeading', () => {
     expect(editor.top).toBe(240)
   })
 
+  it('只匹配标题元素：前面同 id 的其他元素不影响跳转', () => {
+    const { previewScroller, previewEl, editorHost, engine } = setup()
+    previewEl.insertAdjacentHTML('afterbegin', '<div class="ex-preview-section" data-section-index="0"><span id="b">x</span></div>')
+    const preview = trackScrollTop(previewScroller, 50)
+    vi.spyOn(previewScroller, 'getBoundingClientRect').mockReturnValue(rect(100))
+    vi.spyOn(previewEl.querySelector('h2#b')!, 'getBoundingClientRect').mockReturnValue(rect(400))
+    expect(scrollToHeading({ id: 'b', viewMode: 'split', engine, editorHost, previewEl, previewScroller })).toBe(true)
+    expect(preview.top).toBe(350)
+  })
+
   it('找不到标题时返回 false', () => {
     const { previewScroller, previewEl, editorHost, engine } = setup()
     expect(scrollToHeading({ id: 'nope', viewMode: 'preview', engine, editorHost, previewEl, previewScroller })).toBe(false)

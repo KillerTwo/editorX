@@ -1,10 +1,18 @@
-import { safeResolveText, useMessages, type ResolvedPanel } from '@editorx/toolbar'
+import { safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { cx } from '../cx'
 import { useEditorState, type EditorStore } from '../store'
 
-export function SideRail({ panels, store }: { panels: readonly ResolvedPanel[]; store: EditorStore }) {
+export function SideRail({
+  panels,
+  store,
+  ctx,
+}: {
+  panels: readonly ResolvedPanel[]
+  store: EditorStore
+  ctx: ExtensionContext
+}) {
   const m = useMessages()
   const active = useEditorState(store, (s) => s.panel)
   const open = active !== null && panels.some((p) => p.panel.id === active)
@@ -25,7 +33,7 @@ export function SideRail({ panels, store }: { panels: readonly ResolvedPanel[]; 
 
   return (
     <nav className="ex-mde-rail" aria-label={m.panels.rail}>
-      <button type="button" className="ex-mde-rail__item" onClick={toggleAll}>
+      <button type="button" className="ex-mde-rail__item" aria-expanded={open} onClick={toggleAll}>
         <span className="ex-mde-rail__icon" aria-hidden="true">
           {open ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
         </span>
@@ -47,7 +55,7 @@ export function SideRail({ panels, store }: { panels: readonly ResolvedPanel[]; 
                 {panel.icon}
               </span>
             )}
-            <span className="ex-mde-rail__label">{safeResolveText(panel.title, m, undefined, extension, panel.id)}</span>
+            <span className="ex-mde-rail__label">{safeResolveText(panel.title, m, ctx, extension, panel.id)}</span>
           </button>
         )
       })}

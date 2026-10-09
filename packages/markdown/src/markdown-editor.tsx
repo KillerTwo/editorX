@@ -22,6 +22,7 @@ import { ToastProvider, useToast } from '@editorx/ui'
 import {
   useCallback,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -139,6 +140,7 @@ function EditorShell({
   const [store] = useState(() => createEditorStore({ panel: defaultPanel }))
   const [viewMode, setViewMode] = useControllableState(viewModeProp, defaultViewMode, onViewModeChange)
   const [split, setSplit] = useState(() => clampSplit(defaultSplit))
+  const editorId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const panelIdsRef = useRef<ReadonlySet<string>>(new Set())
@@ -377,8 +379,8 @@ function EditorShell({
           onError={reportError}
         />
         <div ref={bodyRef} className="ex-mde-body" style={bodyStyle}>
-          <div ref={hostRef} className="ex-mde-editor" hidden={viewMode === 'preview'} />
-          {viewMode === 'split' && <Splitter value={split} onChange={setSplit} bodyRef={bodyRef} />}
+          <div ref={hostRef} id={editorId} className="ex-mde-editor" hidden={viewMode === 'preview'} />
+          {viewMode === 'split' && <Splitter value={split} onChange={setSplit} bodyRef={bodyRef} controls={editorId} />}
           <div ref={previewScrollRef} className="ex-mde-preview-pane" hidden={viewMode === 'edit'}>
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>
@@ -394,7 +396,7 @@ function EditorShell({
         <StatusBar store={store} viewMode={viewMode} center={slots?.statusCenter} end={slots?.statusEnd} />
       </div>
       <PanelHost position="right" panels={rightPanels} ctx={ctx} store={store} onError={reportError} />
-      {showRail && rightPanels.length > 0 && <SideRail panels={rightPanels} store={store} />}
+      {showRail && rightPanels.length > 0 && <SideRail panels={rightPanels} store={store} ctx={ctx} />}
     </div>
   )
 }

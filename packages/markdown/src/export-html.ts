@@ -7,7 +7,8 @@ export const EXPORT_PAGE_CSS = `
 :root { color-scheme: light dark; }
 body { margin: 0; background: Canvas; color: CanvasText; }
 .ex-preview { box-sizing: border-box; max-width: 860px; margin: 0 auto; padding: 32px 24px; font: 16px/1.75 -apple-system, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif; overflow-wrap: break-word; }
-.ex-preview img, .ex-preview svg { max-width: 100%; }
+.ex-preview img { max-width: 100%; height: auto; }
+.ex-preview svg { max-width: 100%; }
 .ex-preview code, .ex-preview pre { font-family: Consolas, Monaco, 'Andale Mono', monospace; }
 .ex-preview pre { padding: 12px 16px; overflow: auto; border: 1px solid GrayText; border-radius: 4px; font-size: 14px; line-height: 1.6; }
 .ex-preview blockquote { margin: 0 0 1em; padding: 0 1em; border-left: 4px solid GrayText; color: GrayText; }

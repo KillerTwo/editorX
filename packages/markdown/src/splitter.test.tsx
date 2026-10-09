@@ -148,6 +148,42 @@ describe('分隔条', () => {
     expect(syncRefresh.calls).toBe(before + 1)
   })
 
+  it('PageUp/PageDown 按 10% 调整；aria-controls 指向编辑区', () => {
+    renderEditor()
+    const sep = screen.getByRole('separator')
+    const editor = document.querySelector<HTMLElement>('.ex-mde-editor')!
+    expect(editor.id).not.toBe('')
+    expect(sep).toHaveAttribute('aria-controls', editor.id)
+    fireEvent.keyDown(sep, { key: 'PageUp' })
+    expect(sep).toHaveAttribute('aria-valuenow', '60')
+    fireEvent.keyDown(sep, { key: 'PageDown' })
+    fireEvent.keyDown(sep, { key: 'PageDown' })
+    expect(sep).toHaveAttribute('aria-valuenow', '40')
+  })
+
+  it('拖动中 Esc 取消拖动并恢复比例，不退出全屏；方向键被忽略', async () => {
+    renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '全屏' }))
+    const root = document.querySelector<HTMLElement>('.ex-mde')!
+    expect(root).toHaveAttribute('data-fullscreen')
+    mockRect(body(), 0, 1000)
+    const sep = screen.getByRole('separator')
+    fireEvent.pointerDown(sep, { button: 0, pointerId: 1, clientX: 500 })
+    fireEvent.pointerMove(sep, { pointerId: 1, clientX: 300 })
+    expect(body().style.getPropertyValue('--ex-mde-split')).toBe('0.3')
+    fireEvent.keyDown(sep, { key: 'ArrowRight' })
+    expect(sep).toHaveAttribute('aria-valuenow', '30')
+    fireEvent.keyDown(sep, { key: 'Escape' })
+    expect(root).toHaveAttribute('data-fullscreen')
+    expect(body().style.getPropertyValue('--ex-mde-split')).toBe('0.5')
+    expect(sep).toHaveAttribute('aria-valuenow', '50')
+    fireEvent.pointerUp(sep, { pointerId: 1, clientX: 300 })
+    expect(body().style.getPropertyValue('--ex-mde-split')).toBe('0.5')
+    fireEvent.keyDown(sep, { key: 'Escape' })
+    expect(root).not.toHaveAttribute('data-fullscreen')
+  })
+
   it('defaultSplit 超出范围时被限制', () => {
     renderEditor({ defaultSplit: 0.95 })
     expect(screen.getByRole('separator')).toHaveAttribute('aria-valuenow', '80')

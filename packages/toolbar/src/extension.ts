@@ -60,11 +60,17 @@ export interface ToolbarSeparator {
 export type ToolbarItem = ToolbarButton | ToolbarDropdown | ToolbarPopover | ToolbarModal | ToolbarSeparator
 export type ToolbarActionItem = Exclude<ToolbarItem, ToolbarSeparator>
 
-/** 扩展缺少 requires 中的 adapter 时面板总是隐藏（不受 missingAdapter: 'disable' 影响，面板没有禁用态） */
+/**
+ * 扩展缺少 requires 中的 adapter 时面板总是隐藏（不受 missingAdapter: 'disable' 影响，面板没有禁用态）。
+ * 右侧与底部面板共用同一个「当前面板」：同一时刻只打开一个（`ctx.openPanel` 会关闭其他面板）。
+ */
 export interface PanelDef {
   id: string
+  /** 面板标题，同时用作面板区域的无障碍名称与右侧图标栏的文字标签 */
   title: MessageText
+  /** 右侧图标栏中的图标 */
   icon?: ReactNode
+  /** 只有 right 面板出现在右侧图标栏中；bottom 面板没有图标栏入口，只能经 ctx.openPanel / togglePanel 打开 */
   position: 'right' | 'bottom'
   order?: number
   render(ctx: ExtensionContext): ReactNode

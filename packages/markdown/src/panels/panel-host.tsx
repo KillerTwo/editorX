@@ -26,7 +26,7 @@ export function PanelHost({
       data-panel={current.panel.id}
     >
       <ExtensionErrorBoundary
-        key={current.panel.id}
+        key={`${current.extension}:${current.panel.id}`}
         name={current.extension}
         onError={onError}
         render={() => current.panel.render(ctx)}
