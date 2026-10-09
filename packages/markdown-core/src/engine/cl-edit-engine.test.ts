@@ -788,6 +788,45 @@ describe('ClEditEngine 脏标记：按键路径不读整文', () => {
     expect(content.textContent).toBe('abc\nzz\n')
   })
 
+  it('IME：compositionend 在变更记录投递前同步触发，也立即提交组合文本', () => {
+    const { engine, content, changes } = setup('# T\n\nabc')
+    content.focus()
+    content.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    const node = textNodeContaining(content, 'abc')
+    node.data = node.data.replace('abc', 'abc你好')
+    content.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '你好' }))
+    expect(engine.getValue()).toBe('# T\n\nabc你好')
+    expect(changes).toEqual(['# T\n\nabc你好'])
+    expect(content.textContent).toBe('# T\n\nabc你好\n')
+  })
+
+  it('重绘时被 noWatch 截留的变更记录在下一个微任务内同步', async () => {
+    const { engine, content, changes } = setup(doc)
+    content.focus()
+    const node = textNodeContaining(content, 'y')
+    node.data = node.data.replace('y', 'yY')
+    // Programmatic renders trust untouched sections, so records parked by noWatch are the only trace of the edit.
+    ;(engine as unknown as { render(force: boolean, touched: ReadonlySet<Node>): void }).render(false, new Set())
+    expect(changes).toEqual([])
+    await Promise.resolve()
+    // Checked before getValue(), which would flush on its own.
+    expect(changes).toEqual([doc.replace('y', 'yY')])
+    expect(engine.getValue()).toBe(doc.replace('y', 'yY'))
+    expect(content.textContent).toBe(engine.getValue() + '\n')
+  })
+
+  it('getValue 先同步尚未投递的 DOM 编辑（组合期间除外）', () => {
+    const { engine, content, changes } = setup(doc)
+    content.focus()
+    typeInto(textNodeContaining(content, 'y'), 'y', 'Y')
+    expect(engine.getValue()).toBe(doc.replace('y', 'yY'))
+    expect(changes).toEqual([doc.replace('y', 'yY')])
+    content.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    typeInto(textNodeContaining(content, 'yY'), 'yY', 'ni')
+    expect(engine.getValue()).toBe(doc.replace('y', 'yY'))
+    expect(engine.isComposing()).toBe(true)
+  })
+
   it('同一次投递中多个段被改动', async () => {
     const { engine, content } = setup(doc)
     content.focus()

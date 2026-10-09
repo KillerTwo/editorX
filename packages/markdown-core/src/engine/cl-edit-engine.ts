@@ -195,7 +195,12 @@ export class ClEditEngine implements EditorEngine {
     this.applyAriaLabel()
   }
 
+  /** Includes DOM edits whose mutation records are not delivered yet (syncing them emits `change`), except mid-IME. */
   getValue(): string {
+    if (this.watcher && !this.composing) {
+      this.noteMutations(this.watcher.takeRecords())
+      if (this.dirty) this.syncFromDom()
+    }
     return this.value
   }
 
@@ -354,6 +359,12 @@ export class ClEditEngine implements EditorEngine {
       content.toggleAttribute('data-empty', this.value === '')
     })
     if (selection.hasFocus()) selection.restore()
+    // Records undelivered when noWatch stopped the observer are parked in `dirty`; make sure they get synced.
+    if (this.dirty && !this.composing) {
+      queueMicrotask(() => {
+        if (this.content === content && !this.composing) this.flushDom()
+      })
+    }
   }
 
   private noteMutations(records: readonly MutationRecord[]): void {
@@ -430,6 +441,7 @@ export class ClEditEngine implements EditorEngine {
   private syncFromDom(): void {
     const { content, selection } = this
     if (!content || !selection) return
+    if (this.watcher) this.noteMutations(this.watcher.takeRecords())
     const dirty = this.dirty
     this.dirty = null
     const local = dirty === null ? { text: this.value, change: null } : dirty === 'all' ? null : this.readTouchedSections(dirty)
