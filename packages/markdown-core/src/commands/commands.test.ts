@@ -71,6 +71,13 @@ const cases: Case[] = [
     { type: 'sequence' },
   ],
   ['toc inserts CSDN @[TOC](title) and selects the title', commands.toc, 'x«»', 'x\n\n@[TOC](«这里写目录标题»)\n'],
+  ['mark wraps', commands.mark, 'a «b» c', 'a ==«b»== c'],
+  ['mark placeholder', commands.mark, '«»', '==«高亮文本»=='],
+  ['mark unwraps', commands.mark, '==«b»==', '«b»'],
+  ['superscript wraps', commands.superscript, 'x«2»', 'x^«2»^'],
+  ['superscript placeholder', commands.superscript, '«»', '^«上标»^'],
+  ['subscript wraps', commands.subscript, 'H«2»O', 'H~«2»~O'],
+  ['subscript placeholder', commands.subscript, '«»', '~«下标»~'],
 ]
 
 describe('command transforms', () => {
@@ -96,11 +103,14 @@ describe('command transforms', () => {
         'inlineCode',
         'italic',
         'link',
+        'mark',
         'math',
         'mermaid',
         'orderedList',
         'quote',
         'strikethrough',
+        'subscript',
+        'superscript',
         'table',
         'taskList',
         'toc',

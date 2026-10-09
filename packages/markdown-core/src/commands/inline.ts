@@ -22,6 +22,15 @@ export const strikethrough = (state: TextState, args?: PlaceholderArgs): TextSta
 export const inlineCode = (state: TextState, args?: PlaceholderArgs): TextState =>
   toggleWrap(state, '`', args?.placeholder ?? '行内代码')
 
+export const mark = (state: TextState, args?: PlaceholderArgs): TextState =>
+  toggleWrap(state, '==', args?.placeholder ?? '高亮文本')
+
+export const superscript = (state: TextState, args?: PlaceholderArgs): TextState =>
+  toggleWrap(state, '^', args?.placeholder ?? '上标')
+
+export const subscript = (state: TextState, args?: PlaceholderArgs): TextState =>
+  toggleWrap(state, '~', args?.placeholder ?? '下标')
+
 function linkLike(state: TextState, bang: '' | '!', args: LinkArgs, placeholder: string): TextState {
   const { text } = state
   const { start, end } = state.selection

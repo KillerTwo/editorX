@@ -12,7 +12,7 @@ import {
   toc,
   unorderedList,
 } from './block'
-import { bold, image, inlineCode, italic, link, strikethrough } from './inline'
+import { bold, image, inlineCode, italic, link, mark, strikethrough, subscript, superscript } from './inline'
 
 export type CommandTransform<A = unknown> = (state: TextState, args?: A) => TextState
 
@@ -21,6 +21,9 @@ export const commands = {
   italic,
   strikethrough,
   inlineCode,
+  mark,
+  superscript,
+  subscript,
   link,
   image,
   heading,
