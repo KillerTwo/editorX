@@ -22,6 +22,7 @@ export default async function MarkdownPage({ searchParams }: { searchParams: Sea
       view={view}
       panel={first(params.panel) || null}
       autosave={autosave > 0 && autosave <= MAX_TIMER_DELAY ? autosave : 0}
+      publish={first(params.publish) === '1'}
     />
   )
 }

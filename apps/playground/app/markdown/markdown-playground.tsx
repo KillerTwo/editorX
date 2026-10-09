@@ -1,11 +1,14 @@
 'use client'
 
 import { MarkdownEditor, type MarkdownEditorHandle, type ViewMode } from '@editorx/markdown'
+import { PublishModal } from '@editorx/publish'
 import { ThemeProvider } from '@editorx/theme'
+import type { EditorAdapters, EditorDocument } from '@editorx/toolbar'
 import { Button, ThemeToggle } from '@editorx/ui'
 import { ArrowLeftRight, ChevronDown, CircleAlert } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from '../markdown-core/sample'
+import { createPublishAdapters } from '../publish/mock-adapters'
 import { csdnDemoExtensions } from './csdn-demo-extensions'
 import { CSDN_SAMPLE, CSDN_TITLE } from './csdn-sample'
 import { createMockAdapters } from './mock-adapters'
@@ -16,14 +19,35 @@ export interface MarkdownPlaygroundProps {
   panel: string | null
   /** 0 为关闭自动保存 */
   autosave: number
+  /** 首屏自动打开发布弹窗（/compare 对照 12-36-37 用） */
+  publish: boolean
 }
 
-function Playground({ fixture, view, panel, autosave }: MarkdownPlaygroundProps) {
+function Playground({ fixture, view, panel, autosave, publish }: MarkdownPlaygroundProps) {
   const ref = useRef<MarkdownEditorHandle>(null)
   const [readOnly, setReadOnly] = useState(false)
   const [changes, setChanges] = useState(0)
   const [saves, setSaves] = useState(0)
-  const adapters = useMemo(() => createMockAdapters(() => setSaves((n) => n + 1)), [])
+  const [publishDoc, setPublishDoc] = useState<EditorDocument | null>(null)
+  const adapters = useMemo<EditorAdapters>(() => {
+    const { onPublish, searchTags, getCategories, getActivities, getTopics } = createPublishAdapters({
+      categories: false,
+      onLog: (kind, data) => console.info(`[publish:${kind}] ${JSON.stringify(data)}`),
+    })
+    return {
+      ...createMockAdapters(() => setSaves((n) => n + 1)),
+      onPublish,
+      searchTags,
+      getCategories,
+      getActivities,
+      getTopics,
+    }
+  }, [])
+  const openPublish = () => setPublishDoc(ref.current?.getDocument() ?? null)
+
+  useEffect(() => {
+    if (publish) setPublishDoc(ref.current?.getDocument() ?? null)
+  }, [publish])
   const title = fixture === 'csdn' ? CSDN_TITLE : 'EditorX 示例文档'
 
   return (
@@ -75,7 +99,7 @@ function Playground({ fixture, view, panel, autosave }: MarkdownPlaygroundProps)
                   保存草稿
                   <ChevronDown size={14} aria-hidden="true" />
                 </button>
-                <Button variant="primary" className="pg-mde-publish" onClick={() => console.info(ref.current?.getDocument())}>
+                <Button variant="primary" className="pg-mde-publish" onClick={openPublish}>
                   发布文章
                 </Button>
               </>
@@ -83,6 +107,12 @@ function Playground({ fixture, view, panel, autosave }: MarkdownPlaygroundProps)
           }}
         />
       </div>
+      <PublishModal
+        open={publishDoc !== null}
+        onClose={() => setPublishDoc(null)}
+        document={publishDoc ?? undefined}
+        adapters={adapters}
+      />
     </div>
   )
 }

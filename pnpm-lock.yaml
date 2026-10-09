@@ -71,6 +71,9 @@ importers:
       '@editorx/markdown-core':
         specifier: workspace:*
         version: link:../../packages/markdown-core
+      '@editorx/publish':
+        specifier: workspace:*
+        version: link:../../packages/publish
       '@editorx/theme':
         specifier: workspace:*
         version: link:../../packages/theme
