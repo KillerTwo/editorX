@@ -1,7 +1,8 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Dropdown } from './dropdown'
+import { Modal } from './modal'
 import { renderWithTheme } from './test-utils'
 import { Tooltip } from './tooltip'
 
@@ -67,5 +68,88 @@ describe('Dropdown', () => {
     expect(disabled).toBeDisabled()
     await userEvent.click(disabled)
     expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  const navItems = [
+    { key: 'a', label: '甲', extra: 'Ctrl+A' },
+    { key: 'sep', label: '', separator: true },
+    { key: 'b', label: '乙' },
+    { key: 'c', label: '丙', disabled: true },
+  ]
+
+  it('菜单有无障碍名称，分隔线渲染为 separator，extra 显示在项内', async () => {
+    renderWithTheme(
+      <Dropdown label="标题菜单" items={navItems} onSelect={() => {}}>
+        <button>标题</button>
+      </Dropdown>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '标题' }))
+    const menu = await screen.findByRole('menu', { name: '标题菜单' })
+    expect(menu).toHaveClass('ex-popover', 'ex-dropdown')
+    expect(menu.closest('.ex-portal')).not.toBeNull()
+    expect(screen.getByRole('separator')).toHaveClass('ex-dropdown__sep')
+    expect(screen.getByRole('menuitem', { name: /甲/ })).toHaveTextContent('Ctrl+A')
+  })
+
+  it('ArrowDown 打开并聚焦首项，方向键循环且跳过分隔线与禁用项，Enter 选择', async () => {
+    const onSelect = vi.fn()
+    renderWithTheme(
+      <Dropdown label="标题菜单" items={navItems} onSelect={onSelect}>
+        <button>标题</button>
+      </Dropdown>,
+    )
+    screen.getByRole('button', { name: '标题' }).focus()
+    await userEvent.keyboard('{ArrowDown}')
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /甲/ })).toHaveFocus())
+    await userEvent.keyboard('{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: '乙' })).toHaveFocus()
+    await userEvent.keyboard('{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: /甲/ })).toHaveFocus()
+    await userEvent.keyboard('{ArrowUp}')
+    expect(screen.getByRole('menuitem', { name: '乙' })).toHaveFocus()
+    await userEvent.keyboard('{Enter}')
+    expect(onSelect).toHaveBeenCalledWith('b')
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('Modal 内的 Dropdown：点菜单项不关 Modal；Esc 先关菜单，再关 Modal', async () => {
+    const onClose = vi.fn()
+    const onSelect = vi.fn()
+    renderWithTheme(
+      <Modal open onClose={onClose} title="设置">
+        <Dropdown items={navItems} onSelect={onSelect}>
+          <button>标题</button>
+        </Dropdown>
+      </Modal>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '标题' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: '乙' }))
+    expect(onSelect).toHaveBeenCalledWith('b')
+    expect(onClose).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: '标题' }))
+    expect(await screen.findByRole('menu')).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(onClose).not.toHaveBeenCalled()
+    await userEvent.keyboard('{Escape}')
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('Modal 内用键盘打开 Dropdown 后，焦点在菜单项上按 Esc 只关菜单', async () => {
+    const onClose = vi.fn()
+    renderWithTheme(
+      <Modal open onClose={onClose} title="设置">
+        <Dropdown items={navItems} onSelect={() => {}}>
+          <button>标题</button>
+        </Dropdown>
+      </Modal>,
+    )
+    screen.getByRole('button', { name: '标题' }).focus()
+    await userEvent.keyboard('{ArrowDown}')
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /甲/ })).toHaveFocus())
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.getByRole('dialog', { name: '设置' })).toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
   })
 })

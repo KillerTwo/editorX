@@ -1,4 +1,5 @@
 import { useTheme } from '@editorx/theme'
+import { X } from 'lucide-react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -10,6 +11,7 @@ export interface ToastApi {
 
 export interface ToastProviderProps {
   duration?: number
+  closeLabel?: string
   children: ReactNode
 }
 
@@ -22,20 +24,23 @@ interface ToastItem {
 
 const ToastContext = createContext<ToastApi | null>(null)
 
-function ToastView({ item, onDone }: { item: ToastItem; onDone: (id: number) => void }) {
+function ToastView({ item, closeLabel, onDone }: { item: ToastItem; closeLabel: string; onDone: (id: number) => void }) {
   useEffect(() => {
     const timer = window.setTimeout(() => onDone(item.id), item.duration)
     return () => window.clearTimeout(timer)
   }, [item.id, item.duration, onDone])
 
   return (
-    <div role="status" className={`ex-toast ex-toast--${item.type}`}>
-      {item.message}
+    <div role={item.type === 'error' ? 'alert' : 'status'} className={`ex-toast ex-toast--${item.type}`}>
+      <span className="ex-toast__message">{item.message}</span>
+      <button type="button" className="ex-toast__close" aria-label={closeLabel} onClick={() => onDone(item.id)}>
+        <X size={14} aria-hidden="true" />
+      </button>
     </div>
   )
 }
 
-export function ToastProvider({ duration = 3000, children }: ToastProviderProps) {
+export function ToastProvider({ duration = 3000, closeLabel = '关闭', children }: ToastProviderProps) {
   const [items, setItems] = useState<ToastItem[]>([])
   const nextId = useRef(0)
   const { portalRoot } = useTheme()
@@ -59,9 +64,9 @@ export function ToastProvider({ duration = 3000, children }: ToastProviderProps)
       {children}
       {portalRoot &&
         createPortal(
-          <div className="ex-toast-stack" aria-live="polite">
+          <div className="ex-toast-stack">
             {items.map((item) => (
-              <ToastView key={item.id} item={item} onDone={remove} />
+              <ToastView key={item.id} item={item} closeLabel={closeLabel} onDone={remove} />
             ))}
           </div>,
           portalRoot,

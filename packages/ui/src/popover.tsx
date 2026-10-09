@@ -2,12 +2,14 @@ import {
   autoUpdate,
   flip,
   FloatingFocusManager,
+  FloatingNode,
   FloatingPortal,
   offset,
   shift,
   useClick,
   useDismiss,
   useFloating,
+  useFloatingNodeId,
   useInteractions,
   useMergeRefs,
   useRole,
@@ -17,6 +19,7 @@ import {
 import { useTheme } from '@editorx/theme'
 import { cloneElement, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
+import { withFloatingTree } from './floating-tree'
 
 export interface PopoverProps {
   content: (close: () => void) => ReactNode
@@ -27,7 +30,7 @@ export interface PopoverProps {
   className?: string
 }
 
-export function Popover({
+function PopoverInner({
   content,
   children,
   placement = 'bottom-start',
@@ -38,6 +41,7 @@ export function Popover({
   const [innerOpen, setInnerOpen] = useState(false)
   const open = openProp ?? innerOpen
   const { portalRoot } = useTheme()
+  const nodeId = useFloatingNodeId()
 
   const setOpen = (next: boolean, event?: Event, reason?: OpenChangeReason) => {
     if (openProp === undefined) setInnerOpen(next)
@@ -45,6 +49,7 @@ export function Popover({
   }
 
   const { refs, floatingStyles, context } = useFloating({
+    nodeId,
     open,
     onOpenChange: setOpen,
     placement,
@@ -62,20 +67,24 @@ export function Popover({
   return (
     <>
       {cloneElement(children, getReferenceProps({ ...children.props, ref }))}
-      {open && (
-        <FloatingPortal root={portalRoot}>
-          <FloatingFocusManager context={context} modal={false}>
-            <div
-              ref={refs.setFloating}
-              style={floatingStyles}
-              className={cx('ex-popover', className)}
-              {...getFloatingProps()}
-            >
-              {content(() => setOpen(false))}
-            </div>
-          </FloatingFocusManager>
-        </FloatingPortal>
-      )}
+      <FloatingNode id={nodeId}>
+        {open && (
+          <FloatingPortal root={portalRoot}>
+            <FloatingFocusManager context={context} modal={false}>
+              <div
+                ref={refs.setFloating}
+                style={floatingStyles}
+                className={cx('ex-popover', className)}
+                {...getFloatingProps()}
+              >
+                {content(() => setOpen(false))}
+              </div>
+            </FloatingFocusManager>
+          </FloatingPortal>
+        )}
+      </FloatingNode>
     </>
   )
 }
+
+export const Popover = withFloatingTree(PopoverInner, 'Popover')

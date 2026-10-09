@@ -43,6 +43,15 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('无 title 时使用 ariaLabel 作为无障碍名称', () => {
+    renderWithTheme(
+      <Modal open onClose={() => {}} ariaLabel="插入表格">
+        内容
+      </Modal>,
+    )
+    expect(screen.getByRole('dialog', { name: '插入表格' })).toBeInTheDocument()
+  })
+
   it('closeOnMaskClick=false 时点击遮罩不关闭', () => {
     const onClose = vi.fn()
     renderWithTheme(<Modal open onClose={onClose} title="标题" closeOnMaskClick={false}>内容</Modal>)

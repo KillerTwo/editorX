@@ -88,6 +88,32 @@ describe('Toast', () => {
     expect(screen.queryAllByRole('status')).toHaveLength(0)
   })
 
+  it('error 类型使用 role=alert，其余为 status', () => {
+    setup(<Trigger type="error" />)
+    fireEvent.click(screen.getByText('notify'))
+    expect(screen.getByRole('alert')).toHaveClass('ex-toast--error')
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('关闭按钮立即移除提示，按钮名可配置', () => {
+    render(
+      <ThemeProvider defaultTheme="light" storageKey={false}>
+        <ToastProvider closeLabel="Close">
+          <Trigger />
+        </ToastProvider>
+      </ThemeProvider>,
+    )
+    fireEvent.click(screen.getByText('notify'))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('提示栈不再设置 aria-live（由各条 role 决定播报方式）', () => {
+    setup(<Trigger />)
+    fireEvent.click(screen.getByText('notify'))
+    expect(document.querySelector('.ex-toast-stack')).not.toHaveAttribute('aria-live')
+  })
+
   it('Provider 外调用 useToast 抛错', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<Trigger />)).toThrow('useToast must be used within <ToastProvider>')
