@@ -38,6 +38,25 @@ function fakeEngine(offsets: SectionOffset[]) {
   return { engine, handlers, off }
 }
 
+type FakeObserver = { cb: () => void; observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }
+
+function stubResizeObserver(): FakeObserver[] {
+  const observers: FakeObserver[] = []
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe = vi.fn()
+      disconnect = vi.fn()
+      unobserve = vi.fn()
+      constructor(public cb: () => void) {
+        observers.push(this)
+      }
+    },
+  )
+  return observers
+}
+
+// Editor sections fill the editor's whole scroll content (300px, max scrollTop 200).
 const OFFSETS: SectionOffset[] = [
   { start: 0, end: 10, top: 0, height: 100 },
   { start: 10, end: 20, top: 100, height: 200 },
@@ -54,7 +73,7 @@ afterEach(() => {
 })
 
 function setup() {
-  const editor = scroller(1000, 100)
+  const editor = scroller(300, 100)
   const preview = scroller(400, 100)
   setupPreview(preview, [
     [0, 300],
@@ -79,13 +98,16 @@ describe('createScrollSync', () => {
     expect(preview.scrollTop).toBe(150)
   })
 
-  it('预览滚动同步编辑区；结果夹到可滚动范围', () => {
+  it('两端对齐：预览到底 → 编辑区到底，编辑区到底 → 预览到底', () => {
     const { editor, preview } = setup()
-    scrollTo(preview, 350)
+    scrollTo(preview, 300)
     vi.advanceTimersByTime(10)
     expect(editor.scrollTop).toBe(200)
     vi.advanceTimersByTime(50)
-    scrollTo(editor, 1000)
+    scrollTo(preview, 0)
+    vi.advanceTimersByTime(60)
+    expect(editor.scrollTop).toBe(0)
+    scrollTo(editor, 200)
     vi.advanceTimersByTime(10)
     expect(preview.scrollTop).toBe(300)
   })
@@ -99,7 +121,8 @@ describe('createScrollSync', () => {
     editor.scrollTop = 0
     vi.advanceTimersByTime(10)
     expect(editor.scrollTop).toBe(0)
-    vi.advanceTimersByTime(50)
+    vi.advanceTimersByTime(60)
+    expect(editor.scrollTop).toBe(0)
     scrollTo(preview, 150)
     vi.advanceTimersByTime(10)
     expect(editor.scrollTop).toBe(50)
@@ -107,13 +130,26 @@ describe('createScrollSync', () => {
 
   it('来源锁在对侧从未触发 scroll 事件时也会按时过期', () => {
     const { editor, preview } = setup()
+    scrollTo(editor, 20)
+    vi.advanceTimersByTime(10)
+    expect(preview.scrollTop).toBe(60)
+    vi.advanceTimersByTime(50)
+    scrollTo(preview, 150)
+    vi.advanceTimersByTime(10)
+    expect(editor.scrollTop).toBe(50)
+  })
+
+  it('锁期内被丢弃的被动侧用户滚动在锁过期后补同步', () => {
+    const { editor, preview } = setup()
     scrollTo(editor, 50)
     vi.advanceTimersByTime(10)
     expect(preview.scrollTop).toBe(150)
-    vi.advanceTimersByTime(50)
-    scrollTo(preview, 350)
+    scrollTo(preview, 120)
     vi.advanceTimersByTime(10)
-    expect(editor.scrollTop).toBe(200)
+    expect(editor.scrollTop).toBe(50)
+    vi.advanceTimersByTime(40)
+    vi.advanceTimersByTime(10)
+    expect(editor.scrollTop).toBe(40)
   })
 
   it('refresh 立即重新测量并按最近的源同步', () => {
@@ -152,18 +188,7 @@ describe('createScrollSync', () => {
   })
 
   it('ResizeObserver 触发后重新测量，destroy 时断开', () => {
-    const observers: Array<{ cb: () => void; observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }> = []
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe = vi.fn()
-        disconnect = vi.fn()
-        unobserve = vi.fn()
-        constructor(public cb: () => void) {
-          observers.push(this)
-        }
-      },
-    )
+    const observers = stubResizeObserver()
     const { editor, engine, sync } = setup()
     expect(observers).toHaveLength(1)
     expect(observers[0]!.observe).toHaveBeenCalledTimes(2)
@@ -179,26 +204,55 @@ describe('createScrollSync', () => {
     expect(observers[0]!.disconnect).toHaveBeenCalled()
   })
 
-  it('2a 脚注位于最后一段内部：编辑区滚到底时预览也到底', () => {
-    const editor = scroller(400, 100)
-    const preview = scroller(600, 100)
+  it('ResizeObserver 触发后按最近的源重新对齐', () => {
+    const observers = stubResizeObserver()
+    const { editor, preview } = setup()
+    scrollTo(editor, 50)
+    vi.advanceTimersByTime(60)
+    expect(preview.scrollTop).toBe(150)
+    preview.replaceChildren()
+    setupPreview(preview, [
+      [0, 100],
+      [100, 300],
+    ])
+    observers[0]!.cb()
+    vi.advanceTimersByTime(10)
+    expect(preview.scrollTop).toBe(50)
+  })
+
+  it('2a 脚注位于最后一段内部、编辑区有内边距：两端都能对齐', () => {
+    // Editor: 16px padding around 600px of sections → scrollHeight 632, max 532.
+    const editor = scroller(632, 100)
+    // Preview: section 1 contains 400px of footnotes → scrollHeight 1000, max 900.
+    const preview = scroller(1000, 100)
     setupPreview(preview, [
       [0, 300],
-      [300, 300],
+      [300, 700],
     ])
     const footnotes = document.createElement('div')
     footnotes.className = 'ex-footnotes'
-    footnotes.getBoundingClientRect = () => ({ top: 400 - preview.scrollTop, height: 200 }) as DOMRect
+    footnotes.getBoundingClientRect = () => ({ top: 600 - preview.scrollTop, height: 400 }) as DOMRect
     preview.lastElementChild!.appendChild(footnotes)
-    const { engine } = fakeEngine(OFFSETS)
+    const { engine } = fakeEngine([
+      { start: 0, end: 10, top: 16, height: 200 },
+      { start: 10, end: 20, top: 216, height: 400 },
+    ])
     createScrollSync(engine, editor, preview, { debounceMs: 10, lockMs: 50 })
-    scrollTo(editor, 300)
+    scrollTo(editor, 532)
     vi.advanceTimersByTime(10)
-    expect(preview.scrollTop).toBe(500)
+    expect(preview.scrollTop).toBe(900)
+    vi.advanceTimersByTime(50)
+    scrollTo(preview, 0)
+    vi.advanceTimersByTime(10)
+    expect(editor.scrollTop).toBe(0)
+    vi.advanceTimersByTime(50)
+    scrollTo(preview, 900)
+    vi.advanceTimersByTime(10)
+    expect(editor.scrollTop).toBe(532)
   })
 
   it('下标超出源段数的预览段并入最后一段：编辑区滚到底时预览也到底', () => {
-    const editor = scroller(400, 100)
+    const editor = scroller(300, 100)
     const preview = scroller(600, 100)
     setupPreview(preview, [
       [0, 300],
@@ -207,7 +261,7 @@ describe('createScrollSync', () => {
     ])
     const { engine } = fakeEngine(OFFSETS)
     createScrollSync(engine, editor, preview, { debounceMs: 10, lockMs: 50 })
-    scrollTo(editor, 300)
+    scrollTo(editor, 200)
     vi.advanceTimersByTime(10)
     expect(preview.scrollTop).toBe(500)
   })
@@ -226,7 +280,7 @@ describe('createScrollSync', () => {
   })
 
   it('对侧不可滚动时保持 0 且不加锁', () => {
-    const editor = scroller(1000, 100)
+    const editor = scroller(300, 100)
     const preview = scroller(100, 100)
     setupPreview(preview, [
       [0, 50],
@@ -234,7 +288,7 @@ describe('createScrollSync', () => {
     ])
     const { engine } = fakeEngine(OFFSETS)
     createScrollSync(engine, editor, preview, { debounceMs: 10, lockMs: 50 })
-    scrollTo(editor, 200)
+    scrollTo(editor, 150)
     vi.advanceTimersByTime(10)
     expect(preview.scrollTop).toBe(0)
     expect(vi.getTimerCount()).toBe(0)

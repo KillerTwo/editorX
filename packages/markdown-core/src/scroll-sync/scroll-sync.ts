@@ -1,13 +1,23 @@
 // Ported from StackEdit (https://github.com/benweet/stackedit), Apache-2.0. Original: src/services/optional/scrollSync.js
 import { debounce } from '../engine/cledit/utils'
 import type { EditorEngine } from '../types'
-import { buildPairs, mapScrollTop, measurePreviewSections, type ScrollSide, type SectionPair } from './interpolate'
+import { buildPairs, measurePreviewSections, syncScrollTop, type ScrollSide, type SectionPair } from './interpolate'
 
 export interface ScrollSyncOptions {
   debounceMs?: number
   lockMs?: number
 }
 
+/**
+ * Two-way scroll sync between the editor and the preview.
+ *
+ * `editorScrollEl` must be the element the engine was mounted on: it is the editor's scroll container and
+ * `engine.getSectionOffsets()` is measured relative to it.
+ *
+ * Section sizes are cached and invalidated on `change` and container resizes. Call `refresh()` after every
+ * preview render and after late preview content growth (images loading, diagrams rendering), which a
+ * container-level ResizeObserver cannot see.
+ */
 export function createScrollSync(
   engine: EditorEngine,
   editorScrollEl: HTMLElement,
@@ -19,6 +29,8 @@ export function createScrollSync(
   let lastSource: ScrollSide = 'editor'
   let locked: ScrollSide | null = null
   let lockTimer: ReturnType<typeof setTimeout> | undefined
+  let writtenTop = 0
+  let droppedDuringLock = false
   let destroyed = false
 
   const elementOf = (side: ScrollSide) => (side === 'editor' ? editorScrollEl : previewEl)
@@ -36,17 +48,24 @@ export function createScrollSync(
     const src = elementOf(source)
     const target = other(source)
     const dst = elementOf(target)
-    const mapped = mapScrollTop(src.scrollTop, current, source)
+    const range = { max: src.scrollHeight - src.clientHeight, viewport: src.clientHeight }
+    const mapped = syncScrollTop(src.scrollTop, current, source, range, dst.scrollHeight - dst.clientHeight)
     if (!Number.isFinite(mapped)) return
-    const max = Math.max(0, dst.scrollHeight - dst.clientHeight)
-    const next = Math.round(Math.min(Math.max(0, mapped), max))
+    const next = Math.round(mapped)
     if (Math.abs(dst.scrollTop - next) < 1) return
     // The lock expires on its own: the browser may never fire a scroll event for the assignment.
     locked = target
+    writtenTop = next
+    droppedDuringLock = false
     clearTimeout(lockTimer)
     lockTimer = setTimeout(() => {
-      locked = null
       lockTimer = undefined
+      locked = null
+      if (droppedDuringLock && Math.abs(dst.scrollTop - writtenTop) >= 1) {
+        lastSource = target
+        scheduleSync(target)
+      }
+      droppedDuringLock = false
     }, lockMs)
     dst.scrollTop = next
   }
@@ -54,7 +73,10 @@ export function createScrollSync(
   const scheduleSync = debounce(doSync, opts.debounceMs ?? 16)
 
   const onScroll = (side: ScrollSide) => () => {
-    if (locked === side) return
+    if (locked === side) {
+      droppedDuringLock = true
+      return
+    }
     lastSource = side
     scheduleSync(side)
   }
@@ -67,11 +89,18 @@ export function createScrollSync(
     pairs = null
   }
   const offChange = engine.on('change', invalidate)
-  const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(invalidate)
+  const resizeObserver =
+    typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => {
+          invalidate()
+          scheduleSync(lastSource)
+        })
   resizeObserver?.observe(editorScrollEl)
   resizeObserver?.observe(previewEl)
 
   return {
+    /** Re-measures both panes and re-aligns from the last scrolled side. Call after each preview render. */
     refresh() {
       if (destroyed) return
       scheduleSync.cancel()
