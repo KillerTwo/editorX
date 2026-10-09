@@ -12,9 +12,9 @@ import type {
 } from '../types'
 import { DEFAULT_LINE_HEIGHT, Highlighter } from './cledit/highlighter'
 import { handleKeystroke } from './cledit/keystrokes'
-import { SelectionManager } from './cledit/selection'
+import { SelectionManager, topLevelChild } from './cledit/selection'
 import { UndoManager, type UndoManagerOptions, type UndoMode } from './cledit/undo'
-import { diffRange } from './cledit/utils'
+import { applyChange, diffRange, type TextChange } from './cledit/utils'
 import { Watcher } from './cledit/watcher'
 
 export interface ClEditEngineOptions {
@@ -25,6 +25,10 @@ export interface ClEditEngineOptions {
 type Listener = (payload: unknown) => void
 
 const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta'])
+const NOTHING_TOUCHED: ReadonlySet<Node> = new Set()
+
+/** Top-level children changed since the last sync, or `'all'` when the section structure itself may have changed. */
+type DirtyDom = Set<Node> | 'all' | null
 
 // The HTML parser drops U+0000, so keeping it would break DOM text === value + '\n'.
 function normalize(text: string): string {
@@ -87,6 +91,7 @@ export class ClEditEngine implements EditorEngine {
   private ariaLabel: string | undefined
   private releaseTab = false
   private isolateNextSync = false
+  private dirty: DirtyDom = null
   private readonly listeners = new Map<EngineEvent, Set<Listener>>()
   private cleanups: Array<() => void> = []
 
@@ -128,9 +133,15 @@ export class ClEditEngine implements EditorEngine {
       lineHeight: measureLineHeight(content),
     })
     this.selection = new SelectionManager(content, this.highlighter)
-    this.watcher = new Watcher(content, () => {
-      if (!this.composing) this.syncFromDom()
-    })
+    this.dirty = null
+    this.watcher = new Watcher(
+      content,
+      (records) => {
+        this.noteMutations(records)
+        if (!this.composing) this.syncFromDom()
+      },
+      (records) => this.noteMutations(records),
+    )
     const text = normalize(opts.value)
     if (text === this.value) {
       this.lastSelection = this.clamp(this.lastSelection, text.length)
@@ -161,6 +172,7 @@ export class ClEditEngine implements EditorEngine {
     this.selection = null
     this.watcher = null
     this.composing = false
+    this.dirty = null
   }
 
   setReadOnly(readOnly: boolean): void {
@@ -202,8 +214,8 @@ export class ClEditEngine implements EditorEngine {
     }
     this.value = text
     this.lastSelection = after
-    this.render(!opts.keepUndo)
-    this.selection?.set(after.start, after.end)
+    this.selection?.setOffsets(after.start, after.end)
+    this.render(!opts.keepUndo, NOTHING_TOUCHED)
   }
 
   getSelection(): Selection {
@@ -330,43 +342,113 @@ export class ClEditEngine implements EditorEngine {
     return this.lastSelection
   }
 
-  private render(force: boolean): void {
+  /**
+   * Re-highlights changed sections and restores the selection manager's offsets (callers set them first, so the
+   * native selection is written at most once). `touched`: see {@link Highlighter.update}.
+   */
+  private render(force: boolean, touched?: ReadonlySet<Node>): void {
     const { content, highlighter, watcher, selection } = this
     if (!content || !highlighter || !watcher || !selection) return
     watcher.noWatch(() => {
-      highlighter.update(this.value, force)
+      highlighter.update(this.value, force, touched)
       content.toggleAttribute('data-empty', this.value === '')
     })
     if (selection.hasFocus()) selection.restore()
   }
 
+  private noteMutations(records: readonly MutationRecord[]): void {
+    const { content } = this
+    if (!content || records.length === 0 || this.dirty === 'all') return
+    const touched = this.dirty ?? new Set<Node>()
+    for (const record of records) {
+      const top = record.target === content ? undefined : topLevelChild(content, record.target)
+      if (!top) {
+        this.dirty = 'all'
+        return
+      }
+      touched.add(top)
+    }
+    this.dirty = touched
+  }
+
   /**
-   * Mutation records can be dropped by `noWatch`, so compare the DOM text itself before programmatic edits.
-   * An in-progress composition is committed first so its text is never overwritten or duplicated.
+   * Syncs DOM edits whose mutation records were not delivered yet, so programmatic edits never overwrite them. The
+   * DOM is only read when records say it changed. An in-progress composition is committed first so its text is never
+   * overwritten or duplicated.
    */
   private flushDom(): void {
-    if (!this.content) return
+    if (!this.content || !this.watcher) return
+    this.noteMutations(this.watcher.takeRecords())
     if (this.composing) {
       this.composing = false
       this.syncFromDom()
-    } else if (this.content.textContent !== `${this.value}\n`) {
+    } else if (this.dirty) {
       this.syncFromDom()
     }
+  }
+
+  /**
+   * Derives the edit from the touched sections only: untouched sections still hold their last highlighted text.
+   * Returns null when that is not safe (structure changed, or text needs normalizing) and the whole DOM must be read.
+   */
+  private readTouchedSections(touched: ReadonlySet<Node>): { text: string; change: TextChange | null } | null {
+    const { content, highlighter } = this
+    if (!content || !highlighter) return null
+    const sections = highlighter.sections
+    let first = -1
+    let last = -1
+    let found = 0
+    sections.forEach((s, i) => {
+      if (!touched.has(s.el)) return
+      found++
+      if (first < 0) first = i
+      last = i
+    })
+    if (found !== touched.size) return null
+    let before = ''
+    let after = ''
+    for (let i = first; i <= last; i++) {
+      const s = sections[i]!
+      if (s.el.parentNode !== content) return null
+      const text = touched.has(s.el) ? (s.el.textContent ?? '') : s.text
+      if (text.includes('\r') || text.includes('\u0000')) return null
+      before += s.text
+      after += text
+    }
+    const local = diffRange(before, after)
+    if (!local) return { text: this.value, change: null }
+    // Sections span value + '\n'; a change reaching that final newline goes through the generic path below.
+    const change = { ...local, start: sections[first]!.start + local.start }
+    if (change.start + change.removed.length <= this.value.length) {
+      return { text: applyChange(this.value, change), change }
+    }
+    const full = applyChange(`${this.value}\n`, change)
+    const text = full.endsWith('\n') ? full.slice(0, -1) : full
+    return { text, change: diffRange(this.value, text) }
   }
 
   private syncFromDom(): void {
     const { content, selection } = this
     if (!content || !selection) return
-    const raw = content.textContent ?? ''
-    const normalized = normalize(raw)
-    const text = normalized.endsWith('\n') ? normalized.slice(0, -1) : normalized
+    const dirty = this.dirty
+    this.dirty = null
+    const local = dirty === null ? { text: this.value, change: null } : dirty === 'all' ? null : this.readTouchedSections(dirty)
+    let text: string
+    let change: TextChange | null
     let domSel = selection.save()
-    if (domSel && normalized !== raw) {
-      domSel = { start: normalize(raw.slice(0, domSel.start)).length, end: normalize(raw.slice(0, domSel.end)).length }
+    if (local) {
+      ;({ text, change } = local)
+    } else {
+      const raw = content.textContent ?? ''
+      const normalized = normalize(raw)
+      text = normalized.endsWith('\n') ? normalized.slice(0, -1) : normalized
+      if (domSel && normalized !== raw) {
+        domSel = { start: normalize(raw.slice(0, domSel.start)).length, end: normalize(raw.slice(0, domSel.end)).length }
+      }
+      change = diffRange(this.value, text)
     }
     const before = this.lastSelection
     const after = this.clamp(domSel ?? before, text.length)
-    const change = diffRange(this.value, text)
     if (change) {
       const mode: UndoMode = change.removed === '' ? 'typing' : change.inserted === '' ? 'deleting' : 'single'
       if (this.isolateNextSync) this.undoMgr.breakMerge()
@@ -376,22 +458,25 @@ export class ClEditEngine implements EditorEngine {
       this.value = text
     }
     this.lastSelection = after
-    selection.set(after.start, after.end)
-    this.render(false)
+    selection.setOffsets(after.start, after.end)
+    this.render(false, dirty === 'all' ? undefined : (dirty ?? NOTHING_TOUCHED))
     if (change) this.emit('change', this.value)
     if (after.start !== before.start || after.end !== before.end) this.emit('selectionChange', this.getSelection())
   }
 
+  /** Callers flush the DOM first, so no section is touched. */
   private applyState(next: TextState, mode: UndoMode): void {
     const change = diffRange(this.value, next.text)
     const after = this.clamp(next.selection, next.text.length)
-    if (change) {
-      this.undoMgr.record(change, this.lastSelection, after, mode)
-      this.value = next.text
-      this.render(false)
-    }
+    if (change) this.undoMgr.record(change, this.lastSelection, after, mode)
     this.lastSelection = after
-    this.selection?.set(after.start, after.end)
+    if (change) {
+      this.value = next.text
+      this.selection?.setOffsets(after.start, after.end)
+      this.render(false, NOTHING_TOUCHED)
+    } else {
+      this.selection?.set(after.start, after.end)
+    }
     if (change) this.emit('change', this.value)
     this.emit('selectionChange', this.getSelection())
   }
@@ -400,8 +485,8 @@ export class ClEditEngine implements EditorEngine {
     const sel = this.clamp(state.selection, state.text.length)
     this.value = state.text
     this.lastSelection = sel
-    this.render(false)
-    this.selection?.set(sel.start, sel.end)
+    this.selection?.setOffsets(sel.start, sel.end)
+    this.render(false, NOTHING_TOUCHED)
     this.emit('change', this.value)
     this.emit('selectionChange', this.getSelection())
   }

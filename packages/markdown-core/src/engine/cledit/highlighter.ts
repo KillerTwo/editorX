@@ -40,7 +40,11 @@ export class Highlighter implements SectionLocator {
     return this.list
   }
 
-  update(value: string, force = false): number[] {
+  /**
+   * `touched` lists the section elements whose DOM may differ from their last highlighted text; the others are
+   * trusted without reading their `textContent`. Omit it to verify every reused section.
+   */
+  update(value: string, force = false, touched?: ReadonlySet<Node>): number[] {
     const doc = this.root.ownerDocument
     const split = splitSections(value)
     const source = split.length > 0 ? split : [{ text: '', start: 0, end: 0 }]
@@ -49,7 +53,10 @@ export class Highlighter implements SectionLocator {
     )
     const old = this.list
     const reusable = (o: HighlightedSection, n: SourceSection) =>
-      !force && o.text === n.text && o.el.parentNode === this.root && o.el.textContent === n.text
+      !force &&
+      o.text === n.text &&
+      o.el.parentNode === this.root &&
+      ((touched !== undefined && !touched.has(o.el)) || o.el.textContent === n.text)
 
     let left = 0
     while (left < old.length && left < next.length && reusable(old[left]!, next[left]!)) left++

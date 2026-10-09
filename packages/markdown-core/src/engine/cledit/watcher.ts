@@ -6,6 +6,8 @@ export class Watcher {
   constructor(
     private readonly el: Node,
     private readonly listener: MutationCallback,
+    /** Receives records that were queued but not yet delivered when the observer was stopped. */
+    private readonly onDropped?: (records: MutationRecord[]) => void,
   ) {}
 
   get isWatching(): boolean {
@@ -20,9 +22,16 @@ export class Watcher {
   }
 
   stop(): void {
+    const pending = this.observer?.takeRecords() ?? []
     this.observer?.disconnect()
     this.observer = undefined
     this.watching = false
+    if (pending.length > 0) this.onDropped?.(pending)
+  }
+
+  /** Removes and returns records that are queued but not yet delivered to the listener. */
+  takeRecords(): MutationRecord[] {
+    return this.observer?.takeRecords() ?? []
   }
 
   noWatch(cb: () => void): void {

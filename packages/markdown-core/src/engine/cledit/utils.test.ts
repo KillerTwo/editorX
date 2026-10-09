@@ -1,6 +1,34 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { applyChange, debounce, diffRange, revertChange } from './utils'
 
+function naiveDiff(a: string, b: string) {
+  if (a === b) return null
+  let p = 0
+  while (p < Math.min(a.length, b.length) && a[p] === b[p]) p++
+  let s = 0
+  while (s < Math.min(a.length, b.length) - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s++
+  return { start: p, removed: a.slice(p, a.length - s), inserted: b.slice(p, b.length - s) }
+}
+
+describe('diffRange 与逐字符比较结果一致', () => {
+  it('随机编辑（含重复字符与边界）', () => {
+    let seed = 42
+    const rand = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648
+      return seed % n
+    }
+    const alphabet = 'ab\n#'
+    const word = (n: number) => Array.from({ length: n }, () => alphabet[rand(alphabet.length)]).join('')
+    for (let i = 0; i < 2000; i++) {
+      const a = word(rand(40))
+      const at = rand(a.length + 1)
+      const del = rand(Math.min(5, a.length - at) + 1)
+      const b = a.slice(0, at) + word(rand(5)) + a.slice(at + del)
+      expect(diffRange(a, b)).toEqual(naiveDiff(a, b))
+    }
+  })
+})
+
 describe('diffRange', () => {
   it('相同文本返回 null', () => {
     expect(diffRange('abc', 'abc')).toBeNull()

@@ -5,19 +5,33 @@ export interface TextChange {
   inserted: string
 }
 
+// Binary search over substring equality: native string comparison beats a per-character loop on long documents.
+function commonPrefix(a: string, b: string, max: number): number {
+  let lo = 0
+  let hi = max
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1
+    if (a.slice(lo, mid) === b.slice(lo, mid)) lo = mid
+    else hi = mid - 1
+  }
+  return lo
+}
+
+function commonSuffix(a: string, b: string, max: number): number {
+  let lo = 0
+  let hi = max
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1
+    if (a.slice(a.length - mid, a.length - lo) === b.slice(b.length - mid, b.length - lo)) lo = mid
+    else hi = mid - 1
+  }
+  return lo
+}
+
 export function diffRange(oldText: string, newText: string): TextChange | null {
   if (oldText === newText) return null
-  const maxPrefix = Math.min(oldText.length, newText.length)
-  let prefix = 0
-  while (prefix < maxPrefix && oldText.charCodeAt(prefix) === newText.charCodeAt(prefix)) prefix++
-  const maxSuffix = Math.min(oldText.length, newText.length) - prefix
-  let suffix = 0
-  while (
-    suffix < maxSuffix &&
-    oldText.charCodeAt(oldText.length - 1 - suffix) === newText.charCodeAt(newText.length - 1 - suffix)
-  ) {
-    suffix++
-  }
+  const prefix = commonPrefix(oldText, newText, Math.min(oldText.length, newText.length))
+  const suffix = commonSuffix(oldText, newText, Math.min(oldText.length, newText.length) - prefix)
   return {
     start: prefix,
     removed: oldText.slice(prefix, oldText.length - suffix),

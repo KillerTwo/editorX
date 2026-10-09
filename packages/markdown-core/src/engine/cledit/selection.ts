@@ -11,7 +11,7 @@ export interface SectionLocator {
   sectionStart(el: Node): number | undefined
 }
 
-function topLevelChild(root: Node, node: Node): Node | undefined {
+export function topLevelChild(root: Node, node: Node): Node | undefined {
   let current: Node | null = node
   while (current && current.parentNode !== root) current = current.parentNode
   return current ?? undefined
@@ -105,9 +105,14 @@ export class SelectionManager {
   }
 
   set(start: number, end: number): void {
+    this.setOffsets(start, end)
+    if (this.hasFocus()) this.restore()
+  }
+
+  /** Stores the offsets for the next `restore()` without touching the native selection. */
+  setOffsets(start: number, end: number): void {
     this.start = Math.max(0, start)
     this.end = Math.max(0, end)
-    if (this.hasFocus()) this.restore()
   }
 
   save(): Selection | null {

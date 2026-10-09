@@ -704,6 +704,101 @@ describe('ClEditEngine 生命周期', () => {
   })
 })
 
+/** Counts `textContent` reads per node (all nodes go through the Node.prototype getter). */
+function countTextContentReads(): Map<Node, number> {
+  const desc = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent')!
+  const reads = new Map<Node, number>()
+  vi.spyOn(Node.prototype, 'textContent', 'get').mockImplementation(function (this: Node) {
+    reads.set(this, (reads.get(this) ?? 0) + 1)
+    return desc.get!.call(this) as string
+  })
+  return reads
+}
+
+const sectionReads = (content: HTMLElement, reads: Map<Node, number>) =>
+  [...content.querySelectorAll('.ex-editor-section')].map((el) => reads.get(el) ?? 0)
+
+describe('ClEditEngine 脏标记：按键路径不读整文', () => {
+  const doc = '# A\n\nx\n## B\n\ny\n## C\n\nz'
+
+  it('DOM 未变时 Enter / replace 不读编辑区与各段的 textContent', () => {
+    const { engine, content } = setup('- a\n' + doc)
+    content.focus()
+    engine.setSelection(3, 3)
+    const reads = countTextContentReads()
+    const add = vi.spyOn(window.getSelection()!, 'addRange')
+    expect(keydown(content, 'Enter').defaultPrevented).toBe(true)
+    engine.replace(0, 0, '>')
+    expect(reads.get(content) ?? 0).toBe(0)
+    expect(sectionReads(content, reads)).toEqual([0, 0, 0, 0])
+    expect(add.mock.calls.length).toBeLessThanOrEqual(2)
+    vi.restoreAllMocks()
+    expect(engine.getValue()).toBe('>- a\n- \n' + doc)
+    expect(content.textContent).toBe(engine.getValue() + '\n')
+  })
+
+  it('DOM 已变但变更记录尚未投递时，程序化编辑前仍先同步', () => {
+    const { engine, content, changes } = setup(doc)
+    content.focus()
+    typeInto(textNodeContaining(content, 'y'), 'y', 'Y')
+    const reads = countTextContentReads()
+    engine.replace(0, 0, '>')
+    expect(reads.get(content) ?? 0).toBe(0)
+    vi.restoreAllMocks()
+    expect(changes).toEqual([doc.replace('y', 'yY'), '>' + doc.replace('y', 'yY')])
+    expect(content.textContent).toBe(engine.getValue() + '\n')
+  })
+
+  it('段内输入只读被改动的段', async () => {
+    const { engine, content } = setup(doc)
+    content.focus()
+    typeInto(textNodeContaining(content, 'y'), 'y', 'Y')
+    const reads = countTextContentReads()
+    await flush()
+    const sections = [...content.querySelectorAll('.ex-editor-section')]
+    const counts = new Map(reads)
+    vi.restoreAllMocks()
+    expect(engine.getValue()).toBe(doc.replace('y', 'yY'))
+    expect(counts.get(content) ?? 0).toBe(0)
+    expect([sections[0], sections[2]].map((el) => counts.get(el!) ?? 0)).toEqual([0, 0])
+    expect(content.textContent).toBe(engine.getValue() + '\n')
+    expect(engine.getSelection()).toEqual({ start: 15, end: 15 })
+  })
+
+  it('跨段改动（删除段尾换行使两段合并）仍得到正确内容与撤销', async () => {
+    const { engine, content } = setup(doc)
+    content.focus()
+    const node = textNodeContaining(content, 'x')
+    node.data = node.data.replace('x\n', 'x')
+    await flush()
+    expect(engine.getValue()).toBe('# A\n\nx## B\n\ny\n## C\n\nz')
+    expect(content.textContent).toBe(engine.getValue() + '\n')
+    engine.undo()
+    expect(engine.getValue()).toBe(doc)
+  })
+
+  it('顶层结构变化（新增顶层节点）回退为整文读取', async () => {
+    const { engine, content } = setup('abc')
+    content.focus()
+    const extra = document.createElement('div')
+    extra.textContent = 'zz'
+    content.appendChild(extra)
+    await flush()
+    expect(engine.getValue()).toBe('abc\nzz')
+    expect(content.textContent).toBe('abc\nzz\n')
+  })
+
+  it('同一次投递中多个段被改动', async () => {
+    const { engine, content } = setup(doc)
+    content.focus()
+    textNodeContaining(content, 'x').data = textNodeContaining(content, 'x').data.replace('x', 'x1')
+    textNodeContaining(content, 'z').data = textNodeContaining(content, 'z').data.replace('z', 'z2')
+    await flush()
+    expect(engine.getValue()).toBe(doc.replace('x', 'x1').replace('z', 'z2'))
+    expect(content.textContent).toBe(engine.getValue() + '\n')
+  })
+})
+
 describe('ClEditEngine 撤销边界', () => {
   it('setSelection 改变光标后再输入是新的一步撤销', async () => {
     const { engine, content } = setup('abc')
