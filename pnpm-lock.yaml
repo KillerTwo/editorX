@@ -65,12 +65,18 @@ importers:
 
   apps/playground:
     dependencies:
+      '@editorx/markdown':
+        specifier: workspace:*
+        version: link:../../packages/markdown
       '@editorx/markdown-core':
         specifier: workspace:*
         version: link:../../packages/markdown-core
       '@editorx/theme':
         specifier: workspace:*
         version: link:../../packages/theme
+      '@editorx/toolbar':
+        specifier: workspace:*
+        version: link:../../packages/toolbar
       '@editorx/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -1,0 +1,96 @@
+/* /markdown 演示页：顶栏 61px + 外框 padding 16/16/14/14（与 CSDN 参考截图一致） */
+.pg-mde {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--ex-color-mde-canvas);
+}
+
+.pg-mde__topbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  height: 61px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--ex-color-mde-divider);
+  background: var(--ex-color-surface);
+  color: var(--ex-color-text);
+}
+
+.pg-mde__brand { color: var(--ex-color-primary); font-size: 18px; }
+.pg-mde__title { flex: 1; min-width: 0; overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.pg-mde__controls { display: flex; align-items: center; gap: 12px; color: var(--ex-color-text-secondary); font-size: 12px; }
+.pg-mde__check { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+
+.pg-mde__frame {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 16px 16px 14px 14px;
+}
+
+.pg-mde-switch,
+.pg-mde-draft {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--ex-radius-md);
+  background: var(--ex-color-mde-tab-bg);
+  color: var(--ex-color-mde-chrome-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pg-mde-draft { height: 36px; padding: 0 16px; }
+.pg-mde-publish { height: 36px; padding: 0 16px; }
+
+.pg-mde-quota {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--ex-color-primary) 25%, transparent);
+  border-radius: var(--ex-radius-md);
+  background: color-mix(in srgb, var(--ex-color-primary) 6%, transparent);
+  color: var(--ex-color-text-secondary);
+  font-size: 14px;
+}
+
+.pg-mde-quota svg { color: var(--ex-color-primary); }
+.pg-mde-quota em { color: var(--ex-color-primary); font-style: normal; }
+.pg-mde-quota a { color: var(--ex-color-primary); text-decoration: none; }
+
+.pg-mde-badge-icon { position: relative; display: inline-flex; }
+
+.pg-mde-dot {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ex-color-error);
+}
+
+.pg-mde-new {
+  position: absolute;
+  top: -8px;
+  right: -14px;
+  padding: 0 3px;
+  border-radius: var(--ex-radius-pill);
+  background: var(--ex-color-error);
+  color: var(--ex-color-surface);
+  font-size: 8px;
+  line-height: 12px;
+}
+
+.pg-mde-panel { display: flex; flex-direction: column; }
+.pg-mde-muted { margin: 16px 20px; color: var(--ex-color-text-muted); font-size: 13px; }
+.pg-mde-templates { margin: 0; padding: 0; list-style: none; }
