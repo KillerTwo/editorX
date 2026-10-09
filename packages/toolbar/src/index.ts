@@ -1,13 +1,19 @@
 export type {
   AdapterName,
+  ArticleType,
   Category,
+  CoverMode,
+  CreationDeclaration,
   EditorAdapters,
   EditorDocument,
   EditorType,
+  PublishCover,
+  PublishOption,
   PublishPayload,
   PublishSettings,
   Resource,
   Template,
+  Visibility,
   VoteInput,
 } from './types'
 export { errorMessage, formatMessage, mergeMessages, zhCN } from './messages'

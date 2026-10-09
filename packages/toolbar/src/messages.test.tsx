@@ -74,4 +74,25 @@ describe('Messages', () => {
     )
     expect(screen.getByTestId('probe')).toHaveTextContent('Bold|Split|文章已保存')
   })
+
+  it('publish 分桶：CSDN 文案、冻结、可深合并覆盖', () => {
+    expect(zhCN.publish.modalTitle).toBe('发布文章')
+    expect(zhCN.publish.fields.tags).toBe('文章标签')
+    expect(zhCN.publish.fields.activity).toBe('参与活动')
+    expect(zhCN.publish.actions).toMatchObject({
+      saveDraft: '保存草稿',
+      saveDraftModal: '保存为草稿',
+      schedule: '定时发布',
+      publish: '发布文章',
+      publishInline: '发布博客',
+      cancel: '取消',
+    })
+    expect(zhCN.publish.cover.noImages).toBe('暂无内容图片，请在正文中添加图片')
+    expect(formatMessage(zhCN.publish.summary.counterInline, { count: 0, max: 256 })).toBe('0 / 256')
+    expect(formatMessage(zhCN.publish.summary.counterModal, { count: 0, max: 256 })).toBe('0/256')
+    expect(Object.isFrozen(zhCN.publish.errors)).toBe(true)
+    const merged = mergeMessages(zhCN, { publish: { actions: { publish: 'Publish' } } })
+    expect(merged.publish.actions.publish).toBe('Publish')
+    expect(merged.publish.actions.cancel).toBe('取消')
+  })
 })
