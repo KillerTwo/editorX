@@ -109,6 +109,32 @@ describe('内置扩展', () => {
     expect(handle().getValue()).toBe('t')
   })
 
+  it('Ctrl+Shift+L / Ctrl+Shift+G 与工具栏按钮一样打开链接 / 图片对话框', async () => {
+    const { handle } = renderEditor({ defaultValue: '文档' })
+    act(() => handle().getEngine().setSelection(0, 2))
+    fireEvent.keyDown(editorContent(), { key: 'L', code: 'KeyL', ctrlKey: true, shiftKey: true })
+    const link = await screen.findByRole('dialog', { name: '链接' })
+    expect(within(link).getByLabelText('链接文本')).toHaveValue('文档')
+    await userEvent.click(within(link).getByRole('button', { name: '取消' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    fireEvent.keyDown(editorContent(), { key: 'G', code: 'KeyG', ctrlKey: true, shiftKey: true })
+    expect(await screen.findByRole('dialog', { name: '图片' })).toBeInTheDocument()
+    expect(handle().getValue()).toBe('文档')
+  })
+
+  it('只读时 Ctrl+Shift+L 不打开对话框', () => {
+    renderEditor({ defaultValue: 'x', readOnly: true })
+    fireEvent.keyDown(editorContent(), { key: 'L', code: 'KeyL', ctrlKey: true, shiftKey: true })
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('布局中没有链接按钮时 Ctrl+Shift+L 回退为直接插入链接语法', () => {
+    const { handle } = renderEditor({ defaultValue: '', toolbarLayout: [['bold']] })
+    fireEvent.keyDown(editorContent(), { key: 'L', code: 'KeyL', ctrlKey: true, shiftKey: true })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(handle().getValue()).not.toBe('')
+  })
+
   it('只读时快捷键不修改文档', () => {
     const { handle } = renderEditor({ defaultValue: 'x', readOnly: true })
     act(() => handle().getEngine().setSelection(0, 1))
@@ -366,6 +392,9 @@ describe('内置扩展', () => {
     expect(page).toContain('<svg data-test="diagram"></svg>')
     expect(page).not.toContain('language-mermaid')
     expect(page).toContain('<title>图表</title>')
+    const style = /<style>([\s\S]*?)<\/style>/.exec(page)?.[1] ?? ''
+    expect(style).toContain('.ex-preview')
+    expect(style).not.toContain('var(--ex-')
     expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('图表.html')
     expect(previewEl().querySelector('svg')).toBeNull()
   })

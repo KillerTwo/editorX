@@ -1,7 +1,13 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
 import { Image, Link, Sigma, Table, TableOfContents, Workflow } from 'lucide-react'
+import { getMarkdownInternals } from '../internals'
 import { ImageDialog, LinkDialog, TableDialog } from './dialogs'
 import { ICON_SIZE, run } from './format'
+
+/** 与点击工具栏按钮一致打开对话框；按钮不在工具栏中（宿主自定义布局）时直接执行命令 */
+const openDialogOr = (id: string, fallback: (ctx: ExtensionContext) => void) => (ctx: ExtensionContext) => {
+  if (!getMarkdownInternals(ctx)?.openToolbarDialog(id)) fallback(ctx)
+}
 
 export const imageExtension: EditorExtension = {
   name: 'core:image',
@@ -16,7 +22,7 @@ export const imageExtension: EditorExtension = {
       render: (ctx, close) => <ImageDialog ctx={ctx} close={close} />,
     },
   ],
-  shortcuts: { 'Mod-Shift-G': run('image') },
+  shortcuts: { 'Mod-Shift-G': openDialogOr('image', run('image')) },
 }
 
 export const linkExtension: EditorExtension = {
@@ -32,7 +38,7 @@ export const linkExtension: EditorExtension = {
       render: (ctx, close) => <LinkDialog ctx={ctx} close={close} />,
     },
   ],
-  shortcuts: { 'Mod-Shift-L': run('link') },
+  shortcuts: { 'Mod-Shift-L': openDialogOr('link', run('link')) },
 }
 
 export const moreInsertExtension: EditorExtension = {

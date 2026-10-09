@@ -16,6 +16,7 @@ import {
   useStableArray,
   type EditorAdapters,
   type EditorExtension,
+  type ToolbarHandle,
 } from '@editorx/toolbar'
 import { ToastProvider, useToast } from '@editorx/ui'
 import {
@@ -141,6 +142,7 @@ function EditorShell({
   const rootRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const panelIdsRef = useRef<ReadonlySet<string>>(new Set())
+  const toolbarRef = useRef<ToolbarHandle>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -212,6 +214,7 @@ function EditorShell({
           previewScroller: previewScrollRef.current,
         }),
       hasPanel: (id) => panelIdsRef.current.has(id),
+      openToolbarDialog: (id) => toolbarRef.current?.openDialog(id) ?? false,
       // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
       renderExportHtml: async () => {
         await runtime.flush()
@@ -363,6 +366,7 @@ function EditorShell({
           {slots?.headerEnd && <div className="ex-mde-header__end">{slots.headerEnd}</div>}
         </div>
         <Toolbar
+          ref={toolbarRef}
           className="ex-mde-toolbar"
           groups={groups}
           ctx={ctx}

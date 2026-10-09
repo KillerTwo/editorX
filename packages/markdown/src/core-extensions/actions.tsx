@@ -2,6 +2,7 @@ import { exportHtml, exportMarkdown, importFile } from '@editorx/markdown-core'
 import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@editorx/toolbar'
 import { BookOpen, Download, FileText, FileUp, Maximize2 } from 'lucide-react'
 import { downloadBlob, pickFile } from '../download'
+import { EXPORT_PAGE_CSS } from '../export-html'
 import { getMarkdownInternals } from '../internals'
 import { ICON_SIZE } from './format'
 
@@ -47,7 +48,10 @@ async function exportHtmlFile(ctx: ExtensionContext) {
       title = doc.title
       html = doc.html
     }
-    const page = exportHtml({ html, sections: [], toc: [] }, { title: title.trim() || ctx.locale.toolbar.untitled })
+    const page = exportHtml(
+      { html, sections: [], toc: [] },
+      { title: title.trim() || ctx.locale.toolbar.untitled, css: EXPORT_PAGE_CSS },
+    )
     downloadBlob(new Blob([page], { type: 'text/html;charset=utf-8' }), fileName(ctx, title, 'html'))
   } finally {
     exporting.delete(ctx)

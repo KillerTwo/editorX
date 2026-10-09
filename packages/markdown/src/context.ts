@@ -19,6 +19,8 @@ export interface MarkdownContextDeps {
   scrollToHeading?(id: string): boolean
   /** 默认始终为 true */
   hasPanel?(id: string): boolean
+  /** 默认始终为 false */
+  openToolbarDialog?(id: string): boolean
   renderExportHtml(): Promise<string>
   /** 默认始终为 true */
   isMounted?(): boolean
@@ -121,6 +123,7 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
     toggleFullscreen: () => store.set({ fullscreen: !store.get().fullscreen }),
     scrollToHeading: (id) => deps.scrollToHeading?.(id) ?? false,
     hasPanel: (id) => deps.hasPanel?.(id) ?? true,
+    openToolbarDialog: (id) => deps.openToolbarDialog?.(id) ?? false,
     isMounted: () => deps.isMounted?.() ?? true,
   })
   return ctx
