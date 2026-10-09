@@ -1,8 +1,7 @@
 import { useMessages } from '@editorx/toolbar'
 import { Button } from '@editorx/ui'
-import { ChevronRight } from 'lucide-react'
 import type { AdapterState } from './adapter-state'
-import { CaretDownIcon } from './icons'
+import { CaretDownIcon, ChevronRightIcon } from './icons'
 import type { PublishVariant } from './types'
 import type { PublishBusy } from './use-publish-controller'
 
@@ -56,7 +55,7 @@ export function PublishActions(props: PublishActionsProps) {
             onClick={onSchedule}
           >
             {a.schedule}
-            {!modal && <ChevronRight className="ex-pub-action__chevron" size={14} aria-hidden="true" />}
+            {!modal && <ChevronRightIcon className="ex-pub-action__chevron" />}
           </Button>
           <Button
             variant="primary"

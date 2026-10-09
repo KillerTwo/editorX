@@ -46,6 +46,20 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__required \{[^}]*position: absolute;[^}]*left: -16px;/)
   })
 
+  it('单选文字：未选/已选颜色按呈现取 token（内联 #606266/#1a1a1a，模态 #555666/#409eff）', () => {
+    expect(css).toMatch(/\.ex-pub \{[^}]*--ex-pub-option: var\(--ex-color-pub-label\);[^}]*--ex-pub-option-checked: var\(--ex-color-pub-text\);/)
+    expect(css).toMatch(
+      /\.ex-pub--modal \{[^}]*--ex-pub-option: var\(--ex-color-pub-option-modal\);[^}]*--ex-pub-option-checked: var\(--ex-color-pub-check-modal\);/,
+    )
+    expect(css).toMatch(/\.ex-pub \.ex-radio \{[^}]*color: var\(--ex-pub-option\);/)
+    expect(css).toMatch(/\.ex-pub \.ex-radio\.is-checked \{[^}]*color: var\(--ex-pub-option-checked\);/)
+  })
+
+  it('模态摘要框不可拖拽缩放，内联保留', () => {
+    expect(css).toMatch(/\.ex-pub-textarea \{[^}]*resize: vertical;/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-textarea \{[^}]*resize: none;/)
+  })
+
   it('组件中用到的每个 ex-pub-* 类名都有样式', () => {
     const dir = import.meta.dirname
     const sources = (readdirSync(dir, { recursive: true }) as string[])

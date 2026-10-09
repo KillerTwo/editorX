@@ -1,5 +1,6 @@
 import { formatMessage, useMessages } from '@editorx/toolbar'
 import { cx } from '../cx'
+import { WandIcon } from '../icons'
 import type { PublishVariant } from '../types'
 import { countChars, SUMMARY_MAX } from '../validate'
 import { errorId, labelId } from './form-item'
@@ -35,6 +36,7 @@ export function SummaryField({ id, value, onChange, source, variant, invalid }: 
         </span>
       </div>
       <button type="button" className="ex-pub-summary__extract" disabled={!source} onClick={() => onChange(source)}>
+        <WandIcon className="ex-pub-summary__wand" />
         {p.summary.extract}
       </button>
     </div>

@@ -17,6 +17,25 @@ export function CaretDownIcon({ className }: { className?: string }) {
   )
 }
 
+/** 「定时发布」后的细箭头：svg 盒即墨迹盒（参考图 7×12） */
+export function ChevronRightIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">
+      <path d="M.5.5 6 6 .5 11.5" fill="none" stroke="currentColor" />
+    </svg>
+  )
+}
+
+/** 「AI提取摘要」前的魔棒：斜向描边棒身 + 三粒星点（参考图 14×14） */
+export function WandIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+      <path d="M.7 11.3 10.3 1.7l2 2-9.6 9.6zM8.3 3.7l2 2" fill="none" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M3.2.2h2v2h-2zM.8 4.3h2v2h-2zM10.8 7.3h1.6v2h-1.6z" fill="currentColor" />
+    </svg>
+  )
+}
+
 /** 上传框中的细「+」 */
 export function PlusIcon({ size }: { size: number }) {
   return (

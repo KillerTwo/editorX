@@ -114,6 +114,15 @@ describe('SummaryField', () => {
     await userEvent.paste('字'.repeat(257))
     expect(container.querySelector('.ex-pub-summary__box')).toHaveClass('is-over')
   })
+
+  it.each(['inline', 'modal'] as const)('%s：「AI提取摘要」按钮前有魔棒图标，不影响按钮名称', (variant) => {
+    renderWithProviders(<Summary variant={variant} source="正文" />)
+    const button = screen.getByRole('button', { name: 'AI提取摘要' })
+    const icon = button.querySelector('svg.ex-pub-summary__wand')
+    expect(icon).not.toBeNull()
+    expect(icon).toHaveAttribute('aria-hidden', 'true')
+    expect(button.firstElementChild).toBe(icon)
+  })
 })
 
 describe('CategoryField', () => {
@@ -182,6 +191,13 @@ describe('选项字段', () => {
     expect(screen.getByRole('link', { name: '用户协议' })).toHaveAttribute('href', 'https://gitcode.com/terms')
     expect(screen.queryByRole('link', { name: '隐私政策' })).toBeNull()
     expect(screen.getByText('隐私政策')).toHaveClass('ex-pub-link')
+  })
+
+  it('文章备份：协议文案与参考截图一致', () => {
+    const { container } = renderWithProviders(<BackupField checked={false} onChange={() => {}} />)
+    expect(container.querySelector('.ex-pub-agreement')).toHaveTextContent(
+      /^您已同意GitCode 用户协议 和 隐私政策，我们会为您自动创建账号并备份文章至我的项目。$/,
+    )
   })
 
   it('参与活动/话题：按 adapter 状态隐藏或禁用子行', async () => {
