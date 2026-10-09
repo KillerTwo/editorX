@@ -111,6 +111,10 @@ const MDE_TOKENS = [
   '--ex-color-mde-toc-link',
   '--ex-color-mde-body-text',
   '--ex-color-mde-body-marker',
+  '--ex-color-mde-heading-text',
+  '--ex-color-mde-list-text',
+  '--ex-color-mde-preview-link',
+  '--ex-color-mde-preview-rule',
   '--ex-color-mde-disabled-text',
 ]
 
@@ -124,6 +128,11 @@ describe('CSDN 外壳 token', () => {
     expect(expected.get('--ex-color-mde-tab-active-bg')?.[0]).toBe('#1a1a1a')
     expect(expected.get('--ex-color-mde-split-preview-bg')?.[0]).toBe('#f9f9f9')
     expect(expected.get('--ex-color-mde-rail-active-bg')?.[0]).toBe('#e5f1ff')
+    expect(expected.get('--ex-color-mde-body-marker')?.[0]).toBe('#c7c0c0')
+    expect(expected.get('--ex-color-mde-heading-text')?.[0]).toBe('#4f4f4f')
+    expect(expected.get('--ex-color-mde-list-text')?.[0]).toBe('#404040')
+    expect(expected.get('--ex-color-mde-preview-link')?.[0]).toBe('#4ea1db')
+    expect(expected.get('--ex-color-mde-preview-rule')?.[0]).toBe('#dddddd')
   })
 
   it('暗色值单独定义（CSDN 无暗色主题）', () => {

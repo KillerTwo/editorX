@@ -47,7 +47,11 @@
   --ex-color-mde-rail-active-bg: light-dark(#e5f1ff, #1f2a3a);
   --ex-color-mde-toc-link: light-dark(#333333, #c8c9d1);
   --ex-color-mde-body-text: light-dark(#4d4d4d, #c8c9d1);
-  --ex-color-mde-body-marker: light-dark(#999999, #6b6c76);
+  --ex-color-mde-body-marker: light-dark(#c7c0c0, #6b6c76);
+  --ex-color-mde-heading-text: light-dark(#4f4f4f, #dcdde3);
+  --ex-color-mde-list-text: light-dark(#404040, #d0d1d8);
+  --ex-color-mde-preview-link: light-dark(#4ea1db, #6cb6ea);
+  --ex-color-mde-preview-rule: light-dark(#dddddd, #3a3b41);
   --ex-color-mde-disabled-text: light-dark(#bbbbbb, #5a5b63);
 
   --ex-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'SF UI Text', Arial, sans-serif;
@@ -156,7 +160,11 @@
     --ex-color-mde-rail-active-bg: #e5f1ff;
     --ex-color-mde-toc-link: #333333;
     --ex-color-mde-body-text: #4d4d4d;
-    --ex-color-mde-body-marker: #999999;
+    --ex-color-mde-body-marker: #c7c0c0;
+    --ex-color-mde-heading-text: #4f4f4f;
+    --ex-color-mde-list-text: #404040;
+    --ex-color-mde-preview-link: #4ea1db;
+    --ex-color-mde-preview-rule: #dddddd;
     --ex-color-mde-disabled-text: #bbbbbb;
   }
 
@@ -210,6 +218,10 @@
     --ex-color-mde-toc-link: #c8c9d1;
     --ex-color-mde-body-text: #c8c9d1;
     --ex-color-mde-body-marker: #6b6c76;
+    --ex-color-mde-heading-text: #dcdde3;
+    --ex-color-mde-list-text: #d0d1d8;
+    --ex-color-mde-preview-link: #6cb6ea;
+    --ex-color-mde-preview-rule: #3a3b41;
     --ex-color-mde-disabled-text: #5a5b63;
   }
 
@@ -264,6 +276,10 @@
       --ex-color-mde-toc-link: #c8c9d1;
       --ex-color-mde-body-text: #c8c9d1;
       --ex-color-mde-body-marker: #6b6c76;
+      --ex-color-mde-heading-text: #dcdde3;
+      --ex-color-mde-list-text: #d0d1d8;
+      --ex-color-mde-preview-link: #6cb6ea;
+      --ex-color-mde-preview-rule: #3a3b41;
       --ex-color-mde-disabled-text: #5a5b63;
     }
   }
