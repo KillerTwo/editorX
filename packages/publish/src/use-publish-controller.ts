@@ -19,12 +19,14 @@ export type PublishBusy = 'publish' | 'draft' | null
 export interface PublishControllerOptions {
   value?: PublishSettings
   defaultValue?: Partial<PublishSettings>
+  /** 受控父组件需在 onChange 中同步应用新值；放进 transition 或异步更新时，下一次修改可能基于旧值 */
   onChange?: (settings: PublishSettings) => void
   document?: EditorDocument
   adapters: EditorAdapters
   rules?: PublishRules
   messages: Messages['publish']
   notify: (message: string, type?: ToastType) => void
+  /** 发布成功（已提示成功）后调用；它抛出的异常不算发布失败，原样由 publish() 的 Promise 拒绝 */
   onPublished?: (payload: PublishPayload) => void
   /** 当前时间（ms），便于测试注入 */
   now?: () => number
@@ -37,6 +39,10 @@ export interface PublishController {
   /** 每次校验失败 +1，表单据此把焦点移到第一个错误字段 */
   failedAttempts: number
   update<K extends keyof PublishSettings>(key: K, value: PublishSettings[K]): void
+  /**
+   * 校验并调用 adapters.onPublish：成功 true，校验失败或接口失败 false（均已 toast）。
+   * 只在 onPublished 抛错时拒绝——此时文章已发布，调用方不要把它当作发布失败提示。
+   */
   publish(scheduledAt?: string): Promise<boolean>
   saveDraft(): Promise<boolean>
 }

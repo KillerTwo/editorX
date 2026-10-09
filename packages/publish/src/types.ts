@@ -23,6 +23,7 @@ export interface AgreementLinks {
 export interface PublishBaseProps {
   value?: PublishSettings
   defaultValue?: Partial<PublishSettings>
+  /** 受控时需在回调中同步应用新值（不要放进 transition 或异步更新） */
   onChange?(settings: PublishSettings): void
   /** 当前文章：用于标题校验、摘要提取、正文图片封面与 payload */
   document?: EditorDocument
@@ -37,6 +38,7 @@ export interface PublishBaseProps {
   templates?: readonly PublishOption[]
   /** GitCode 协议链接；未提供时渲染为纯文本 */
   agreementLinks?: AgreementLinks
+  /** 发布成功后调用（PublishModal 在此之前已调用 onClose）；抛出的异常不会显示为发布失败 */
   onPublished?(payload: PublishPayload): void
   locale?: DeepPartial<Messages>
   /**
