@@ -4,6 +4,8 @@ import {
   collectDefinitions,
   collectFootnoteDefinitions,
   type DefinitionEnv,
+  definitionsUsedBy,
+  joinDefinitions,
   parseDefinitions,
   seedEnv,
 } from './definitions'
@@ -55,11 +57,12 @@ export function createRenderer(options?: RendererOptions): Renderer {
       const sources = splitSections(markdown)
       const definitions = collectDefinitions(markdown)
       let defs: DefinitionEnv | undefined
-      const definitionEnv = () => (defs ??= parseDefinitions(md, definitions))
+      const definitionEnv = () => (defs ??= parseDefinitions(md, joinDefinitions(definitions)))
+      const cacheKey = (text: string) => `${definitionsUsedBy(text, definitions)}\u0000${text}`
 
       const nextCache = new Map<string, CachedSection>()
       const rendered = sources.map((section) => {
-        const key = `${definitions}\u0000${section.text}`
+        const key = cacheKey(section.text)
         const entry = nextCache.get(key) ?? cache.get(key) ?? renderSection(section.text, definitionEnv())
         nextCache.set(key, entry)
         return entry
@@ -77,8 +80,9 @@ export function createRenderer(options?: RendererOptions): Renderer {
       )
 
       const nextFootnoteCache = new Map<string, CachedFootnoteBody>()
-      const footnotesHtml = renderFootnotesHtml(withRefs.footnotes, collectFootnoteDefinitions(markdown), (body) => {
-        const key = `${definitions}\u0000${body}`
+      const footnoteDefinitions = withRefs.footnotes.length > 0 ? collectFootnoteDefinitions(markdown) : new Map<string, string>()
+      const footnotesHtml = renderFootnotesHtml(withRefs.footnotes, footnoteDefinitions, (body) => {
+        const key = cacheKey(body)
         const entry = nextFootnoteCache.get(key) ?? footnoteCache.get(key) ?? renderFootnoteBody(body, definitionEnv())
         nextFootnoteCache.set(key, entry)
         return resolveBodyFootnoteRefs(entry.html, entry.footnoteRefs, withRefs.footnotes)

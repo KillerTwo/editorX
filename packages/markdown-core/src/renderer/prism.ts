@@ -20,7 +20,8 @@ import { escapeHtml } from './escape'
 
 export function highlightCode(code: string, lang: string): string {
   const name = lang.trim().toLowerCase()
-  const grammar = name ? Prism.languages[name] : undefined
+  const candidate = Object.prototype.hasOwnProperty.call(Prism.languages, name) ? Prism.languages[name] : undefined
+  const grammar = typeof candidate === 'object' ? candidate : undefined
   const cls = name ? ` class="language-${escapeHtml(name)}"` : ''
   const body = grammar ? Prism.highlight(code, grammar, name) : escapeHtml(code)
   return `<pre${cls}><code${cls}>${body}</code></pre>\n`

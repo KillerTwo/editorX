@@ -9,7 +9,7 @@ const THEMATIC_BREAK = /^ {0,3}([-*_])(?:[ \t]*\1){2,}[ \t\r]*$/
 const QUOTE_MARKER = /^ {0,3}> ?/
 const LIST_MARKER = /^ {0,3}(?:[-*+]|\d{1,9}[.)])(?=[ \t\r]|$)/
 
-interface Fence { char: string; length: number }
+export interface Fence { char: string; length: number }
 type Container = { kind: 'list'; indent: number; empty: boolean } | { kind: 'quote' }
 
 const isBlank = (line: string) => line.trim() === ''
@@ -36,13 +36,13 @@ function stripColumns(line: string, columns: number): string {
   return line.slice(i)
 }
 
-function openFence(line: string): Fence | null {
+export function openFence(line: string): Fence | null {
   const open = FENCE_OPEN.exec(line)
   if (!open || (open[1]![0] === '`' && open[2]!.includes('`'))) return null
   return { char: open[1]![0]!, length: open[1]!.length }
 }
 
-function closesFence(line: string, fence: Fence): boolean {
+export function closesFence(line: string, fence: Fence): boolean {
   const close = FENCE_CLOSE.exec(line)
   return !!close && close[1]![0] === fence.char && close[1]!.length >= fence.length
 }

@@ -1,6 +1,8 @@
 import MarkdownIt from 'markdown-it'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { splitSections } from '../sections'
+import { collectDefinitions } from './definitions'
+import { highlightCode } from './prism'
 import { createRenderer } from './renderer'
 
 function dom(html: string): HTMLDivElement {
@@ -220,6 +222,19 @@ describe('createRenderer — markdown extensions', () => {
     expect(render('```\nx\n```')).toContain('<pre><code>x\n</code></pre>')
   })
 
+  it.each(['constructor', 'extend', 'insertBefore', 'DFS', 'hasOwnProperty', '__proto__'])(
+    'treats Prism.languages helpers as unknown languages: %s',
+    (lang) => {
+      const name = lang.toLowerCase()
+      expect(highlightCode('<b>\n', lang)).toBe(
+        `<pre class="language-${name}"><code class="language-${name}">&lt;b&gt;\n</code></pre>\n`,
+      )
+      expect(render(`\`\`\`${lang}\n<b>\n\`\`\``)).toContain(
+        `<pre class="language-${name}"><code class="language-${name}">&lt;b&gt;\n</code></pre>`,
+      )
+    },
+  )
+
   it('puts Prism in manual mode so it never auto-highlights the host page', () => {
     expect((globalThis as { Prism?: { manual?: boolean } }).Prism?.manual).toBe(true)
   })
@@ -280,5 +295,59 @@ describe('createRenderer — incremental cache', () => {
     const result = renderer.render('[x][r]\n# B\n[r]: https://b.com')
     expect(spy).toHaveBeenCalledTimes(4)
     expect(result.sections[0]!.html).toContain('https://b.com')
+  })
+
+  const manySections = (defs: string[]) =>
+    Array.from({ length: 50 }, (_, i) => `# S${i}\nsee [x][ref-${i}-x] word${i}\n`).join('') +
+    `# Defs\n${defs.join('\n')}\n`
+  const linkDefs = (url3: string) =>
+    Array.from({ length: 50 }, (_, i) => `[ref-${i}-x]: ${i === 3 ? url3 : `https://${i}.com`}`)
+
+  it('re-renders only sections that reference a changed link definition', () => {
+    const spy = vi.spyOn(MarkdownIt.prototype, 'render')
+    const renderer = createRenderer()
+    renderer.render(manySections(linkDefs('https://3.com')))
+    expect(spy).toHaveBeenCalledTimes(51)
+    const result = renderer.render(manySections(linkDefs('https://new3.com')))
+    expect(spy).toHaveBeenCalledTimes(53)
+    expect(result.sections[3]!.html).toContain('<a href="https://new3.com">x</a>')
+    expect(result.sections[4]!.html).toContain('<a href="https://4.com">x</a>')
+  })
+
+  it('re-renders only sections containing a newly added abbreviation key', () => {
+    const spy = vi.spyOn(MarkdownIt.prototype, 'render')
+    const renderer = createRenderer()
+    renderer.render(manySections(linkDefs('https://3.com')))
+    expect(spy).toHaveBeenCalledTimes(51)
+    const result = renderer.render(manySections([...linkDefs('https://3.com'), '*[word7]: Seven']))
+    expect(spy).toHaveBeenCalledTimes(53)
+    expect(result.sections[7]!.html).toContain('<abbr title="Seven">word7</abbr>')
+  })
+
+  it('matches reference labels case- and whitespace-insensitively for invalidation', () => {
+    const spy = vi.spyOn(MarkdownIt.prototype, 'render')
+    const renderer = createRenderer()
+    renderer.render('[x][My\n  Ref]\n# B\n[my ref]: https://a.com')
+    const result = renderer.render('[x][My\n  Ref]\n# B\n[my ref]: https://b.com')
+    expect(spy).toHaveBeenCalledTimes(4)
+    expect(result.sections[0]!.html).toContain('<a href="https://b.com">x</a>')
+  })
+
+  it('re-renders a footnote body when a link definition it uses changes', () => {
+    const renderer = createRenderer()
+    renderer.render('see[^n]\n\n[^n]: go [home][h]\n# B\n[h]: https://h.com')
+    const el = dom(renderer.render('see[^n]\n\n[^n]: go [home][h]\n# B\n[h]: https://h2.com').html)
+    expect(el.querySelector('li#fn1 a')?.getAttribute('href')).toBe('https://h2.com')
+  })
+})
+
+describe('createRenderer — definitions and fences', () => {
+  it('ignores mismatched fence markers when collecting definitions', () => {
+    const md =
+      '[x][1]\n# B\n```\n~~~\n```\n\n```\n[1]: https://evil.example\n```\n\n[1]: https://good.example\n'
+    const result = createRenderer().render(md)
+    expect(result.sections[0]!.html).toContain('<a href="https://good.example">x</a>')
+    expect(result.html).not.toContain('href="https://evil.example"')
+    expect(collectDefinitions(md).map((entry) => entry.source)).toEqual(['[1]: https://good.example'])
   })
 })
