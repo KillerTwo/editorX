@@ -1,6 +1,6 @@
 import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@editorx/toolbar'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { StrictMode } from 'react'
+import { StrictMode, useLayoutEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { createSettings } from './settings'
 import { useAsyncList } from './use-async-list'
@@ -96,6 +96,20 @@ describe('usePublishController', () => {
     expect(payload).not.toHaveProperty('scheduledAt')
     expect(notify).toHaveBeenCalledWith('发布成功', 'success')
     expect(onPublished).toHaveBeenCalledWith(payload)
+    expect(result.current.busy).toBeNull()
+  })
+
+  it('onPublished 抛错：已发出成功提示、不提示发布失败，异常交给调用方', async () => {
+    const onPublished = vi.fn(() => {
+      throw new Error('导航失败')
+    })
+    const { result, notify, onPublish } = setup({ defaultValue: { tags: ['React'] }, onPublished })
+    await act(async () => {
+      await expect(result.current.publish()).rejects.toThrow('导航失败')
+    })
+    expect(onPublish).toHaveBeenCalledTimes(1)
+    expect(notify).toHaveBeenCalledWith('发布成功', 'success')
+    expect(notify).not.toHaveBeenCalledWith(expect.stringContaining('发布失败'), 'error')
     expect(result.current.busy).toBeNull()
   })
 
@@ -195,6 +209,25 @@ describe('useAsyncList', () => {
     const bad = renderHook(() => useAsyncList<string>(() => Promise.reject(new Error('x')), onError), strict)
     await waitFor(() => expect(bad.result.current).toEqual([]))
     expect(onError).toHaveBeenCalledWith(expect.any(Error))
+  })
+
+  it('从未启用切到启用：变化后首次提交即为 null，不闪现空列表', () => {
+    const committed: (string[] | null)[] = []
+    const never = () => new Promise<string[]>(() => {})
+    const { rerender } = renderHook(
+      ({ load }: { load?: () => Promise<string[]> }) => {
+        const items = useAsyncList(load, vi.fn())
+        useLayoutEffect(() => {
+          committed.push(items)
+        })
+        return items
+      },
+      { ...strict, initialProps: {} },
+    )
+    expect(committed.at(-1)).toEqual([])
+    committed.length = 0
+    rerender({ load: never })
+    expect(committed[0]).toBeNull()
   })
 })
 

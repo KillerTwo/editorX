@@ -5,17 +5,18 @@ import { useLatest } from './use-latest'
 export function useAsyncList<T>(load: (() => Promise<T[]>) | undefined, onError: (error: unknown) => void): T[] | null {
   const enabled = load !== undefined
   const [items, setItems] = useState<T[] | null>(enabled ? null : [])
+  const [wasEnabled, setWasEnabled] = useState(enabled)
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled)
+    setItems(enabled ? null : [])
+  }
   const loadRef = useLatest(load)
   const onErrorRef = useLatest(onError)
 
   useEffect(() => {
     const run = loadRef.current
-    if (!run) {
-      setItems([])
-      return
-    }
+    if (!run) return
     let live = true
-    setItems(null)
     run().then(
       (list) => {
         if (live) setItems(list)

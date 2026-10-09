@@ -113,14 +113,6 @@ export function usePublishController(options: PublishControllerOptions): Publish
       const payload = toPayload(doc ?? EMPTY_DOC, target)
       try {
         await adapters.onPublish(payload)
-        notify(
-          scheduledAt
-            ? formatMessage(messages.status.scheduled, { time: formatScheduleTime(scheduledAt) })
-            : messages.status.published,
-          'success',
-        )
-        latest.current.onPublished?.(payload)
-        return true
       } catch (error) {
         notify(formatMessage(messages.errors.publish, { message: errorMessage(error) }), 'error')
         return false
@@ -128,6 +120,15 @@ export function usePublishController(options: PublishControllerOptions): Publish
         busyRef.current = false
         setBusy(null)
       }
+      notify(
+        scheduledAt
+          ? formatMessage(messages.status.scheduled, { time: formatScheduleTime(scheduledAt) })
+          : messages.status.published,
+        'success',
+      )
+      // 文章已发布：onPublished 的异常原样抛给调用方，不当作发布失败
+      latest.current.onPublished?.(payload)
+      return true
     },
     [latest],
   )
@@ -139,8 +140,6 @@ export function usePublishController(options: PublishControllerOptions): Publish
     setBusy('draft')
     try {
       await adapters.onSaveDraft(doc ?? EMPTY_DOC, pending.current)
-      notify(messages.status.draftSaved, 'success')
-      return true
     } catch (error) {
       notify(formatMessage(messages.errors.saveDraft, { message: errorMessage(error) }), 'error')
       return false
@@ -148,6 +147,8 @@ export function usePublishController(options: PublishControllerOptions): Publish
       busyRef.current = false
       setBusy(null)
     }
+    notify(messages.status.draftSaved, 'success')
+    return true
   }, [latest])
 
   return { settings, errors, busy, failedAttempts, update, publish, saveDraft }
