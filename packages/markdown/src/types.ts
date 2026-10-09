@@ -26,14 +26,17 @@ export interface MarkdownEditorSlots {
 export interface MarkdownEditorProps {
   value?: string
   defaultValue?: string
-  /** 防抖渲染完成后调用，html 为同一次渲染结果 */
+  /** 防抖渲染完成后调用，html 为同一次渲染结果；卸载时若有尚未发出的编辑，会同步再调用一次 */
   onChange?(markdown: string, html: string): void
   /** 写入 getDocument().title */
   title?: string
   viewMode?: ViewMode
   defaultViewMode?: ViewMode
   onViewModeChange?(mode: ViewMode): void
-  /** 传入 theme 或 defaultTheme 时编辑器自建 ThemeProvider，否则复用外层 */
+  /**
+   * 首次渲染时传入 theme 或 defaultTheme（或没有外层 ThemeProvider）则编辑器自建 ThemeProvider，否则复用外层。
+   * 该决定在组件实例生命周期内不变；复用外层时 theme/defaultTheme/onThemeChange/themeStorageKey 均被忽略。
+   */
   theme?: ThemeMode
   defaultTheme?: ThemeMode
   onThemeChange?(mode: ThemeMode): void
@@ -45,7 +48,10 @@ export interface MarkdownEditorProps {
   ariaLabel?: string
   /** 编辑器总高度，默认 100% */
   height?: number | string
-  /** 自定义引擎工厂；每个组件实例只采用首次结果（StrictMode 下可能被调用两次） */
+  /**
+   * 自定义引擎工厂；每个组件实例只采用首次结果（StrictMode 下可能被调用两次）。
+   * 在 render 期间调用（服务端渲染时也会调用），必须无副作用且不访问 DOM；挂载在 effect 中进行。
+   */
   engine?: () => EditorEngine
   slots?: MarkdownEditorSlots
   className?: string

@@ -23,6 +23,8 @@ function LocalizedToasts({ children }: { children: ReactNode }) {
 export function MarkdownEditor(props: MarkdownEditorProps) {
   const outer = useOptionalTheme()
   const { theme, defaultTheme, onThemeChange, themeStorageKey, locale } = props
+  // 只在首次渲染决定是否自建主题：树形状切换会重建 EditorShell（新引擎，内容与撤销丢失）
+  const [ownTheme] = useState(() => !outer || theme !== undefined || defaultTheme !== undefined)
   const content = (
     <MessagesProvider messages={locale}>
       <LocalizedToasts>
@@ -30,7 +32,7 @@ export function MarkdownEditor(props: MarkdownEditorProps) {
       </LocalizedToasts>
     </MessagesProvider>
   )
-  if (outer && theme === undefined && defaultTheme === undefined) return content
+  if (!ownTheme) return content
   return (
     <ThemeProvider
       theme={theme}

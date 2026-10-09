@@ -2,7 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ClEditEngine, type EditorEngine } from '@editorx/markdown-core'
 import { ThemeProvider } from '@editorx/theme'
-import { createRef, StrictMode, useState, type RefObject } from 'react'
+import { createRef, StrictMode, useLayoutEffect, useState, type RefObject } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { MarkdownEditor } from './markdown-editor'
 import { editorContent, editorRoot, previewEl, renderEditor, strict } from './test-utils'
@@ -191,6 +191,166 @@ describe('MarkdownEditor', () => {
     renderEditor({ slots: { headerEnd: <button>使用富文本编辑器</button> }, height: 600 })
     expect(screen.getByRole('button', { name: '使用富文本编辑器' }).closest('.ex-mde-header__end')).not.toBeNull()
     expect(editorRoot().style.getPropertyValue('--ex-mde-height')).toBe('600px')
+  })
+
+  it('卸载时同步发出尚未发出的编辑；无编辑的 StrictMode 挂载/卸载不触发 onChange', async () => {
+    const onChange = vi.fn()
+    const first = renderEditor({ defaultValue: '# 标题', onChange })
+    await waitFor(() => expect(previewEl().querySelector('h1')).not.toBeNull())
+    first.unmount()
+    expect(onChange).not.toHaveBeenCalled()
+
+    const second = renderEditor({ defaultValue: '# 标题', onChange })
+    act(() => second.handle().getEngine().replace(4, 4, '尾'))
+    second.unmount()
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith('# 标题尾', expect.stringContaining('标题尾'))
+  })
+
+  it('卸载时 onChange 抛错只记录错误，编辑区照常销毁', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { handle, unmount } = renderEditor({
+      defaultValue: 'a',
+      onChange: () => {
+        throw new Error('boom')
+      },
+    })
+    act(() => handle().getEngine().replace(1, 1, 'b'))
+    expect(() => unmount()).not.toThrow()
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[editorx/markdown]'), expect.any(Error))
+    expect(document.querySelector('.ex-editor-content')).toBeNull()
+  })
+
+  it('外层 ThemeProvider 下切换 theme 有无，不重建引擎', () => {
+    const ref = createRef<MarkdownEditorHandle>()
+    const ui = (theme?: 'dark') => (
+      <ThemeProvider defaultTheme="light" storageKey={false}>
+        <MarkdownEditor ref={ref} theme={theme} defaultValue="甲" />
+      </ThemeProvider>
+    )
+    const { rerender } = render(ui(), strict)
+    const engine = ref.current!.getEngine()
+    const content = editorContent()
+    act(() => engine.replace(1, 1, '乙'))
+    rerender(ui('dark'))
+    expect(ref.current!.getEngine()).toBe(engine)
+    expect(editorContent()).toBe(content)
+    expect(ref.current!.getValue()).toBe('甲乙')
+    rerender(ui())
+    expect(ref.current!.getEngine()).toBe(engine)
+    expect(ref.current!.getValue()).toBe('甲乙')
+  })
+
+  it('无外层 ThemeProvider 时切换 theme / defaultTheme 有无，不重建引擎', () => {
+    const ref = createRef<MarkdownEditorHandle>()
+    const { rerender } = render(<MarkdownEditor ref={ref} themeStorageKey={false} defaultValue="甲" />, strict)
+    const engine = ref.current!.getEngine()
+    rerender(<MarkdownEditor ref={ref} themeStorageKey={false} theme="dark" defaultValue="甲" />)
+    expect(ref.current!.getEngine()).toBe(engine)
+    expect(document.querySelector('.ex-root.ex-mde-theme')).toHaveAttribute('data-ex-theme', 'dark')
+    rerender(<MarkdownEditor ref={ref} themeStorageKey={false} defaultTheme="light" defaultValue="甲" />)
+    expect(ref.current!.getEngine()).toBe(engine)
+  })
+
+  it('挂载前调用 ref.setValue 生效，且不触发 onChange', async () => {
+    const onChange = vi.fn()
+    const ref = createRef<MarkdownEditorHandle>()
+    function Parent() {
+      useLayoutEffect(() => {
+        ref.current!.setValue('预设')
+      }, [])
+      return <MarkdownEditor ref={ref} defaultTheme="light" themeStorageKey={false} defaultValue="默认" onChange={onChange} />
+    }
+    render(<Parent />, strict)
+    expect(ref.current!.getValue()).toBe('预设')
+    expect(editorContent()).toHaveTextContent('预设')
+    await waitFor(() => expect(previewEl()).toHaveTextContent('预设'))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('受控 value 以 CRLF 回写时按 LF 比较，不重复写入引擎', async () => {
+    const setValueCalls: string[] = []
+    const factory = () => {
+      const engine = new ClEditEngine()
+      const setValue = engine.setValue.bind(engine)
+      engine.setValue = (md, opts) => {
+        setValueCalls.push(md)
+        setValue(md, opts)
+      }
+      return engine
+    }
+    const onChange = vi.fn()
+    const ref = createRef<MarkdownEditorHandle>()
+    function Parent() {
+      const [value, setValue] = useState('a\r\nb')
+      return (
+        <MarkdownEditor
+          ref={ref}
+          engine={factory}
+          defaultTheme="light"
+          themeStorageKey={false}
+          value={value}
+          onChange={(md) => {
+            onChange(md)
+            setValue(md.replace(/\n/g, '\r\n'))
+          }}
+        />
+      )
+    }
+    render(<Parent />, strict)
+    expect(ref.current!.getValue()).toBe('a\nb')
+    act(() => ref.current!.getEngine().replace(3, 3, '!'))
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('a\nb!'))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(setValueCalls).toEqual([])
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('受控：父组件在 onChange 中变换值时显示变换结果，不循环、光标在范围内', async () => {
+    const onChange = vi.fn()
+    const ref = createRef<MarkdownEditorHandle>()
+    function Parent() {
+      const [value, setValue] = useState('abc')
+      return (
+        <MarkdownEditor
+          ref={ref}
+          defaultTheme="light"
+          themeStorageKey={false}
+          value={value}
+          onChange={(md) => {
+            onChange(md)
+            setValue(md.toUpperCase())
+          }}
+        />
+      )
+    }
+    render(<Parent />, strict)
+    act(() => {
+      ref.current!.getEngine().setSelection(3, 3)
+      ref.current!.getEngine().replace(3, 3, 'd')
+    })
+    await waitFor(() => expect(ref.current!.getValue()).toBe('ABCD'))
+    await waitFor(() => expect(previewEl()).toHaveTextContent('ABCD'))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith('abcd')
+    expect(ref.current!.getEngine().getSelection()).toEqual({ start: 4, end: 4 })
+  })
+
+  it('视图切换保留同一引擎、编辑区节点、内容与撤销历史', async () => {
+    const { handle } = renderEditor({ defaultValue: 'ab' })
+    const engine = handle().getEngine()
+    const content = editorContent()
+    act(() => engine.replace(2, 2, 'c'))
+    for (const name of ['Markdown', '预览', '比对']) {
+      await userEvent.click(screen.getByRole('tab', { name }))
+      expect(handle().getEngine()).toBe(engine)
+      expect(editorContent()).toBe(content)
+      expect(handle().getValue()).toBe('abc')
+    }
+    act(() => engine.undo())
+    expect(handle().getValue()).toBe('ab')
   })
 
   it('卸载时销毁编辑区并清空预览', async () => {
