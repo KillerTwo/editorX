@@ -46,7 +46,7 @@
   height: 32px;
   padding: 0 12px;
   border: 0;
-  border-radius: var(--ex-radius-md);
+  border-radius: var(--ex-radius-lg);
   background: var(--ex-color-mde-tab-bg);
   color: var(--ex-color-mde-chrome-text);
   font: inherit;
@@ -63,7 +63,7 @@
   flex: none;
   box-sizing: border-box;
   height: 39px;
-  margin-top: 16px;
+  margin-top: 17px;
   padding: 0 10px;
   border-bottom: 1px solid var(--ex-color-mde-divider);
 }
