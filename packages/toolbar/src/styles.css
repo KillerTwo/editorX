@@ -1,1 +1,59 @@
-/* @editorx/toolbar：工具栏样式（Task 5） */
+/* @editorx/toolbar：28px 按钮、6px 间距、1×16px 分隔线（左右 8px） */
+.ex-toolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ex-toolbar__group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.ex-toolbar__group.is-overflow,
+.ex-toolbar__divider.is-overflow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ex-toolbar__divider {
+  flex: none;
+  width: 1px;
+  height: 16px;
+  margin: 0 8px;
+  background: var(--ex-color-border);
+}
+
+.ex-toolbar__item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ex-space-1);
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--ex-space-1);
+  border: 0;
+  border-radius: var(--ex-radius-md);
+  background: transparent;
+  color: var(--ex-color-text);
+  font: inherit;
+  font-size: var(--ex-font-size-md);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ex-toolbar__item.has-label { padding: 0 var(--ex-space-2); }
+.ex-toolbar__item:hover:not(:disabled) { background: var(--ex-color-surface-hover); }
+.ex-toolbar__item:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: -2px; }
+.ex-toolbar__item.is-active { color: var(--ex-color-primary); }
+.ex-toolbar__item:disabled { color: var(--ex-color-text-muted); cursor: not-allowed; }
+.ex-toolbar__icon { display: inline-flex; }
+.ex-toolbar__caret { flex: none; }
