@@ -35,3 +35,6 @@ export {
   type TableArgs,
 } from './commands/block'
 export type { LinkArgs, PlaceholderArgs } from './commands/inline'
+export { countHtml, countWords, type HtmlCount, type WordCount } from './utils/count'
+export { htmlToMarkdown } from './utils/html-to-markdown'
+export { exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF, type ExportHtmlOptions } from './utils/io'

@@ -24,6 +24,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@joplin/turndown-plugin-gfm": "1.0.68",
     "dompurify": "3.4.16",
     "flowchart.js": "1.18.0",
     "github-slugger": "2.0.0",
@@ -36,9 +37,11 @@
     "markdown-it-sub": "2.0.0",
     "markdown-it-sup": "2.0.0",
     "mermaid": "12.1.0",
-    "prismjs": "1.30.0"
+    "prismjs": "1.30.0",
+    "turndown": "7.2.4"
   },
   "devDependencies": {
-    "@types/prismjs": "1.26.6"
+    "@types/prismjs": "1.26.6",
+    "@types/turndown": "5.0.6"
   }
 }
