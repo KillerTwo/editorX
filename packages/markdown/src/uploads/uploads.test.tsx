@@ -48,6 +48,17 @@ describe('MarkdownEditor 图片上传', () => {
     expect(handle().getValue()).toBe('')
   })
 
+  it('失败条按钮名称取自 upload.retryItem / removeItem，可按语言调整语序', async () => {
+    renderEditor({
+      adapters: { uploadImage: async () => Promise.reject(new Error('timeout')) },
+      locale: { upload: { retryItem: '{name}: retry', removeItem: '{name}: remove' } },
+    })
+    fireEvent.drop(editorContent(), { dataTransfer: { files: [png('bad.png')], types: ['Files'] } })
+    await screen.findByRole('list', { name: '上传失败的图片' })
+    expect(screen.getByRole('button', { name: 'bad.png: retry' })).toHaveTextContent('重试')
+    expect(screen.getByRole('button', { name: 'bad.png: remove' })).toHaveTextContent('删除')
+  })
+
   it('失败条重试：使用最新的 adapters', async () => {
     const { ref, handle, rerender } = renderEditor({ adapters: { uploadImage: async () => Promise.reject(new Error('超时')) } })
     fireEvent.drop(editorContent(), { dataTransfer: { files: [png('bad.png')], types: ['Files'] } })

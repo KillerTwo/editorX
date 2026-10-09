@@ -251,6 +251,41 @@ describe('createUploader', () => {
     detach()
   })
 
+  it('组合期间焦点离开 host 而没有 compositionend：视为组合结束，排队的替换照常执行', async () => {
+    const d = deferred<{ url: string }>()
+    const { host, engine, uploader } = setup('', () => d.promise)
+    const detach = uploader.attach(host)
+    const done = uploader.upload([png('a.png')])
+    const before = engine.getValue()
+    const content = host.querySelector<HTMLElement>('.ex-editor-content')!
+    content.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    d.resolve({ url: 'u' })
+    await tick()
+    expect(engine.getValue()).toBe(before)
+    content.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: document.body }))
+    await done
+    expect(engine.getValue()).toBe('![a](u)')
+    detach()
+  })
+
+  it('组合期间焦点在 host 内部移动不结束排队', async () => {
+    const d = deferred<{ url: string }>()
+    const { host, engine, uploader } = setup('', () => d.promise)
+    const detach = uploader.attach(host)
+    void uploader.upload([png('a.png')])
+    const before = engine.getValue()
+    const content = host.querySelector<HTMLElement>('.ex-editor-content')!
+    const inner = document.createElement('span')
+    host.appendChild(inner)
+    content.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    d.resolve({ url: 'u' })
+    await tick()
+    content.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: inner }))
+    await tick()
+    expect(engine.getValue()).toBe(before)
+    detach()
+  })
+
   it('组合期间 detach：排队的替换被丢弃，upload 的 Promise 仍会结束', async () => {
     const d = deferred<{ url: string }>()
     const { host, engine, uploader } = setup('', () => d.promise)

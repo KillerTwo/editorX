@@ -54,7 +54,7 @@ export function UploadFailures({
             type="button"
             className="ex-mde-uploads__action"
             data-action="retry"
-            aria-label={`${m.upload.retry} ${upload.name}`}
+            aria-label={formatMessage(m.upload.retryItem, { name: upload.name })}
             disabled={readOnly}
             onClick={() => act('retry', upload.id, index)}
           >
@@ -64,7 +64,7 @@ export function UploadFailures({
             type="button"
             className="ex-mde-uploads__action"
             data-action="remove"
-            aria-label={`${m.upload.remove} ${upload.name}`}
+            aria-label={formatMessage(m.upload.removeItem, { name: upload.name })}
             disabled={readOnly}
             onClick={() => act('remove', upload.id, index)}
           >

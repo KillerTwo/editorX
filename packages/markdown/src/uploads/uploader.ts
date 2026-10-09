@@ -20,7 +20,7 @@ export interface Uploader {
   remove(id: string): void
   /**
    * 组件挂载期间保持连接；断开后到达的上传结果被丢弃，不再写入引擎、store 或提示。
-   * 传入编辑器 host 时监听其输入法组合事件，组合期间到达的替换排队到 compositionend 之后。
+   * 传入编辑器 host 时监听其输入法组合事件，组合期间到达的替换排队到 compositionend（或焦点离开 host）之后。
    */
   attach(host?: HTMLElement | null): () => void
 }
@@ -145,11 +145,20 @@ export function createUploader(opts: UploaderOptions): Uploader {
         composing = false
         queueMicrotask(releaseWaiters)
       }
+      // 部分输入法/浏览器在组合中失焦时不派发 compositionend：焦点离开 host 也视为组合结束
+      const onFocusOut = (e: FocusEvent) => {
+        if (!composing) return
+        const next = e.relatedTarget
+        if (next instanceof Node && host?.contains(next)) return
+        onEnd()
+      }
       host?.addEventListener('compositionstart', onStart, true)
       host?.addEventListener('compositionend', onEnd, true)
+      host?.addEventListener('focusout', onFocusOut, true)
       return () => {
         host?.removeEventListener('compositionstart', onStart, true)
         host?.removeEventListener('compositionend', onEnd, true)
+        host?.removeEventListener('focusout', onFocusOut, true)
         attached = false
         composing = false
         releaseWaiters()

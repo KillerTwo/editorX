@@ -94,7 +94,7 @@ export const moreActionsExtension: EditorExtension = {
           icon: <FileText size={ICON_SIZE} />,
           allowReadOnly: true,
           run: (ctx) => {
-            exportHtmlFile(ctx).catch(reportFailure(ctx, ctx.locale.errors.extension))
+            exportHtmlFile(ctx).catch(reportFailure(ctx, ctx.locale.errors.export))
           },
         },
         { type: 'separator' },

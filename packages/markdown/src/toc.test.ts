@@ -1,5 +1,5 @@
 import { createRenderer } from '@editorx/markdown-core'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { extractTocTitle } from './toc'
 
 const unescape = (html: string) =>
@@ -48,6 +48,33 @@ describe('extractTocTitle', () => {
     expect(extractTocTitle('@[TOC]\n# A')).toBeNull()
     expect(extractTocTitle('[TOC]')).toBeNull()
     expect(extractTocTitle('正文 @[TOC](x)')).toBeNull()
+  })
+
+  it('没有 @[TOC]( 标记时不逐行扫描', () => {
+    const split = vi.spyOn(String.prototype, 'split')
+    expect(extractTocTitle('# A\n\n```js\ncode\n```\n\n正文\n'.repeat(200))).toBeNull()
+    expect(split).not.toHaveBeenCalled()
+  })
+
+  it('每个围栏只构造一次闭合正则', () => {
+    const RealRegExp = RegExp
+    const ctor = vi.fn()
+    vi.stubGlobal(
+      'RegExp',
+      new Proxy(RealRegExp, {
+        construct(target, args: [string, string?]) {
+          ctor()
+          return new target(...args)
+        },
+      }),
+    )
+    try {
+      const fenced = '```js\n' + 'line\n'.repeat(50) + '```\n\n'
+      expect(extractTocTitle(fenced + fenced + '@[TOC](标题)\n')).toBe('标题')
+      expect(ctor.mock.calls.length).toBeLessThanOrEqual(2)
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it.each(CASES)('与渲染器的目录识别一致：%j', (markdown) => {

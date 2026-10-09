@@ -2,15 +2,19 @@
 const KEEP_INTERACTIVE = '.ex-portal, .ex-body-portal, [data-floating-ui-portal]'
 
 /**
- * 全屏期间锁定页面滚动，并把编辑器根节点祖先链上的兄弟节点设为 inert，使 Tab 焦点留在编辑器与浮层内。
- * 返回的函数还原 overflow 与本次添加的 inert（原本就 inert 的节点不动）。
- * 限制：之后才挂到页面上的节点不会被 inert；祖先带 transform/filter/contain 时 position: fixed 无法铺满视口。
+ * 全屏期间锁定页面滚动（html 与 body，页面可能由任一方滚动），并把编辑器根节点祖先链上的兄弟节点设为 inert，
+ * 使 Tab 焦点留在编辑器与浮层内。返回的函数还原 overflow 与本次添加的 inert（原本就 inert 的节点不动）。
+ * 限制：之后才挂到页面上的节点不会被 inert；祖先带 transform/filter/contain 时 position: fixed 无法铺满视口；
+ * 还原按调用顺序的倒序进行（同一时间只有一个编辑器全屏）。
  */
 export function isolateFullscreen(root: HTMLElement): () => void {
   const doc = root.ownerDocument
   const html = doc.documentElement
-  const previousOverflow = html.style.overflow
+  const body = doc.body
+  const previousHtmlOverflow = html.style.overflow
+  const previousBodyOverflow = body.style.overflow
   html.style.overflow = 'hidden'
+  body.style.overflow = 'hidden'
 
   const inerted: Element[] = []
   for (let node: Element = root; node.parentElement && node !== doc.body; node = node.parentElement) {
@@ -23,7 +27,8 @@ export function isolateFullscreen(root: HTMLElement): () => void {
   }
 
   return () => {
-    html.style.overflow = previousOverflow
+    html.style.overflow = previousHtmlOverflow
+    body.style.overflow = previousBodyOverflow
     for (const el of inerted) el.removeAttribute('inert')
   }
 }
