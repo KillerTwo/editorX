@@ -86,8 +86,9 @@ export interface EditorAdapters {
   uploadImage?(file: File, onProgress?: (p: number) => void): Promise<{ url: string }>
   /**
    * 保存草稿；从发布面板触发时附带当前发布设置。
-   * 自动保存（仅 Markdown 有改动时）与 `saveDraft()` 调用。不会并发调用：进行中时的请求合并为一次后续调用；
-   * 若已排队，可能在编辑器卸载后才调用。reject 表示保存失败。
+   * 自动保存（仅 Markdown 有改动时）与 `saveDraft()` 调用。同一调用方内不会并发调用，编辑器与发布面板之间可能并发：
+   * 编辑器进行中时的请求合并为一次后续调用，若已排队，可能在编辑器卸载后才调用；发布面板进行中时忽略重复提交。
+   * reject 表示保存失败。
    */
   onSaveDraft?(doc: EditorDocument, settings?: PublishSettings): Promise<void>
   onPublish?(payload: PublishPayload): Promise<void>
