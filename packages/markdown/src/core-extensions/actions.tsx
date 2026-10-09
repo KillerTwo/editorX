@@ -5,9 +5,9 @@ import { downloadBlob, pickFile } from '../download'
 import { getMarkdownInternals } from '../internals'
 import { ICON_SIZE } from './format'
 
-const fileName = (ctx: ExtensionContext, ext: string) => `${ctx.getDocument().title.trim() || ctx.locale.toolbar.untitled}.${ext}`
-
 const NAME = 'core:more-actions'
+
+const fileName = (ctx: ExtensionContext, title: string, ext: string) => `${title.trim() || ctx.locale.toolbar.untitled}.${ext}`
 
 const reportFailure = (ctx: ExtensionContext, template: string) => (error: unknown) => {
   console.error(error)
@@ -20,13 +20,41 @@ async function importInto(ctx: ExtensionContext) {
   ctx.replaceDocument({ markdown: await importFile(file) })
 }
 
+/** 只取标题与 Markdown，不渲染文档 */
+function readSource(ctx: ExtensionContext): { title: string; markdown: string } {
+  const internals = getMarkdownInternals(ctx)
+  if (internals) return { title: internals.getTitle(), markdown: internals.engine.getValue() }
+  const doc = ctx.getDocument()
+  return { title: doc.title, markdown: doc.markdown ?? '' }
+}
+
+/** 同一编辑器的 HTML 导出进行中（等待图表）时忽略重复点击 */
+const exporting = new WeakSet<ExtensionContext>()
+
 /** 预览 HTML 中的图表须已绘制（编辑视图下预览不画图表，由 renderExportHtml 在离屏副本上补画） */
 async function exportHtmlFile(ctx: ExtensionContext) {
-  const doc = ctx.getDocument()
-  const html = (await getMarkdownInternals(ctx)?.renderExportHtml()) || doc.html
-  const page = exportHtml({ html, sections: [], toc: [] }, { title: doc.title || ctx.locale.toolbar.untitled })
-  downloadBlob(new Blob([page], { type: 'text/html;charset=utf-8' }), fileName(ctx, 'html'))
+  if (exporting.has(ctx)) return
+  exporting.add(ctx)
+  try {
+    const internals = getMarkdownInternals(ctx)
+    let title: string
+    let html: string
+    if (internals) {
+      title = internals.getTitle()
+      html = await internals.renderExportHtml()
+    } else {
+      const doc = ctx.getDocument()
+      title = doc.title
+      html = doc.html
+    }
+    const page = exportHtml({ html, sections: [], toc: [] }, { title: title.trim() || ctx.locale.toolbar.untitled })
+    downloadBlob(new Blob([page], { type: 'text/html;charset=utf-8' }), fileName(ctx, title, 'html'))
+  } finally {
+    exporting.delete(ctx)
+  }
 }
+
+const isFullscreen = (ctx: ExtensionContext | undefined) => (ctx && getMarkdownInternals(ctx)?.isFullscreen()) ?? false
 
 export const moreActionsExtension: EditorExtension = {
   name: NAME,
@@ -54,7 +82,10 @@ export const moreActionsExtension: EditorExtension = {
           title: (m) => m.toolbar.exportMarkdown,
           icon: <Download size={ICON_SIZE} />,
           allowReadOnly: true,
-          run: (ctx) => downloadBlob(exportMarkdown(ctx.getDocument().markdown ?? ''), fileName(ctx, 'md')),
+          run: (ctx) => {
+            const { title, markdown } = readSource(ctx)
+            downloadBlob(exportMarkdown(markdown), fileName(ctx, title, 'md'))
+          },
         },
         {
           type: 'button',
@@ -79,10 +110,10 @@ export const moreActionsExtension: EditorExtension = {
         {
           type: 'button',
           id: 'fullscreen',
-          title: (m) => m.toolbar.fullscreen,
+          title: (m, ctx) => (isFullscreen(ctx) ? m.toolbar.exitFullscreen : m.toolbar.fullscreen),
           icon: <Maximize2 size={ICON_SIZE} />,
           allowReadOnly: true,
-          active: (ctx) => getMarkdownInternals(ctx)?.isFullscreen() ?? false,
+          active: (ctx) => isFullscreen(ctx),
           run: (ctx) => getMarkdownInternals(ctx)?.toggleFullscreen(),
         },
       ],

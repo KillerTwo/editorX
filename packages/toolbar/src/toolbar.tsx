@@ -78,6 +78,15 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
     if (dialogGone) setDialogKey(null)
   }, [dialogGone])
 
+  // 对话框关闭后焦点无处可还（触发按钮已不在，如被溢出或布局变化移除）时落到 body：交还编辑区
+  const closeDialog = () => {
+    setDialogKey(null)
+    setTimeout(() => {
+      const active = document.activeElement
+      if (!active || active === document.body) ctx.focus()
+    }, 0)
+  }
+
   const report =
     onError ??
     ((extension: string, error: unknown) => {
@@ -150,7 +159,7 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
         ? { key: child.key, label: '', separator: true }
         : {
             key: child.item.id,
-            label: resolveText(child.item.title, m),
+            label: resolveText(child.item.title, m, ctx),
             icon: child.item.icon,
             extra: child.item.type === 'button' && child.item.shortcut ? formatShortcut(child.item.shortcut, mac) : undefined,
             disabled: disabled.has(child),
@@ -160,13 +169,16 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
 
   const selectFrom = (children: readonly ResolvedChild[], key: string) => {
     const found = flattenChildren(children).find((c): c is ResolvedItem => !isSeparator(c) && c.item.id === key)
-    if (found) activate(found)
+    if (!found) return
+    // 菜单关闭后会在微任务中把焦点还给触发按钮：对话框等它完成再打开，初始焦点与关闭后的归还才落在正确位置
+    if (found.item.type === 'modal' || found.item.type === 'popover') setTimeout(() => activate(found), 0)
+    else activate(found)
   }
 
   const renderItem = (resolved: ResolvedItem): ReactElement => {
     const { item } = resolved
-    const title = resolveText(item.title, m)
-    const label = item.label === undefined ? undefined : resolveText(item.label, m)
+    const title = resolveText(item.title, m, ctx)
+    const label = item.label === undefined ? undefined : resolveText(item.label, m, ctx)
     const shortcut = item.type === 'button' && item.shortcut ? formatShortcut(item.shortcut, mac) : undefined
     const active = isItemActive(resolved, ctx)
     const button = (
@@ -287,15 +299,15 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
       {dialog && dialogItem && (
         <Modal
           open
-          onClose={() => setDialogKey(null)}
-          title={resolveText(dialogItem.title, m)}
+          onClose={closeDialog}
+          title={resolveText(dialogItem.title, m, ctx)}
           width={dialogItem.type === 'modal' ? dialogItem.width : undefined}
           closeLabel={m.dialog.close}
         >
           <ExtensionErrorBoundary
             name={dialog.extension}
             onError={report}
-            render={() => dialogItem.render(ctx, () => setDialogKey(null))}
+            render={() => dialogItem.render(ctx, closeDialog)}
           />
         </Modal>
       )}

@@ -40,13 +40,16 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
     engine.focus()
   }
 
+  // 修改文档的方法在只读时为空操作
   const ctx: ExtensionContext = {
     editorType: 'markdown',
     insert(content) {
+      if (deps.isReadOnly()) return
       const { end } = engine.getSelection()
       insertAt(end, end, toMarkdown(content))
     },
     insertEmbed(type, payload) {
+      if (deps.isReadOnly()) return
       const { end } = engine.getSelection()
       const fence = `\`\`\`ex-embed:${type}\n${JSON.stringify(payload, null, 2)}\n\`\`\``
       insertAt(end, end, asBlock(engine.getValue(), end, fence))
@@ -56,10 +59,12 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
       return engine.getValue().slice(start, end)
     },
     replaceSelection(content) {
+      if (deps.isReadOnly()) return
       const { start, end } = engine.getSelection()
       insertAt(start, end, toMarkdown(content))
     },
     replaceDocument(content) {
+      if (deps.isReadOnly()) return
       engine.replace(0, engine.getValue().length, toMarkdown(content))
       engine.setSelection(0, 0)
       engine.focus()
@@ -104,6 +109,7 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
   registerMarkdownInternals(ctx, {
     engine,
     store,
+    getTitle: deps.getTitle,
     getLiveHtml: deps.getLiveHtml,
     renderExportHtml: deps.renderExportHtml,
     isFullscreen: () => store.get().fullscreen,

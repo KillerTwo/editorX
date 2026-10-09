@@ -149,6 +149,66 @@ describe('Toolbar', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
+  it('从下拉菜单打开的对话框：初始焦点在对话框内，关闭后焦点回到下拉触发按钮', async () => {
+    const ext: EditorExtension = {
+      name: 'menu',
+      toolbar: [
+        {
+          type: 'dropdown',
+          id: 'insert',
+          title: '插入',
+          label: '插入',
+          items: [
+            {
+              type: 'modal',
+              id: 'tbl',
+              title: '表格',
+              render: (_ctx, close) => (
+                <>
+                  <input aria-label="行数" autoFocus />
+                  <button onClick={close}>取消</button>
+                </>
+              ),
+            },
+          ],
+        },
+      ],
+    }
+    const { ctx } = setup([ext])
+    await userEvent.click(screen.getByRole('button', { name: '插入' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: '表格' }))
+    const dialog = await screen.findByRole('dialog', { name: '表格' })
+    await vi.waitFor(() => expect(within(dialog).getByLabelText('行数')).toHaveFocus())
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(within(dialog).getByLabelText('行数')).toHaveFocus()
+    await userEvent.click(within(dialog).getByRole('button', { name: '取消' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: '插入' })).toHaveFocus())
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(ctx.focus).not.toHaveBeenCalled()
+  })
+
+  it('直接从工具栏按钮打开的对话框关闭后不调用 ctx.focus（焦点回到按钮）', async () => {
+    const { ctx } = setup([core])
+    await userEvent.click(screen.getByRole('button', { name: '表格' }))
+    const dialog = await screen.findByRole('dialog', { name: '表格' })
+    await userEvent.click(within(dialog).getByRole('button', { name: '插入' }))
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: '表格' })).toHaveFocus())
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(ctx.focus).not.toHaveBeenCalled()
+  })
+
+  it('title / label 函数可读取 ctx（随 stateKey 刷新）', () => {
+    const ext: EditorExtension = {
+      name: 'state',
+      toolbar: [
+        { type: 'button', id: 'fs', title: (m, c) => (c?.activePanel === 'x' ? '退出' : m.toolbar.fullscreen), run: vi.fn() },
+      ],
+    }
+    setup([ext], undefined, makeCtx({ activePanel: 'x' }))
+    expect(screen.getByRole('button', { name: '退出' })).toBeInTheDocument()
+  })
+
   it('popover 条目以 Popover 打开', async () => {
     const ext: EditorExtension = {
       name: 'pop',

@@ -24,7 +24,14 @@ export function cycleHeading(ctx: ExtensionContext): void {
   const engine = getMarkdownInternals(ctx)?.engine
   const formats = engine ? detectFormats(engine.getValue(), engine.getSelection()) : ctx.formats
   const current = LEVELS.find(([level]) => formats.has(`heading${level}`))?.[0]
-  ctx.commands.run(current === undefined ? 'heading1' : `heading${current === 6 ? 6 : current + 1}`)
+  if (current === undefined) {
+    ctx.commands.run('heading1')
+  } else if (current === 6) {
+    // headingN 对已是 N 级的行是开关：再执行一次 heading6 即去掉标题
+    ctx.commands.run('heading6')
+  } else {
+    ctx.commands.run(`heading${current + 1}`)
+  }
 }
 
 export const formatExtension: EditorExtension = {

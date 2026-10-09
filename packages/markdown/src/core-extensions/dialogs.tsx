@@ -25,48 +25,58 @@ function Field({ label, children }: { label: string; children: (id: string) => R
   )
 }
 
-function Actions({ ctx, close }: DialogProps) {
+function Actions({ ctx, close, canSubmit = true }: DialogProps & { canSubmit?: boolean }) {
   return (
     <div className="ex-mde-dialog__actions">
       <Button onClick={close}>{ctx.locale.dialog.cancel}</Button>
-      <Button type="submit" variant="primary">
+      <Button type="submit" variant="primary" disabled={!canSubmit}>
         {ctx.locale.dialog.confirm}
       </Button>
     </div>
   )
 }
 
+const URL_PREFIX = 'https://'
+const isUrlFilled = (url: string) => {
+  const value = url.trim()
+  return value !== '' && value !== URL_PREFIX
+}
+
 export function LinkDialog({ ctx, close }: DialogProps) {
   const m = ctx.locale
   const [text, setText] = useState(() => ctx.getSelectionText())
-  const [url, setUrl] = useState('https://')
+  const [url, setUrl] = useState(URL_PREFIX)
+  const canSubmit = isUrlFilled(url)
   const submit = (e: FormEvent) => {
     e.preventDefault()
+    if (!canSubmit) return
     close()
-    afterClose(() => ctx.commands.run('link', { text: text || undefined, url }))
+    afterClose(() => ctx.commands.run('link', { text: text || undefined, url: url.trim() }))
   }
   return (
     <form className="ex-mde-dialog" onSubmit={submit}>
       <Field label={m.dialog.linkText}>
-        {(id) => <input id={id} className="ex-mde-input" value={text} onChange={(e) => setText(e.target.value)} />}
+        {(id) => <input id={id} className="ex-mde-input" autoFocus value={text} onChange={(e) => setText(e.target.value)} />}
       </Field>
       <Field label={m.dialog.linkUrl}>
         {(id) => <input id={id} className="ex-mde-input" value={url} onChange={(e) => setUrl(e.target.value)} />}
       </Field>
-      <Actions ctx={ctx} close={close} />
+      <Actions ctx={ctx} close={close} canSubmit={canSubmit} />
     </form>
   )
 }
 
 export function ImageDialog({ ctx, close }: DialogProps) {
   const m = ctx.locale
-  const [url, setUrl] = useState('https://')
+  const [url, setUrl] = useState(URL_PREFIX)
   const [alt, setAlt] = useState(() => ctx.getSelectionText())
   const fileRef = useRef<HTMLInputElement>(null)
+  const canSubmit = isUrlFilled(url)
   const submit = (e: FormEvent) => {
     e.preventDefault()
+    if (!canSubmit) return
     close()
-    afterClose(() => ctx.commands.run('image', { url, text: alt || undefined }))
+    afterClose(() => ctx.commands.run('image', { url: url.trim(), text: alt || undefined }))
   }
   const onFiles = (files: FileList | null) => {
     const list = Array.from(files ?? [])
@@ -77,7 +87,7 @@ export function ImageDialog({ ctx, close }: DialogProps) {
   return (
     <form className="ex-mde-dialog" onSubmit={submit}>
       <Field label={m.dialog.imageUrl}>
-        {(id) => <input id={id} className="ex-mde-input" value={url} onChange={(e) => setUrl(e.target.value)} />}
+        {(id) => <input id={id} className="ex-mde-input" autoFocus value={url} onChange={(e) => setUrl(e.target.value)} />}
       </Field>
       <Field label={m.dialog.imageAlt}>
         {(id) => <input id={id} className="ex-mde-input" value={alt} onChange={(e) => setAlt(e.target.value)} />}
@@ -90,7 +100,7 @@ export function ImageDialog({ ctx, close }: DialogProps) {
           </Button>
         </div>
       )}
-      <Actions ctx={ctx} close={close} />
+      <Actions ctx={ctx} close={close} canSubmit={canSubmit} />
     </form>
   )
 }
@@ -111,7 +121,7 @@ export function TableDialog({ ctx, close }: DialogProps) {
       <div className="ex-mde-dialog__row">
         <Field label={m.dialog.tableRows}>
           {(id) => (
-            <input id={id} className="ex-mde-input" type="number" min={1} max={20} value={rows} onChange={(e) => setRows(e.target.value)} />
+            <input id={id} className="ex-mde-input" type="number" min={1} max={20} autoFocus value={rows} onChange={(e) => setRows(e.target.value)} />
           )}
         </Field>
         <Field label={m.dialog.tableCols}>

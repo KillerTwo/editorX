@@ -85,6 +85,17 @@ describe('createMarkdownContext', () => {
     expect(ctx.locale.toolbar.bold).toBe('加粗')
   })
 
+  it('只读时 insert / replaceSelection / replaceDocument / insertEmbed 不修改文档', () => {
+    const { engine, ctx } = setup('abc', true)
+    engine.setSelection(0, 3)
+    ctx.insert({ markdown: 'X' })
+    ctx.replaceSelection({ markdown: 'Y' })
+    ctx.replaceDocument({ markdown: 'Z' })
+    ctx.insertEmbed('vote', { id: 1 })
+    expect(engine.getValue()).toBe('abc')
+    expect(ctx.getSelectionText()).toBe('abc')
+  })
+
   it('internals：全屏开关、live HTML 与导出 HTML', async () => {
     const { store, ctx } = setup('')
     const internals = getMarkdownInternals(ctx)!
@@ -92,6 +103,7 @@ describe('createMarkdownContext', () => {
     expect(store.get().fullscreen).toBe(true)
     expect(internals.isFullscreen()).toBe(true)
     expect(internals.getLiveHtml()).toBe('<p>live</p>')
+    expect(internals.getTitle()).toBe('文章')
     await expect(internals.renderExportHtml()).resolves.toBe('<p>export</p>')
   })
 })

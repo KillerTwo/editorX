@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import type { Messages } from './messages'
 import type { AdapterName, EditorAdapters, EditorDocument, EditorType } from './types'
 
-/** 静态文案或从当前 Messages 取值的函数 */
-export type MessageText = string | ((messages: Messages) => string)
+/** 静态文案或从当前 Messages 取值的函数；在工具栏中求值时还会传入 ctx（随 stateKey 刷新） */
+export type MessageText = string | ((messages: Messages, ctx?: ExtensionContext) => string)
 export type NotifyType = 'info' | 'success' | 'warning' | 'error'
 
 interface ItemBase {
@@ -81,7 +81,10 @@ export interface InsertContent {
   html?: string
 }
 
-/** 编辑器提供给扩展的能力；对象引用稳定，带 get 的属性始终返回最新值 */
+/**
+ * 编辑器提供给扩展的能力；对象引用稳定，带 get 的属性始终返回最新值。
+ * 只读时 insert / insertEmbed / replaceSelection / replaceDocument 为空操作。
+ */
 export interface ExtensionContext {
   readonly editorType: EditorType
   /** 在选区末尾插入，不删除选中文本 */
@@ -128,6 +131,6 @@ export interface EditorExtension {
 export type ToolbarLayout = ReadonlyArray<string | readonly string[]>
 export type MissingAdapterPolicy = 'hide' | 'disable'
 
-export function resolveText(text: MessageText, messages: Messages): string {
-  return typeof text === 'function' ? text(messages) : text
+export function resolveText(text: MessageText, messages: Messages, ctx?: ExtensionContext): string {
+  return typeof text === 'function' ? text(messages, ctx) : text
 }

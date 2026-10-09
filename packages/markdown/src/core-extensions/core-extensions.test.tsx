@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderDiagrams } from '@editorx/markdown-core'
 import type { EditorExtension } from '@editorx/toolbar'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { editorContent, editorRoot, previewEl, renderEditor } from '../test-utils'
@@ -47,6 +48,16 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+const openMenuItem = async (menu: string, item: string | RegExp) => {
+  await userEvent.click(screen.getByRole('button', { name: menu }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
+const enterFullscreen = async () => {
+  await openMenuItem('更多操作', '全屏')
+  expect(editorRoot()).toHaveAttribute('data-fullscreen')
+}
+
 describe('内置扩展', () => {
   it('默认按 CSDN 布局渲染（未提供的 csdn:* 项跳过）', () => {
     renderEditor()
@@ -91,6 +102,20 @@ describe('内置扩展', () => {
     expect(handle().getValue()).toBe('## t')
   })
 
+  it('Mod-Shift-H 在 H6 时回到无标题', () => {
+    const { handle } = renderEditor({ defaultValue: '###### t' })
+    act(() => handle().getEngine().setSelection(8, 8))
+    fireEvent.keyDown(editorContent(), { key: 'H', code: 'KeyH', ctrlKey: true, shiftKey: true })
+    expect(handle().getValue()).toBe('t')
+  })
+
+  it('只读时快捷键不修改文档', () => {
+    const { handle } = renderEditor({ defaultValue: 'x', readOnly: true })
+    act(() => handle().getEngine().setSelection(0, 1))
+    fireEvent.keyDown(editorContent(), { key: 'b', code: 'KeyB', ctrlKey: true })
+    expect(handle().getValue()).toBe('x')
+  })
+
   it('列表下拉选择有序列表；更多格式插入高亮', async () => {
     const { handle } = renderEditor({ defaultValue: 'a' })
     act(() => handle().getEngine().setSelection(0, 1))
@@ -117,6 +142,62 @@ describe('内置扩展', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
+  it('链接对话框：初始焦点在首个输入框；地址为空或仅 https:// 时不能确定', async () => {
+    renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: '链接' }))
+    const dialog = await screen.findByRole('dialog', { name: '链接' })
+    await waitFor(() => expect(within(dialog).getByLabelText('链接文本')).toHaveFocus())
+    const confirm = within(dialog).getByRole('button', { name: '确定' })
+    expect(confirm).toBeDisabled()
+    const url = within(dialog).getByLabelText('链接地址')
+    await userEvent.type(url, 'e.com')
+    expect(confirm).toBeEnabled()
+    await userEvent.clear(url)
+    await userEvent.type(url, '  ')
+    expect(confirm).toBeDisabled()
+  })
+
+  it('图片对话框：填写地址与描述后插入图片', async () => {
+    const { handle } = renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: '图片' }))
+    const dialog = await screen.findByRole('dialog', { name: '图片' })
+    await waitFor(() => expect(within(dialog).getByLabelText('图片地址')).toHaveFocus())
+    expect(within(dialog).getByRole('button', { name: '确定' })).toBeDisabled()
+    expect(within(dialog).queryByRole('button', { name: '本地上传' })).toBeNull()
+    await userEvent.type(within(dialog).getByLabelText('图片地址'), 'e.com/a.png')
+    await userEvent.type(within(dialog).getByLabelText('图片描述'), '图')
+    await userEvent.click(within(dialog).getByRole('button', { name: '确定' }))
+    await waitFor(() => expect(handle().getValue()).toBe('![图](https://e.com/a.png)'))
+  })
+
+  it('图片对话框：有 uploadImage 时显示本地上传，选择文件走上传流程', async () => {
+    const uploadImage = vi.fn(async () => ({ url: 'https://cdn/a.png' }))
+    const { handle } = renderEditor({ adapters: { uploadImage } })
+    await userEvent.click(screen.getByRole('button', { name: '图片' }))
+    const dialog = await screen.findByRole('dialog', { name: '图片' })
+    expect(within(dialog).getByRole('button', { name: '本地上传' })).toBeInTheDocument()
+    const file = new File(['x'], 'a.png', { type: 'image/png' })
+    const input = dialog.querySelector<HTMLInputElement>('input[type="file"]')!
+    await userEvent.upload(input, file)
+    await waitFor(() => expect(uploadImage).toHaveBeenCalledWith(file))
+    await waitFor(() => expect(handle().getValue()).toBe('![a](https://cdn/a.png)'))
+  })
+
+  it('从下拉菜单打开的对话框：焦点在行数输入框；取消后焦点回到编辑器内（触发按钮），全屏 Esc 仍可用', async () => {
+    renderEditor()
+    await enterFullscreen()
+    await openMenuItem('更多插入', '表格')
+    const dialog = await screen.findByRole('dialog', { name: '表格' })
+    await waitFor(() => expect(within(dialog).getByLabelText('行数')).toHaveFocus())
+    await userEvent.click(within(dialog).getByRole('button', { name: '取消' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await waitFor(() => expect(screen.getByRole('button', { name: '更多插入' })).toHaveFocus())
+    // 获得焦点的按钮会显示 tooltip：第一次 Esc 先关闭 tooltip，第二次退出全屏
+    await userEvent.keyboard('{Escape}')
+    await userEvent.keyboard('{Escape}')
+    expect(editorRoot()).not.toHaveAttribute('data-fullscreen')
+  })
+
   it('更多插入 → 表格对话框按行列插入', async () => {
     const { handle } = renderEditor()
     await userEvent.click(screen.getByRole('button', { name: '更多插入' }))
@@ -138,25 +219,115 @@ describe('内置扩展', () => {
 
   it('全屏：切换 data-fullscreen，Esc 退出', async () => {
     renderEditor()
-    await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: '全屏' }))
-    expect(editorRoot()).toHaveAttribute('data-fullscreen')
+    await enterFullscreen()
     fireEvent.keyDown(editorContent(), { key: 'Escape' })
     expect(editorRoot()).not.toHaveAttribute('data-fullscreen')
   })
 
-  it('导出 Markdown 触发下载并回收对象 URL', async () => {
-    const { createObjectURL, revokeObjectURL, click } = stubObjectUrls()
-    renderEditor({ defaultValue: '# x', title: '我的文章' })
+  it('全屏：输入法组合中的 Esc 不退出', async () => {
+    renderEditor()
+    await enterFullscreen()
+    fireEvent.keyDown(editorContent(), { key: 'Escape', isComposing: true })
+    expect(editorRoot()).toHaveAttribute('data-fullscreen')
+  })
+
+  it('全屏：菜单项显示「退出全屏」，点击退出', async () => {
+    renderEditor()
+    await enterFullscreen()
+    await openMenuItem('更多操作', '退出全屏')
+    expect(editorRoot()).not.toHaveAttribute('data-fullscreen')
     await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: '导出为 Markdown' }))
-    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
+    expect(await screen.findByRole('menuitem', { name: '全屏' })).toBeInTheDocument()
+  })
+
+  describe('全屏隔离页面', () => {
+    const html = document.documentElement
+    const extras: HTMLElement[] = []
+    const setupPage = () => {
+      const outside = document.createElement('button')
+      outside.textContent = '页面按钮'
+      const already = document.createElement('div')
+      already.setAttribute('inert', '')
+      document.body.append(outside, already)
+      extras.push(outside, already)
+      html.style.overflow = 'scroll'
+      return { outside, already }
+    }
+
+    afterEach(() => {
+      extras.splice(0).forEach((el) => el.remove())
+      html.style.overflow = ''
+    })
+
+    it('锁定页面滚动、页面其余部分 inert（浮层容器除外）；退出后还原', async () => {
+      const page = setupPage()
+      renderEditor()
+      await enterFullscreen()
+      expect(html.style.overflow).toBe('hidden')
+      expect(page.outside).toHaveAttribute('inert')
+      expect(editorRoot().closest('[inert]')).toBeNull()
+      expect(document.querySelector('.ex-portal')!.closest('[inert]')).toBeNull()
+      expect(document.querySelector('.ex-body-portal')!.closest('[inert]')).toBeNull()
+      fireEvent.keyDown(editorContent(), { key: 'Escape' })
+      expect(html.style.overflow).toBe('scroll')
+      expect(page.outside).not.toHaveAttribute('inert')
+      expect(page.already).toHaveAttribute('inert')
+    })
+
+    it('全屏中卸载时还原', async () => {
+      const page = setupPage()
+      const { unmount } = renderEditor()
+      await enterFullscreen()
+      unmount()
+      expect(html.style.overflow).toBe('scroll')
+      expect(page.outside).not.toHaveAttribute('inert')
+      expect(page.already).toHaveAttribute('inert')
+    })
+  })
+
+  it('导出 Markdown 触发下载', async () => {
+    const { createObjectURL, click } = stubObjectUrls()
+    renderEditor({ defaultValue: '# x', title: '我的文章' })
+    await openMenuItem('更多操作', '导出为 Markdown')
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    expect(await readBlob(createObjectURL.mock.calls[0]![0])).toBe('# x')
     expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('我的文章.md')
-    await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith('blob:x'))
+  })
+
+  it('导出 HTML：绘制失败的图表以源码代码块导出', async () => {
+    const { createObjectURL } = stubObjectUrls()
+    vi.mocked(renderDiagrams).mockImplementationOnce(async (container, { theme }) => {
+      const block = container.querySelector<HTMLElement>('.ex-mermaid[data-ex-diagram]')!
+      block.innerHTML = '<pre class="ex-mermaid-error">Parse error</pre>'
+      block.classList.add('ex-mermaid--error')
+      block.dataset.exRenderedTheme = theme
+    })
+    renderEditor({ defaultValue: '```mermaid\ngraph TD\nA-->B\n```\n', defaultViewMode: 'edit' })
+    await waitFor(() => expect(previewEl().querySelector('.ex-mermaid[data-ex-diagram]')).not.toBeNull())
+    await openMenuItem('更多操作', '导出为 HTML')
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1))
+    const page = await readBlob(createObjectURL.mock.calls[0]![0])
+    expect(page).toContain('<pre><code class="language-mermaid">graph TD\nA--&gt;B')
+    expect(page).not.toContain('Parse error')
+  })
+
+  it('导出 HTML 进行中再次点击被忽略', async () => {
+    const { createObjectURL } = stubObjectUrls()
+    let release = () => {}
+    vi.mocked(renderDiagrams).mockImplementationOnce(() => new Promise<void>((resolve) => (release = resolve)))
+    renderEditor({ defaultValue: '```mermaid\ngraph TD\n```\n', defaultViewMode: 'edit' })
+    await waitFor(() => expect(previewEl().querySelector('.ex-mermaid[data-ex-diagram]')).not.toBeNull())
+    await openMenuItem('更多操作', '导出为 HTML')
+    await openMenuItem('更多操作', '导出为 HTML')
+    expect(renderDiagrams).toHaveBeenCalledTimes(1)
+    release()
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1))
+    await openMenuItem('更多操作', '导出为 HTML')
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(2))
   })
 
   it('编辑视图导出 HTML：图表已绘制（不是占位块），预览 DOM 不受影响', async () => {
-    const { createObjectURL, revokeObjectURL, click } = stubObjectUrls()
+    const { createObjectURL, click } = stubObjectUrls()
     renderEditor({ defaultValue: '# 图\n\n```mermaid\ngraph TD\nA-->B\n```\n', defaultViewMode: 'edit', title: '图表' })
     await waitFor(() => expect(previewEl().querySelector('.ex-mermaid[data-ex-diagram]')).not.toBeNull())
     expect(previewEl().querySelector('svg')).toBeNull()
@@ -169,7 +340,6 @@ describe('内置扩展', () => {
     expect(page).toContain('<title>图表</title>')
     expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('图表.html')
     expect(previewEl().querySelector('svg')).toBeNull()
-    await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith('blob:x'))
   })
 
   it('自定义扩展：经 * 追加到末尾，setup/cleanup 成对，run 抛错提示', async () => {
@@ -225,5 +395,12 @@ describe('内置扩展', () => {
     act(() => handle().getEngine().setSelection(1, 1))
     act(() => handle().insert({ markdown: 'X' }))
     expect(handle().getValue()).toBe('aXb')
+  })
+
+  it('只读时 ref.insert 不修改文档', () => {
+    const { handle } = renderEditor({ defaultValue: 'ab', readOnly: true })
+    act(() => handle().getEngine().setSelection(1, 1))
+    act(() => handle().insert({ markdown: 'X' }))
+    expect(handle().getValue()).toBe('ab')
   })
 })

@@ -85,6 +85,16 @@ describe('styles.css @supports 兜底块', () => {
   })
 })
 
+describe('styles.css 层级', () => {
+  it('全屏外壳 < 弹出层 < 模态框 < 提示', () => {
+    const z = (name: string) => Number(new RegExp(`--ex-z-${name}:\\s*(\\d+);`).exec(mainCss)?.[1])
+    const order = ['fullscreen', 'popover', 'modal', 'toast'].map(z)
+    for (const value of order) expect(Number.isFinite(value)).toBe(true)
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
+    expect(new Set(order).size).toBe(order.length)
+  })
+})
+
 describe('styles.css 主题切换', () => {
   it('切换期间禁用 transition', () => {
     expect(css).toContain('.ex-root[data-ex-theme-switching] *')

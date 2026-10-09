@@ -60,6 +60,7 @@ export const zhCN = {
     exportHtml: '导出为 HTML',
     syntax: '语法说明',
     fullscreen: '全屏',
+    exitFullscreen: '退出全屏',
     untitled: '未命名',
   },
   dialog: {

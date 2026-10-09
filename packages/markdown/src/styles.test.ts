@@ -26,6 +26,19 @@ describe('markdown styles.css', () => {
     }
   })
 
+  it('全屏外壳使用 --ex-z-fullscreen，位于弹出层之下', () => {
+    const rule = /\.ex-mde\[data-fullscreen\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect(rule).toMatch(/z-index:\s*var\(--ex-z-fullscreen\);/)
+    const z = (name: string) => Number(new RegExp(`--ex-z-${name}:\\s*(\\d+);`).exec(themeCss)?.[1])
+    expect(z('fullscreen')).toBeLessThan(z('popover'))
+  })
+
+  it('全屏时两个滚动面板不把滚动链传给页面', () => {
+    expect(css).toMatch(
+      /\.ex-mde\[data-fullscreen\] \.ex-mde-editor,\s*\.ex-mde\[data-fullscreen\] \.ex-mde-preview-pane\s*\{\s*overscroll-behavior: contain;/,
+    )
+  })
+
   it('隐藏面板使用 hidden 属性', () => {
     expect(css).toMatch(/\.ex-mde-editor\[hidden\],\s*\.ex-mde-preview-pane\[hidden\]\s*\{\s*display: none;/)
   })

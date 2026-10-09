@@ -1,4 +1,4 @@
-import { ClEditEngine, renderDiagrams, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
+import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
 import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
 import {
   collectShortcuts,
@@ -30,6 +30,8 @@ import {
 import { createMarkdownContext } from './context'
 import { MARKDOWN_TOOLBAR_LAYOUT, markdownCoreExtensions } from './core-extensions'
 import { cx } from './cx'
+import { drawDiagramsForExport } from './export-html'
+import { isolateFullscreen } from './fullscreen'
 import { ModeTabs } from './mode-tabs'
 import { useEditorRuntime } from './runtime'
 import { createEditorStore, useEditorState } from './store'
@@ -158,14 +160,8 @@ function EditorShell({
       // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
       renderExportHtml: async () => {
         await runtime.flush()
-        const container = document.createElement('div')
-        container.innerHTML = previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html
-        try {
-          await renderDiagrams(container, { theme: live.current.theme })
-        } catch (error) {
-          console.error('[editorx/markdown] 导出时图表渲染失败', error)
-        }
-        return container.innerHTML
+        const html = previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html
+        return drawDiagramsForExport(html, live.current.theme)
       },
     }),
   )
@@ -194,6 +190,11 @@ function EditorShell({
   const formatsKey = useEditorState(store, (s) => s.formatsKey)
   const panel = useEditorState(store, (s) => s.panel)
   const fullscreen = useEditorState(store, (s) => s.fullscreen)
+
+  useEffect(() => {
+    if (!fullscreen || !rootRef.current) return
+    return isolateFullscreen(rootRef.current)
+  }, [fullscreen])
 
   useEffect(() => {
     const detach = uploader.attach(hostRef.current)
