@@ -22,9 +22,21 @@ export interface ShortcutBinding {
   disabledByAdapter: boolean
 }
 
+const KEY_ALIASES: Record<string, string> = {
+  space: ' ',
+  esc: 'escape',
+  up: 'arrowup',
+  down: 'arrowdown',
+  left: 'arrowleft',
+  right: 'arrowright',
+  minus: '-',
+}
+
 export function parseShortcut(spec: string): ParsedShortcut {
   const parts = spec.split('-')
-  const key = parts.pop()!.toLowerCase()
+  const last = parts.pop()!.toLowerCase()
+  if (last === '') throw new Error(`快捷键缺少按键：${spec}`)
+  const key = KEY_ALIASES[last] ?? last
   const parsed: ParsedShortcut = { mod: false, ctrl: false, meta: false, alt: false, shift: false, key }
   for (const raw of parts) {
     const part = raw.toLowerCase()
@@ -52,6 +64,7 @@ function eventKey(e: KeyboardEvent): string {
 }
 
 export function matchShortcut(p: ParsedShortcut, e: KeyboardEvent, mac: boolean): boolean {
+  if (e.getModifierState?.('AltGraph')) return false
   const wantCtrl = p.ctrl || (p.mod && !mac)
   const wantMeta = p.meta || (p.mod && mac)
   return (
@@ -82,8 +95,14 @@ const KEY_LABELS: Record<string, string> = {
   ' ': 'Space',
 }
 
+/** 非法组合键返回原文 */
 export function formatShortcut(spec: string, mac: boolean): string {
-  const p = parseShortcut(spec)
+  let p: ParsedShortcut
+  try {
+    p = parseShortcut(spec)
+  } catch {
+    return spec
+  }
   const key = KEY_LABELS[p.key] ?? p.key.toUpperCase()
   if (mac) {
     return [p.ctrl && '⌃', p.alt && '⌥', p.shift && '⇧', (p.mod || p.meta) && '⌘', key].filter(Boolean).join('')
@@ -94,8 +113,20 @@ export function formatShortcut(spec: string, mac: boolean): string {
 export function collectShortcuts(extensions: readonly EditorExtension[], options: ResolveOptions): ShortcutBinding[] {
   const bindings = new Map<string, ShortcutBinding>()
   const add = (spec: string, binding: Omit<ShortcutBinding, 'key' | 'parsed'>) => {
-    const parsed = parseShortcut(spec)
+    let parsed: ParsedShortcut
+    try {
+      parsed = parseShortcut(spec)
+    } catch (error) {
+      console.error(`[editorx] 扩展 ${binding.extension} 的快捷键 "${spec}" 无效，已忽略`, error)
+      return
+    }
     const key = normalizeShortcut(parsed)
+    const previous = bindings.get(key)
+    if (previous && previous.extension !== binding.extension && process.env.NODE_ENV !== 'production') {
+      console.warn(`[editorx] 快捷键 ${key} 被扩展 ${binding.extension} 覆盖（原为 ${previous.extension}）`)
+    }
+    // 删除后重新插入：等价写法（如 Windows 上的 mod-b 与 ctrl-b）按插入顺序倒序匹配时后注册者优先
+    bindings.delete(key)
     bindings.set(key, { ...binding, key, parsed })
   }
   for (const ext of activeExtensions(extensions, options.editorType)) {
@@ -119,7 +150,7 @@ export function collectShortcuts(extensions: readonly EditorExtension[], options
   return [...bindings.values()]
 }
 
-/** 命中返回 true（已 preventDefault）；扩展异常交给 onError */
+/** 命中返回 true（已 preventDefault）；多个绑定命中时取数组中最后一个；扩展异常交给 onError */
 export function handleShortcut(
   e: KeyboardEvent,
   bindings: readonly ShortcutBinding[],
@@ -128,7 +159,10 @@ export function handleShortcut(
   onError: (extension: string, error: unknown) => void,
 ): boolean {
   if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return false
-  const binding = bindings.find((b) => matchShortcut(b.parsed, e, mac))
+  let binding: ShortcutBinding | undefined
+  for (let i = bindings.length - 1; i >= 0 && !binding; i--) {
+    if (matchShortcut(bindings[i]!.parsed, e, mac)) binding = bindings[i]
+  }
   if (!binding) return false
   e.preventDefault()
   if (binding.disabledByAdapter) return true

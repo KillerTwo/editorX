@@ -38,11 +38,8 @@ export function isSeparator(child: ResolvedChild): child is ResolvedSeparator {
 
 export function activeExtensions(extensions: readonly EditorExtension[], editorType: EditorType): EditorExtension[] {
   const byName = new Map<string, EditorExtension>()
-  for (const ext of extensions) {
-    if (ext.editors && !ext.editors.includes(editorType)) continue
-    byName.set(ext.name, ext)
-  }
-  return [...byName.values()]
+  for (const ext of extensions) byName.set(ext.name, ext)
+  return [...byName.values()].filter((ext) => !ext.editors || ext.editors.includes(editorType))
 }
 
 export function hasMissingAdapter(requires: readonly AdapterName[] | undefined, adapters: EditorAdapters): boolean {

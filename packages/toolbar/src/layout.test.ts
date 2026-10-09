@@ -63,6 +63,12 @@ describe('resolveToolbar', () => {
     expect(ids(resolveToolbar([rich], undefined, md))).toEqual([])
   })
 
+  it('同名替换扩展不适用当前编辑器时，旧扩展也不保留', () => {
+    const richOnly: EditorExtension = { name: 'core', editors: ['richtext'], toolbar: [button('video')] }
+    expect(ids(resolveToolbar([core, richOnly], undefined, md))).toEqual([])
+    expect(resolvePanels([{ name: 'p', panels: [{ id: 'toc', title: 't', position: 'right', render: () => null }] }, { name: 'p', editors: ['richtext'] }], md)).toEqual([])
+  })
+
   it('缺失 adapter：默认隐藏（扩展级与条目级），disable 时标记 disabledByAdapter', () => {
     const exts: EditorExtension[] = [
       { name: 'upload', requires: ['uploadImage'], toolbar: [button('img')] },
@@ -141,6 +147,13 @@ describe('fitGroups', () => {
     expect(fitGroups([100, 100, 100], 250, 17, 49)).toBe(1)
     expect(fitGroups([100, 100, 100], 300, 17, 49)).toBe(2)
     expect(fitGroups([100], 10, 17, 49)).toBe(0)
+  })
+
+  it('恰好放得下时不溢出；空分组返回 0', () => {
+    expect(fitGroups([100, 100, 100], 334, 17, 49)).toBe(3)
+    expect(fitGroups([100, 100, 100], 333, 17, 49)).toBe(2)
+    expect(fitGroups([], 0, 17, 49)).toBe(0)
+    expect(fitGroups([], 500, 17, 49)).toBe(0)
   })
 })
 

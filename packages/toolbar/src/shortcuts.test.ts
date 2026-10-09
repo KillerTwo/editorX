@@ -27,6 +27,28 @@ describe('parse / normalize / format', () => {
     expect(formatShortcut('Alt-Enter', false)).toBe('Alt+Enter')
   })
 
+  it('键名别名：space/esc/方向键/minus，格式化为可读标签', () => {
+    expect(parseShortcut('Mod-Space').key).toBe(' ')
+    expect(parseShortcut('Esc').key).toBe('escape')
+    expect(['Up', 'Down', 'Left', 'Right'].map((k) => parseShortcut(`Alt-${k}`).key)).toEqual([
+      'arrowup',
+      'arrowdown',
+      'arrowleft',
+      'arrowright',
+    ])
+    expect(parseShortcut('Mod-Minus').key).toBe('-')
+    expect(formatShortcut('Mod-Space', false)).toBe('Ctrl+Space')
+    expect(formatShortcut('Esc', false)).toBe('Esc')
+    expect(formatShortcut('Alt-Up', false)).toBe('Alt+↑')
+    expect(formatShortcut('Mod-Minus', false)).toBe('Ctrl+-')
+    expect(formatShortcut('Mod-Minus', true)).toBe('⌘-')
+  })
+
+  it('formatShortcut 遇到非法组合键时返回原文，不抛错', () => {
+    expect(formatShortcut('Hyper-K', false)).toBe('Hyper-K')
+    expect(formatShortcut('Mod--', true)).toBe('Mod--')
+  })
+
   it('isMacPlatform 读取 navigator.platform', () => {
     vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel')
     expect(isMacPlatform()).toBe(true)
@@ -47,6 +69,18 @@ describe('matchShortcut', () => {
   it('Shift 产生大写或符号时按 key / code 回退匹配', () => {
     expect(matchShortcut(parseShortcut('Mod-Shift-K'), key({ key: 'K', code: 'KeyK', ctrlKey: true, shiftKey: true }), false)).toBe(true)
     expect(matchShortcut(parseShortcut('Mod-Shift-1'), key({ key: '!', code: 'Digit1', ctrlKey: true, shiftKey: true }), false)).toBe(true)
+  })
+
+  it('别名键可匹配：Mod-Minus、Mod-Space、Esc', () => {
+    expect(matchShortcut(parseShortcut('Mod-Minus'), key({ key: '-', code: 'Minus', ctrlKey: true }), false)).toBe(true)
+    expect(matchShortcut(parseShortcut('Mod-Space'), key({ key: ' ', code: 'Space', ctrlKey: true }), false)).toBe(true)
+    expect(matchShortcut(parseShortcut('Esc'), key({ key: 'Escape', code: 'Escape' }), false)).toBe(true)
+  })
+
+  it('AltGr 按下时不匹配（Windows 上 AltGr 表现为 Ctrl+Alt）', () => {
+    const e = key({ key: 'q', code: 'KeyQ', ctrlKey: true, altKey: true })
+    vi.spyOn(e, 'getModifierState').mockImplementation((k) => k === 'AltGraph')
+    expect(matchShortcut(parseShortcut('Ctrl-Alt-Q'), e, false)).toBe(false)
   })
 })
 
@@ -71,12 +105,54 @@ describe('collectShortcuts / handleShortcut', () => {
   ]
 
   it('收集按钮（含 dropdown 子项）与 shortcuts 映射，后注册覆盖先注册', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
     const later: EditorExtension = { name: 'mine', shortcuts: { 'mod-b': vi.fn() } }
     const bindings = collectShortcuts([...exts, later], md)
     expect(bindings.map((b) => normalizeShortcut(b.parsed)).sort()).toEqual(
       ['mod-b', 'mod-shift-d', 'mod-shift-h', 'mod-shift-o', 'mod-shift-v'].sort(),
     )
     expect(bindings.find((b) => b.key === 'mod-b')!.extension).toBe('mine')
+  })
+
+  it('非法组合键被跳过并 console.error（含扩展名），其他绑定照常收集', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const bad: EditorExtension = {
+      name: 'bad',
+      toolbar: [{ type: 'button', id: 'x', title: 'x', shortcut: 'Mod--', run }],
+      shortcuts: { 'Hyper-K': run, 'Mod-J': run },
+    }
+    const bindings = collectShortcuts([...exts, bad], md)
+    expect(bindings.map((b) => b.key).sort()).toEqual(
+      ['mod-b', 'mod-j', 'mod-shift-d', 'mod-shift-h', 'mod-shift-o', 'mod-shift-v'].sort(),
+    )
+    expect(error).toHaveBeenCalledTimes(2)
+    expect(String(error.mock.calls[0]![0])).toContain('bad')
+  })
+
+  it('等价写法（Windows 上 mod-b 与 ctrl-b）由后注册者生效', () => {
+    const first = vi.fn()
+    const second = vi.fn()
+    const third = vi.fn()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const a: EditorExtension = { name: 'a', shortcuts: { 'Mod-B': first } }
+    const b: EditorExtension = { name: 'b', shortcuts: { 'Ctrl-B': second } }
+    handleShortcut(key({ key: 'b', ctrlKey: true }), collectShortcuts([a, b], md), ctx(), false, vi.fn())
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(first).not.toHaveBeenCalled()
+    const c: EditorExtension = { name: 'c', shortcuts: { 'Mod-B': third } }
+    handleShortcut(key({ key: 'b', ctrlKey: true }), collectShortcuts([a, b, c], md), ctx(), false, vi.fn())
+    expect(third).toHaveBeenCalledTimes(1)
+    expect(second).toHaveBeenCalledTimes(1)
+  })
+
+  it('不同扩展绑定同一组合键时开发环境 console.warn；同一扩展内不警告', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    collectShortcuts([{ name: 'a', shortcuts: { 'Mod-B': run } }, { name: 'b', shortcuts: { 'mod-b': run } }], md)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0]![0])).toMatch(/mod-b/)
+    warn.mockClear()
+    collectShortcuts([{ name: 'a', toolbar: [{ type: 'button', id: 'x', title: 'x', shortcut: 'Mod-B', run }], shortcuts: { 'Mod-B': run } }], md)
+    expect(warn).not.toHaveBeenCalled()
   })
 
   it('命中则 preventDefault 并执行；已被处理、输入法组合中、未命中都不处理', () => {
