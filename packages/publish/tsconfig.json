@@ -1,0 +1,4 @@
+{
+  "extends": "../../tooling/tsconfig.base.json",
+  "include": ["src", "vitest.config.ts", "tsup.config.ts", "../../tooling/test/setup-dom.ts"]
+}
