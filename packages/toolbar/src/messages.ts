@@ -223,11 +223,11 @@ export const zhCN = deepFreeze({
     },
     backup: {
       label: '同时备份到GitCode',
-      agreementPrefix: '勾选即表示同意 GitCode ',
+      agreementPrefix: '您已同意GitCode ',
       terms: '用户协议',
       and: ' 和 ',
       privacy: '隐私政策',
-      agreementSuffix: '',
+      agreementSuffix: '，我们会为您自动创建账号并备份文章至我的项目。',
     },
     visibility: { public: '全部可见', private: '仅我可见', fans: '粉丝可见', vip: 'VIP可见' },
     template: { default: '默认模板', simple: '简洁模板', moyan: '墨衍模板' },
