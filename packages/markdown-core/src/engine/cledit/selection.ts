@@ -119,9 +119,21 @@ export class SelectionManager {
     return this.get()
   }
 
+  /** Skips the write when the native selection already matches: `addRange` forces a synchronous layout. */
   restore(): void {
     const sel = this.root.ownerDocument.getSelection()
     if (!sel) return
+    const anchor = findPosition(this.root, this.start, this.locator)
+    const focus = this.start === this.end ? anchor : findPosition(this.root, this.end, this.locator)
+    if (
+      sel.rangeCount === 1 &&
+      sel.anchorNode === anchor.node &&
+      sel.anchorOffset === anchor.offset &&
+      sel.focusNode === focus.node &&
+      sel.focusOffset === focus.offset
+    ) {
+      return
+    }
     const range = this.createRange(this.start, this.end)
     sel.removeAllRanges()
     if (this.start > this.end) {

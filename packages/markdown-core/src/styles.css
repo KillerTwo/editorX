@@ -20,6 +20,11 @@
   caret-color: var(--ex-color-primary);
 }
 
+/* Off-screen sections skip layout/paint; the engine sets a per-section `contain-intrinsic-size` estimate. */
+.ex-editor-section {
+  content-visibility: auto;
+}
+
 .ex-editor-content[data-empty]::before {
   position: absolute;
   content: attr(data-placeholder);

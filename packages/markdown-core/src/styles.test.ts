@@ -99,6 +99,13 @@ describe('markdown-core styles.css', () => {
     expect(ruleBody('.ex-editor-content[data-empty]::before')).toContain('content: attr(data-placeholder)')
   })
 
+  it('编辑区段只跳过屏外渲染，不改变排版（DOM 文本不变式依赖它）', () => {
+    const body = ruleBody('.ex-editor-section')
+    expect(body).toContain('content-visibility: auto')
+    const props = [...body.matchAll(/([\w-]+)\s*:/g)].map((m) => m[1])
+    for (const p of props) expect(['content-visibility', 'contain-intrinsic-size'], p).toContain(p)
+  })
+
   it('任务列表使用渲染器类名且不影响混合列表', () => {
     expect(ruleBody('.ex-preview .ex-task-list-item')).toContain('list-style: none')
     expect(ruleBody('.ex-preview .ex-task-list-item-checkbox')).toContain('margin')

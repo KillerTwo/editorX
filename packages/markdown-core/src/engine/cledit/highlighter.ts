@@ -10,18 +10,30 @@ export interface HighlightedSection extends SourceSection {
 
 export interface HighlighterOptions {
   highlight?: (text: string) => string
+  /** Line height in px for the `contain-intrinsic-size` estimate of sections skipped by `content-visibility: auto`. */
+  lineHeight?: number
+}
+
+export const DEFAULT_LINE_HEIGHT = 25
+
+function countLines(text: string): number {
+  let n = 0
+  for (let i = text.indexOf('\n'); i !== -1; i = text.indexOf('\n', i + 1)) n++
+  return Math.max(1, n)
 }
 
 export class Highlighter implements SectionLocator {
   private list: HighlightedSection[] = []
   private starts = new WeakMap<Node, number>()
   private readonly highlight: (text: string) => string
+  private readonly lineHeight: number
 
   constructor(
     private readonly root: HTMLElement,
     opts: HighlighterOptions = {},
   ) {
     this.highlight = opts.highlight ?? highlightMarkdown
+    this.lineHeight = opts.lineHeight ?? DEFAULT_LINE_HEIGHT
   }
 
   get sections(): readonly HighlightedSection[] {
@@ -57,6 +69,8 @@ export class Highlighter implements SectionLocator {
     for (let i = left; i < next.length - right; i++) {
       const el = doc.createElement('div')
       el.className = 'ex-editor-section'
+      // `auto` makes the browser keep the real size once the section has been rendered.
+      el.style.setProperty('contain-intrinsic-size', `auto ${countLines(next[i]!.text) * this.lineHeight}px`)
       el.innerHTML = this.highlight(next[i]!.text)
       // The selection manager needs a text node to place a caret in.
       if (!el.firstChild) el.appendChild(doc.createTextNode(''))

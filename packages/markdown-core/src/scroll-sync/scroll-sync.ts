@@ -14,7 +14,8 @@ export interface ScrollSyncOptions {
  * `editorScrollEl` must be the element the engine was mounted on: it is the editor's scroll container and
  * `engine.getSectionOffsets()` is measured relative to it.
  *
- * Section sizes are cached and invalidated on `change` and container resizes. Call `refresh()` after every
+ * Section sizes are cached and invalidated on `change`, container resizes and editor sections' `content-visibility`
+ * state changes. Call `refresh()` after every
  * preview render and after late preview content growth (images loading, diagrams rendering), which a
  * container-level ResizeObserver cannot see.
  *
@@ -93,6 +94,8 @@ export function createScrollSync(
     pairs = null
   }
   const offChange = engine.on('change', invalidate)
+  // Sections skipped by `content-visibility: auto` report estimated sizes until rendered; the event does not bubble.
+  editorScrollEl.addEventListener('contentvisibilityautostatechange', invalidate, true)
   const resizeObserver =
     typeof ResizeObserver === 'undefined'
       ? null
@@ -120,6 +123,7 @@ export function createScrollSync(
       locked = null
       pairs = null
       offChange()
+      editorScrollEl.removeEventListener('contentvisibilityautostatechange', invalidate, true)
       resizeObserver?.disconnect()
       editorScrollEl.removeEventListener('scroll', onEditorScroll)
       previewEl.removeEventListener('scroll', onPreviewScroll)

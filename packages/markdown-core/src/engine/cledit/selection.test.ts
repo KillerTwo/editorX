@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { findPosition, getTextOffset, SelectionManager, type SectionLocator } from './selection'
 
 function build(html: string): HTMLElement {
@@ -10,6 +10,7 @@ function build(html: string): HTMLElement {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks()
   document.body.innerHTML = ''
   window.getSelection()?.removeAllRanges()
 })
@@ -143,6 +144,35 @@ describe('SelectionManager', () => {
     const sel = window.getSelection()!
     expect(sel.anchorNode!.textContent).toBe('# Title\n')
     expect(sel.anchorOffset).toBe(3)
+  })
+
+  it('原生选区已等于目标（含方向）时 restore 不改写，否则照常写入', () => {
+    const root = build(HTML)
+    root.focus()
+    const sm = new SelectionManager(root)
+    sm.set(3, 3)
+    const sel = window.getSelection()!
+    const remove = vi.spyOn(sel, 'removeAllRanges')
+    const add = vi.spyOn(sel, 'addRange')
+    sm.restore()
+    sm.set(3, 3)
+    expect(remove).not.toHaveBeenCalled()
+    expect(add).not.toHaveBeenCalled()
+
+    sm.set(12, 8)
+    expect(add).toHaveBeenCalledTimes(1)
+    expect(sm.save()).toEqual({ start: 12, end: 8 })
+    sm.restore()
+    expect(add).toHaveBeenCalledTimes(1)
+
+    sm.set(8, 12)
+    expect(add).toHaveBeenCalledTimes(2)
+    expect(sm.save()).toEqual({ start: 8, end: 12 })
+
+    root.innerHTML = '<div># Title\n</div><div>body bold\n</div>'
+    sm.restore()
+    expect(add).toHaveBeenCalledTimes(3)
+    expect(sm.save()).toEqual({ start: 8, end: 12 })
   })
 
   it('选区端点落在 emoji 中间时 save 吸附到码点边界', () => {

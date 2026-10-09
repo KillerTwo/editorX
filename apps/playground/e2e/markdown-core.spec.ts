@@ -295,6 +295,16 @@ test('10k 行文档单次按键延迟 < 50ms', async ({ page }) => {
   expect(p95).toBeLessThan(50)
 })
 
+test('10k 行文档：Ctrl+End 跳到尚未渲染的末段后仍可输入', async ({ page }) => {
+  await loadLargeDoc(page)
+  await editor(page).click({ position: { x: 60, y: 30 } })
+  await page.keyboard.press('Control+End')
+  await page.keyboard.type('Z')
+  await expect.poll(() => editorValue(page)).toMatch(/Z\n$/)
+  await expect(page.getByTestId('status-md')).toContainText('当前行 10000,')
+  await expect(editor(page).locator('.ex-editor-section').last()).toBeInViewport()
+})
+
 test('视觉基线：明亮模式', async ({ page }) => {
   await expect(page.locator('.ex-root').first()).toHaveAttribute('data-ex-theme', 'light')
   await page.evaluate(() => document.fonts.ready)

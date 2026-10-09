@@ -152,6 +152,28 @@ describe('createScrollSync', () => {
     expect(editor.scrollTop).toBe(40)
   })
 
+  it('编辑区段的 contentvisibilityautostatechange（不冒泡，捕获监听）使段尺寸缓存失效', () => {
+    const { editor, engine, sync } = setup()
+    const offsets = vi.mocked(engine.getSectionOffsets)
+    scrollTo(editor, 50)
+    vi.advanceTimersByTime(10)
+    const calls = offsets.mock.calls.length
+    scrollTo(editor, 60)
+    vi.advanceTimersByTime(10)
+    expect(offsets.mock.calls.length).toBe(calls)
+
+    const section = document.createElement('div')
+    editor.appendChild(section)
+    section.dispatchEvent(new Event('contentvisibilityautostatechange'))
+    scrollTo(editor, 70)
+    vi.advanceTimersByTime(10)
+    expect(offsets.mock.calls.length).toBe(calls + 1)
+
+    const remove = vi.spyOn(editor, 'removeEventListener')
+    sync.destroy()
+    expect(remove).toHaveBeenCalledWith('contentvisibilityautostatechange', expect.any(Function), true)
+  })
+
   it('refresh 立即重新测量并按最近的源同步', () => {
     const { editor, preview, engine, sync } = setup()
     editor.scrollTop = 200

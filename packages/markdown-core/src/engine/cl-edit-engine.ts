@@ -9,7 +9,7 @@ import type {
   TextState,
   Unsubscribe,
 } from '../types'
-import { Highlighter } from './cledit/highlighter'
+import { DEFAULT_LINE_HEIGHT, Highlighter } from './cledit/highlighter'
 import { handleKeystroke } from './cledit/keystrokes'
 import { SelectionManager } from './cledit/selection'
 import { UndoManager, type UndoManagerOptions, type UndoMode } from './cledit/undo'
@@ -39,6 +39,12 @@ function editableMode(doc: Document): 'plaintext-only' | 'true' {
     return 'true'
   }
   return probe.contentEditable === 'plaintext-only' ? 'plaintext-only' : 'true'
+}
+
+function measureLineHeight(el: HTMLElement): number {
+  const value = el.ownerDocument.defaultView?.getComputedStyle(el).lineHeight ?? ''
+  const px = value.endsWith('px') ? Number.parseFloat(value) : Number.NaN
+  return Number.isFinite(px) && px > 0 ? px : DEFAULT_LINE_HEIGHT
 }
 
 export class ClEditEngine implements EditorEngine {
@@ -91,7 +97,10 @@ export class ClEditEngine implements EditorEngine {
 
     this.host = el
     this.content = content
-    this.highlighter = new Highlighter(content, this.options.highlight ? { highlight: this.options.highlight } : {})
+    this.highlighter = new Highlighter(content, {
+      ...(this.options.highlight ? { highlight: this.options.highlight } : {}),
+      lineHeight: measureLineHeight(content),
+    })
     this.selection = new SelectionManager(content, this.highlighter)
     this.watcher = new Watcher(content, () => {
       if (!this.composing) this.syncFromDom()
@@ -342,6 +351,12 @@ export class ClEditEngine implements EditorEngine {
       else this.undo()
       return
     }
+    if (mod && !e.altKey && (e.key === 'Home' || e.key === 'End')) {
+      // Native document-boundary navigation cannot place the caret inside sections skipped by `content-visibility: auto`.
+      e.preventDefault()
+      this.moveToBoundary(e.key === 'End', e.shiftKey)
+      return
+    }
     if (e.key !== 'Enter' && e.key !== 'Tab' && e.key !== 'Backspace') return
     this.flushDom()
     const state: TextState = { text: this.value, selection: this.getSelection() }
@@ -365,6 +380,23 @@ export class ClEditEngine implements EditorEngine {
     e.preventDefault()
     this.undoMgr.breakMerge()
     this.applyState(result.state, result.mode)
+  }
+
+  private moveToBoundary(end: boolean, extend: boolean): void {
+    this.flushDom()
+    const anchor = this.readSelection().start
+    const caret = end ? this.value.length : 0
+    this.undoMgr.breakMerge()
+    this.setSelection(extend ? anchor : caret, caret)
+    const host = this.host
+    if (!host) return
+    const scroll = () => {
+      host.scrollTop = end ? host.scrollHeight : 0
+    }
+    scroll()
+    // The target section only gets its real size once rendered, a frame or two later.
+    const win = host.ownerDocument.defaultView
+    if (end && win) win.requestAnimationFrame(() => win.requestAnimationFrame(scroll))
   }
 
   private bindEvents(host: HTMLElement, content: HTMLElement): void {

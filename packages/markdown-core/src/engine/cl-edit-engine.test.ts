@@ -57,6 +57,29 @@ describe('ClEditEngine 挂载', () => {
     expect(engine.contentElement).toBe(content)
   })
 
+  it('各段按行数 × 编辑区行高设置 contain-intrinsic-size，读不到行高时用默认值', async () => {
+    const intrinsic = (content: HTMLElement) =>
+      [...content.querySelectorAll<HTMLElement>('.ex-editor-section')].map((s) =>
+        s.style.getPropertyValue('contain-intrinsic-size'),
+      )
+    const style = document.createElement('style')
+    style.textContent = '.ex-editor-content { line-height: 20px; }'
+    document.head.appendChild(style)
+    try {
+      const { engine, content } = setup('# A\n\nx\n## B\n\ny')
+      expect(intrinsic(content)).toEqual(['auto 60px', 'auto 60px'])
+      content.focus()
+      typeInto(textNodeContaining(content, 'y'), 'y', '\nz')
+      await flush()
+      expect(engine.getValue()).toBe('# A\n\nx\n## B\n\ny\nz')
+      expect(intrinsic(content)).toEqual(['auto 60px', 'auto 80px'])
+    } finally {
+      style.remove()
+    }
+    const { content } = setup('a\nb')
+    expect(intrinsic(content)[0]).toMatch(/^auto \d+(\.\d+)?px$/)
+  })
+
   it('readOnly 与 placeholder', () => {
     const { content, engine } = setup('', { placeholder: '请输入', readOnly: true })
     expect(content.getAttribute('contenteditable')).toBe('false')
@@ -227,6 +250,45 @@ describe('ClEditEngine 输入', () => {
     expect(engine.getValue()).toBe('# T\n\nabc\nX')
     expect(content.textContent).toBe('# T\n\nabc\nX\n')
     expect(engine.getSelection()).toEqual({ start: 10, end: 10 })
+  })
+
+  it('一次 DOM 同步最多写一次原生选区', async () => {
+    const { engine, content } = setup('# T\n\nabc')
+    content.focus()
+    typeInto(textNodeContaining(content, 'abc'), 'abc', 'X')
+    const add = vi.spyOn(window.getSelection()!, 'addRange')
+    await flush()
+    expect(engine.getValue()).toBe('# T\n\nabcX')
+    expect(add.mock.calls.length).toBeLessThanOrEqual(1)
+    expect(engine.getSelection()).toEqual({ start: 9, end: 9 })
+  })
+
+  it('Ctrl/Cmd+Home/End 由引擎移动光标并滚动（Shift 扩展选区），不依赖原生布局', () => {
+    const { engine, content, host } = setup('# A\n\nx\n## B\n\ny')
+    let top = 0
+    Object.defineProperties(host, {
+      scrollTop: { get: () => top, set: (v: number) => (top = v), configurable: true },
+      scrollHeight: { value: 500, configurable: true },
+    })
+    content.focus()
+    engine.setSelection(5, 5)
+    const selections: unknown[] = []
+    engine.on('selectionChange', (s) => selections.push(s))
+
+    const end = keydown(content, 'End', { ctrlKey: true })
+    expect(end.defaultPrevented).toBe(true)
+    expect(engine.getSelection()).toEqual({ start: 14, end: 14 })
+    expect(top).toBe(500)
+    expect(selections).toEqual([{ start: 14, end: 14 }])
+
+    const home = keydown(content, 'Home', { metaKey: true, shiftKey: true })
+    expect(home.defaultPrevented).toBe(true)
+    expect(engine.getSelection()).toEqual({ start: 0, end: 14 })
+    expect(window.getSelection()!.toString()).toBe('# A\n\nx\n## B\n\ny')
+    expect(top).toBe(0)
+
+    expect(keydown(content, 'End').defaultPrevented).toBe(false)
+    expect(keydown(content, 'End', { ctrlKey: true, altKey: true }).defaultPrevented).toBe(false)
   })
 
   it('Enter 续写列表并阻止默认行为', () => {
