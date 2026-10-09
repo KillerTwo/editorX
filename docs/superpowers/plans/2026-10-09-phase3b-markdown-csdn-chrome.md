@@ -1072,6 +1072,8 @@ git commit -m "feat(markdown): 目录/语法面板与右侧图标栏" -m "面板
 - Create: `packages/markdown/src/splitter.tsx`、`packages/markdown/src/splitter.test.tsx`
 - Modify: `packages/markdown/src/types.ts`；`packages/markdown/src/markdown-editor.tsx`（全文替换为最终版）
 
+> **执行注意（3a 修复轮之后补充）：** 下文"最终版"全文写于 3a 各任务修复轮之前。替换时以当前文件为底稿按差异合入，3a 修复轮引入的行为都要保留（见 3a Task 9 开头的执行注意，以及 3a 最终修复波次之后的实际代码）。上传失败条按钮的可访问名称为 `重试 <文件名>` / `删除 <文件名>`。3a Task 9 实际产出与本计划锚点的差异：toolbar 导入中 `isMacPlatform` 换为 `useIsMacPlatform`（`const mac = useIsMacPlatform()`，SSR 安全）；markdown-core 导入新增 `renderDiagrams`；`createMarkdownContext` 依赖新增 `renderExportHtml`。
+
 **Interfaces:**
 - Consumes：`Messages.editor.splitter`。
 - Produces：
