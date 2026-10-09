@@ -134,6 +134,9 @@ test('目录面板：自定义标题、层级字号、点击跳转预览', async
   await expect(panel.getByRole('button', { name: 'SmartyPants' })).toHaveCSS('font-size', '13px')
   const target = preview(page).getByRole('heading', { name: '导入', exact: true })
   await expect(target).not.toBeInViewport()
+  // 图表异步渲染会撑高预览，等它们就位后再跳转，否则目标会被推出视口
+  await expect(preview(page).locator('.ex-mermaid svg').first()).toBeVisible()
+  await expect(preview(page).locator('.ex-flowchart svg').first()).toBeVisible()
   await panel.getByRole('button', { name: '导入', exact: true }).click()
   await expect(target).toBeInViewport()
 })
