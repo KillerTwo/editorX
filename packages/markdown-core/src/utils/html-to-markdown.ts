@@ -7,7 +7,7 @@ function decode(value: string | null): string {
   try {
     return decodeBase64Utf8(value)
   } catch {
-    return ''
+    return value
   }
 }
 
@@ -67,6 +67,7 @@ function getService(): TurndownService {
     strongDelimiter: '**',
   })
   td.use(gfm)
+  td.remove(['script', 'style', 'noscript'])
 
   td.addRule('exToc', {
     filter: (node) => node.nodeName === 'DIV' && hasClass(node, 'ex-toc'),
@@ -106,7 +107,8 @@ function getService(): TurndownService {
       const parent = node.parentNode as HTMLElement | null
       let prefix = '- '
       if (parent?.nodeName === 'OL') {
-        const start = Number(parent.getAttribute('start') ?? '1')
+        const parsed = Number.parseInt(parent.getAttribute('start') ?? '', 10)
+        const start = Number.isNaN(parsed) ? 1 : parsed
         prefix = `${start + Array.prototype.indexOf.call(parent.children, node)}. `
       }
       const body = content

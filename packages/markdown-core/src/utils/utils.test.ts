@@ -25,6 +25,20 @@ describe('countHtml', () => {
     const html = createRenderer().render('# 标题\n\n第一段 text\n\n- 项一\n- 项二').html
     expect(countHtml(html)).toEqual({ words: 10, paragraphs: 4 })
   })
+
+  it('ignores the TOC and footnote markers', () => {
+    const doc = '# 标题\n\n## 小节\n\n正文 text[^a]\n\n[^a]: 注释'
+    const without = countHtml(createRenderer().render(doc).html)
+    expect(countHtml(createRenderer().render(`[TOC]\n\n${doc}`).html)).toEqual(without)
+    expect(countHtml(createRenderer().render(`@[TOC](目录)\n\n${doc}`).html)).toEqual(without)
+    expect(without).toEqual({ words: 9, paragraphs: 5 })
+  })
+
+  it('separates words only at block boundaries and line breaks', () => {
+    expect(countHtml('<p>foo<em>bar</em></p>')).toEqual({ words: 1, paragraphs: 1 })
+    expect(countHtml('<p>H<sub>2</sub>O</p>')).toEqual({ words: 1, paragraphs: 1 })
+    expect(countHtml('<p>a<br>b</p><div>c</div><div>d</div>')).toEqual({ words: 4, paragraphs: 1 })
+  })
 })
 
 describe('countWords', () => {
@@ -37,6 +51,8 @@ describe('countWords', () => {
     ['😀', { words: 0, chars: 1, lines: 1 }],
     ['“引号”…', { words: 5, chars: 5, lines: 1 }],
     ['こんにちは 안녕', { words: 7, chars: 7, lines: 1 }],
+    ['コーヒー・ティー', { words: 8, chars: 8, lines: 1 }],
+    ['コーヒー', { words: 4, chars: 4, lines: 1 }],
     ['ＡＢＣ１２３', { words: 1, chars: 6, lines: 1 }],
     ['\t \n', { words: 0, chars: 0, lines: 2 }],
     ['# 标题\n\n**bold** text', { words: 4, chars: 15, lines: 3 }],
@@ -79,6 +95,14 @@ describe('export / import', () => {
       { type: 'text/html' },
     )
     expect(await importFile(file)).toBe('# Hi\n\n**b**')
+  })
+
+  it('drops script, style and noscript content when importing html', async () => {
+    const file = new File(
+      ['<html><body><style>p{}</style><p>a</p><script>alert(1)</script><noscript>no js</noscript></body></html>'],
+      'page.htm',
+    )
+    expect(await importFile(file)).toBe('a')
   })
 })
 
@@ -147,5 +171,21 @@ describe('htmlToMarkdown', () => {
   it('keeps an unknown-embed code block as a fence', () => {
     const md = htmlToMarkdown(createRenderer().render('```ex-embed:nope\n{"a":1}\n```').html)
     expect(md).toBe('```ex-embed:nope\n{"a":1}\n```')
+  })
+
+  it('drops script, style and noscript content', () => {
+    expect(htmlToMarkdown('<p>a</p><script>alert(1)</script><style>p{}</style><noscript>x</noscript>')).toBe('a')
+  })
+
+  it('falls back to 1 for an invalid ordered-list start', () => {
+    expect(htmlToMarkdown('<ol start="x"><li>a</li><li>b</li></ol>')).toBe('1. a\n2. b')
+    expect(htmlToMarkdown('<ol start="3"><li>a</li></ol>')).toBe('3. a')
+    expect(htmlToMarkdown('<ol start="0"><li>a</li></ol>')).toBe('0. a')
+  })
+
+  it('keeps a malformed base64 payload verbatim', () => {
+    expect(htmlToMarkdown('<div class="ex-embed" data-ex-embed="card" data-ex-payload="not base64!"></div>')).toBe(
+      '```ex-embed:card\nnot base64!\n```',
+    )
   })
 })
