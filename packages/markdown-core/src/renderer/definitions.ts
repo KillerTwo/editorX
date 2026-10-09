@@ -1,3 +1,10 @@
+import type { Env, MarkdownIt } from 'markdown-it'
+
+export interface DefinitionEnv extends Env {
+  abbreviations?: Record<string, string>
+  footnotes?: { refs?: Record<string, number> }
+}
+
 const LINK_OR_ABBR_DEFINITION = /^ {0,3}\*?\[(?!\^)[^\]\n]+\]:/
 const FOOTNOTE_DEFINITION = /^ {0,3}\[\^([^\]\s]+)\]:[ \t]?(.*)$/
 const CONTINUATION_LINE = /^(?: {4}|\t)\S/
@@ -18,6 +25,7 @@ function forEachLineOutsideFences(md: string, visit: (line: string, index: numbe
   })
 }
 
+/** Definitions separated by blank lines: a link definition cannot interrupt a footnote stub paragraph. */
 export function collectDefinitions(md: string): string {
   const out: string[] = []
   let inDefinition = false
@@ -30,12 +38,31 @@ export function collectDefinitions(md: string): string {
       out.push(line)
       inDefinition = true
     } else if (inDefinition && CONTINUATION_LINE.test(line)) {
-      out.push(line)
+      out[out.length - 1] += `\n${line}`
     } else {
       inDefinition = false
     }
   })
-  return out.join('\n')
+  return out.join('\n\n')
+}
+
+/** Parses the collected definitions once, without rendering them anywhere. */
+export function parseDefinitions(md: MarkdownIt, definitions: string): DefinitionEnv {
+  const env: DefinitionEnv = {}
+  if (definitions) md.parse(definitions, env)
+  return env
+}
+
+/**
+ * Fresh env pre-filled with document-wide definitions (keys as used by markdown-it,
+ * markdown-it-abbr and markdown-it-footnote). Copies, because rendering mutates them.
+ */
+export function seedEnv(defs: DefinitionEnv): DefinitionEnv {
+  const env: DefinitionEnv = {}
+  if (defs.references) env.references = { ...defs.references }
+  if (defs.abbreviations) env.abbreviations = { ...defs.abbreviations }
+  if (defs.footnotes?.refs) env.footnotes = { refs: { ...defs.footnotes.refs } }
+  return env
 }
 
 export function collectFootnoteDefinitions(md: string): Map<string, string> {

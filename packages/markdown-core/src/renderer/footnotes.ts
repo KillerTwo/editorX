@@ -1,5 +1,6 @@
 import type { MarkdownIt } from 'markdown-it'
 import footnote from 'markdown-it-footnote'
+import { escapeHtml } from './escape'
 import type { RenderEnv } from './md-types'
 
 export interface FootnoteEntry {
@@ -13,6 +14,8 @@ interface FootnoteParseEnv extends RenderEnv {
 }
 
 const FOOTNOTE_REF_PLACEHOLDER = /ex-fn-ref-(\d+)-(href|id|num)/g
+const FOOTNOTE_REF_ELEMENT =
+  /<sup class="footnote-ref"><a href="#ex-fn-ref-(\d+)-href" id="ex-fn-ref-\1-id">\[ex-fn-ref-\1-num\]<\/a><\/sup>/g
 
 export function footnotesPlugin(md: MarkdownIt): void {
   md.use(footnote)
@@ -54,6 +57,19 @@ export function assignFootnotes(htmls: string[], refs: string[][]): { htmls: str
     })
   })
   return { htmls: out, footnotes: [...entries.values()] }
+}
+
+/**
+ * Footnote refs inside footnote bodies: link to numbered footnotes without an id or backref
+ * (those belong to section refs); labels never referenced from sections stay as plain text.
+ */
+export function resolveBodyFootnoteRefs(html: string, refs: string[], footnotes: FootnoteEntry[]): string {
+  return html.replace(FOOTNOTE_REF_ELEMENT, (_match, k: string) => {
+    const label = refs[Number(k)] ?? ''
+    const entry = footnotes.find((item) => item.label === label)
+    if (!entry) return `[^${escapeHtml(label)}]`
+    return `<sup class="footnote-ref"><a href="#fn${entry.n}">[${entry.n}]</a></sup>`
+  })
 }
 
 export function renderFootnotesHtml(

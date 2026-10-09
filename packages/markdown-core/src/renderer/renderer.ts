@@ -1,8 +1,14 @@
 import { splitSections } from '../sections'
 import type { RenderedSection, Renderer, RendererOptions, RenderResult } from '../types'
-import { collectDefinitions, collectFootnoteDefinitions } from './definitions'
-import { assignFootnotes, renderFootnotesHtml } from './footnotes'
-import { assignHeadingIds, fillToc } from './headings'
+import {
+  collectDefinitions,
+  collectFootnoteDefinitions,
+  type DefinitionEnv,
+  parseDefinitions,
+  seedEnv,
+} from './definitions'
+import { assignFootnotes, renderFootnotesHtml, resolveBodyFootnoteRefs } from './footnotes'
+import { assignHeadingIds, fillToc, stripHeadingPlaceholders } from './headings'
 import { createMarkdownIt, resolveRendererOptions } from './markdown-it'
 import type { HeadingInfo, RenderEnv } from './md-types'
 import { sanitizeHtml } from './sanitize'
@@ -14,14 +20,23 @@ interface CachedSection {
   footnoteRefs: string[]
 }
 
+interface CachedFootnoteBody {
+  html: string
+  footnoteRefs: string[]
+}
+
 export function createRenderer(options?: RendererOptions): Renderer {
   const md = createMarkdownIt(resolveRendererOptions(options))
   let cache = new Map<string, CachedSection>()
-  let footnoteCache = new Map<string, string>()
+  let footnoteCache = new Map<string, CachedFootnoteBody>()
 
-  function renderSource(source: string): CachedSection {
-    const env: RenderEnv = {}
-    const html = sanitizeHtml(md.render(source, env))
+  function renderWithDefinitions(source: string, defs: DefinitionEnv): { html: string; env: RenderEnv } {
+    const env: RenderEnv = seedEnv(defs)
+    return { html: sanitizeHtml(md.render(source, env)), env }
+  }
+
+  function renderSection(source: string, defs: DefinitionEnv): CachedSection {
+    const { html, env } = renderWithDefinitions(source, defs)
     return {
       html,
       headings: env.exHeadings ?? [],
@@ -30,15 +45,23 @@ export function createRenderer(options?: RendererOptions): Renderer {
     }
   }
 
+  function renderFootnoteBody(body: string, defs: DefinitionEnv): CachedFootnoteBody {
+    const { html, env } = renderWithDefinitions(body, defs)
+    return { html: stripHeadingPlaceholders(html), footnoteRefs: env.exFootnoteRefs ?? [] }
+  }
+
   return {
     render(markdown: string): RenderResult {
       const sources = splitSections(markdown)
       const definitions = collectDefinitions(markdown)
+      let defs: DefinitionEnv | undefined
+      const definitionEnv = () => (defs ??= parseDefinitions(md, definitions))
+
       const nextCache = new Map<string, CachedSection>()
       const rendered = sources.map((section) => {
-        const source = definitions ? `${section.text}\n\n${definitions}\n` : section.text
-        const entry = nextCache.get(source) ?? cache.get(source) ?? renderSource(source)
-        nextCache.set(source, entry)
+        const key = `${definitions}\u0000${section.text}`
+        const entry = nextCache.get(key) ?? cache.get(key) ?? renderSection(section.text, definitionEnv())
+        nextCache.set(key, entry)
         return entry
       })
       cache = nextCache
@@ -53,11 +76,12 @@ export function createRenderer(options?: RendererOptions): Renderer {
         rendered.map((entry) => entry.footnoteRefs),
       )
 
-      const nextFootnoteCache = new Map<string, string>()
+      const nextFootnoteCache = new Map<string, CachedFootnoteBody>()
       const footnotesHtml = renderFootnotesHtml(withRefs.footnotes, collectFootnoteDefinitions(markdown), (body) => {
-        const html = nextFootnoteCache.get(body) ?? footnoteCache.get(body) ?? sanitizeHtml(md.render(body, {}))
-        nextFootnoteCache.set(body, html)
-        return html
+        const key = `${definitions}\u0000${body}`
+        const entry = nextFootnoteCache.get(key) ?? footnoteCache.get(key) ?? renderFootnoteBody(body, definitionEnv())
+        nextFootnoteCache.set(key, entry)
+        return resolveBodyFootnoteRefs(entry.html, entry.footnoteRefs, withRefs.footnotes)
       })
       footnoteCache = nextFootnoteCache
 

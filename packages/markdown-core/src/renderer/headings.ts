@@ -84,6 +84,11 @@ export function assignHeadingIds(
   return { htmls: out, toc }
 }
 
+/** For HTML outside the section flow (footnote bodies): no heading ids, no TOC. */
+export function stripHeadingPlaceholders(html: string): string {
+  return html.replaceAll(` id="${HEADING_ID_PLACEHOLDER}"`, '').replace(TOC_PLACEHOLDER, '')
+}
+
 export function renderTocHtml(toc: TocItem[]): string {
   let html = ''
   const stack: number[] = []

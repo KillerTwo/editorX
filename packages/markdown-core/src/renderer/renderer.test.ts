@@ -118,6 +118,24 @@ describe('createRenderer — footnotes', () => {
     expect(sectionB.querySelector('sup.footnote-ref a')?.id).toBe('fnref1:1')
   })
 
+  it('resolves reference links inside footnote bodies', () => {
+    const el = dom(createRenderer().render('see[^n]\n\n[^n]: go [home][h]\n# B\n[h]: https://h.com').html)
+    expect(el.querySelector('li#fn1 a[href="https://h.com"]')?.textContent).toBe('home')
+  })
+
+  it('does not leak placeholders from headings, [TOC] or nested refs in footnote bodies', () => {
+    const md = 'see[^n] and[^m]\n\n[^n]: body [^m] [^z]\n\n    # Inner\n\n    [TOC]\n\n[^m]: other\n[^z]: unused'
+    const html = createRenderer().render(md).html
+    expect(html).not.toContain('ex-heading-id-placeholder')
+    expect(html).not.toContain('ex-fn-ref')
+    expect(html).not.toContain('data-ex-toc')
+    const fn1 = dom(html).querySelector('li#fn1')!
+    expect(fn1.querySelector('h1')?.textContent).toBe('Inner')
+    expect(fn1.querySelector('sup.footnote-ref a')?.getAttribute('href')).toBe('#fn2')
+    expect(fn1.querySelector('sup.footnote-ref a')?.id).toBe('')
+    expect(fn1.textContent).toContain('[^z]')
+  })
+
   it('supports multi-line definitions and omits the list without references', () => {
     const el = dom(createRenderer().render('see[^n]\n\n[^n]: first\n    second').html)
     expect(el.querySelector('li#fn1')?.textContent).toContain('second')
@@ -164,6 +182,29 @@ describe('createRenderer — markdown extensions', () => {
     expect(result.sections[0]!.html).toContain('<a href="https://e.com">x</a>')
     expect(result.sections[0]!.html).toContain('<a href="https://one.com" title="One">y</a>')
     expect(result.sections[1]!.html).not.toContain('https://e.com')
+  })
+
+  it('resolves abbreviations defined in another section', () => {
+    const result = createRenderer().render('HTML rocks\n# B\n*[HTML]: Hyper Text')
+    expect(result.sections[0]!.html).toContain('<abbr title="Hyper Text">HTML</abbr>')
+  })
+
+  it('does not leak definitions into an unclosed fenced code block', () => {
+    const result = createRenderer().render('[x][r]\n\n[r]: https://a.com\n# B\n```js\ncode')
+    expect(result.sections[0]!.html).toContain('<a href="https://a.com">x</a>')
+    const code = dom(result.sections[1]!.html).querySelector('pre code')
+    expect(code?.textContent).toBe('code')
+  })
+
+  it.each(['<!--\nopen', '<pre>\nopen'])('does not leak definitions into an unclosed html block: %s', (block) => {
+    const md = `[x][r] y[^a] HTML\n\n[r]: https://a.com\n*[HTML]: Hyper\n[^a]: note\n# B\n${block}`
+    const result = createRenderer().render(md)
+    expect(result.sections[0]!.html).toContain('<a href="https://a.com">x</a>')
+    expect(result.sections[0]!.html).toContain('<abbr title="Hyper">HTML</abbr>')
+    const sectionB = result.sections[1]!.html.replace(/<div class="ex-footnotes">[\s\S]*$/, '')
+    expect(sectionB).not.toContain('https://a.com')
+    expect(sectionB).not.toContain('ex-footnote')
+    expect(sectionB).not.toContain('Hyper')
   })
 
   it('renders :emoji: shortcodes and can disable them', () => {
