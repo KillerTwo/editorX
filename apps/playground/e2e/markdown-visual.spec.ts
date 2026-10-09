@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-test.skip(process.platform !== 'win32', 'Windows-only visual baselines')
+test.skip(process.platform !== 'win32' && process.platform !== 'darwin', 'Windows/macOS-only visual baselines')
 
 type Scheme = 'light' | 'dark'
 type View = 'edit' | 'split' | 'preview'

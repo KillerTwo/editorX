@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
-test.skip(process.platform !== 'win32', 'Windows-only geometry')
+test.skip(process.platform !== 'win32' && process.platform !== 'darwin', 'Windows/macOS-only geometry')
 
 // 数值实测自 apps/playground/public/reference/screenshot_2026-10-09_12-35-10.png（2558×1308，Markdown 模式 + AI 面板）
 // 参考图显示常驻滚动条；Playwright 无头模式默认 --hide-scrollbars，这里恢复真实滚动条
