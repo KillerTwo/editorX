@@ -27,6 +27,7 @@ const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta'])
 
 // The HTML parser drops U+0000, so keeping it would break DOM text === value + '\n'.
 function normalize(text: string): string {
+  if (!text.includes('\r') && !text.includes('\u0000')) return text
   return text.replace(/\r\n?/g, '\n').split('\u0000').join('')
 }
 
@@ -52,6 +53,7 @@ export class ClEditEngine implements EditorEngine {
   private composing = false
   private readOnly = false
   private releaseTab = false
+  private isolateNextSync = false
   private readonly listeners = new Map<EngineEvent, Set<Listener>>()
   private cleanups: Array<() => void> = []
 
@@ -97,6 +99,7 @@ export class ClEditEngine implements EditorEngine {
     this.value = normalize(opts.value)
     this.lastSelection = { start: 0, end: 0 }
     this.releaseTab = false
+    this.isolateNextSync = false
     this.undoMgr.clear()
     this.render(true)
     this.watcher.start()
@@ -239,10 +242,18 @@ export class ClEditEngine implements EditorEngine {
     if (selection.hasFocus()) selection.restore()
   }
 
-  /** Mutation records can be dropped by `noWatch`, so compare the DOM text itself before programmatic edits. */
+  /**
+   * Mutation records can be dropped by `noWatch`, so compare the DOM text itself before programmatic edits.
+   * An in-progress composition is committed first so its text is never overwritten or duplicated.
+   */
   private flushDom(): void {
-    if (this.composing || !this.content) return
-    if (this.content.textContent !== `${this.value}\n`) this.syncFromDom()
+    if (!this.content) return
+    if (this.composing) {
+      this.composing = false
+      this.syncFromDom()
+    } else if (this.content.textContent !== `${this.value}\n`) {
+      this.syncFromDom()
+    }
   }
 
   private syncFromDom(): void {
@@ -260,7 +271,10 @@ export class ClEditEngine implements EditorEngine {
     const change = diffRange(this.value, text)
     if (change) {
       const mode: UndoMode = change.removed === '' ? 'typing' : change.inserted === '' ? 'deleting' : 'single'
+      if (this.isolateNextSync) this.undoMgr.breakMerge()
       this.undoMgr.record(change, before, after, mode)
+      if (this.isolateNextSync) this.undoMgr.breakMerge()
+      this.isolateNextSync = false
       this.value = text
     }
     this.lastSelection = after
@@ -364,6 +378,7 @@ export class ClEditEngine implements EditorEngine {
     }
     listen(content, 'keydown', (e) => this.onKeydown(e))
     listen(content, 'beforeinput', (e) => {
+      if (this.composing) return
       if (e.inputType !== 'historyUndo' && e.inputType !== 'historyRedo') return
       e.preventDefault()
       if (e.inputType === 'historyUndo') this.undo()
@@ -372,14 +387,29 @@ export class ClEditEngine implements EditorEngine {
     listen(content, 'compositionstart', () => {
       this.flushDom()
       this.readSelection()
+      this.isolateNextSync = true
       this.composing = true
     })
     listen(content, 'compositionend', () => {
+      if (!this.composing) return
       this.composing = false
       this.syncFromDom()
     })
-    listen(content, 'paste', (e) => this.emit('paste', e))
-    listen(content, 'drop', (e) => this.emit('drop', e))
+    listen(content, 'blur', () => {
+      this.releaseTab = false
+      if (this.composing) this.flushDom()
+    })
+    listen(content, 'mousedown', () => {
+      this.releaseTab = false
+    })
+    const forward = (event: 'paste' | 'drop', e: Event) => {
+      if (this.readOnly) return
+      this.isolateNextSync = true
+      this.undoMgr.breakMerge()
+      this.emit(event, e)
+    }
+    listen(content, 'paste', (e) => forward('paste', e))
+    listen(content, 'drop', (e) => forward('drop', e))
     listen(host, 'scroll', () => this.emit('scroll', { scrollTop: host.scrollTop }))
 
     const doc = host.ownerDocument
@@ -387,7 +417,10 @@ export class ClEditEngine implements EditorEngine {
       if (this.composing || !this.selection?.hasFocus()) return
       const prev = this.lastSelection
       const next = this.readSelection()
-      if (next.start !== prev.start || next.end !== prev.end) this.emit('selectionChange', this.getSelection())
+      if (next.start !== prev.start || next.end !== prev.end) {
+        this.undoMgr.breakMerge()
+        this.emit('selectionChange', this.getSelection())
+      }
     }
     doc.addEventListener('selectionchange', onSelectionChange)
     this.cleanups.push(() => doc.removeEventListener('selectionchange', onSelectionChange))
