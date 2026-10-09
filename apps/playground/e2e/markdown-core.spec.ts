@@ -262,6 +262,27 @@ test('KaTeX、Mermaid 与 flowchart.js 在亮/暗主题下真实渲染', async (
   await expect(p.locator('.katex')).toHaveCount(2)
 })
 
+test('在图表上方插入标题：预览增量更新，已渲染的图表 SVG 不被重建', async ({ page }) => {
+  const p = preview(page)
+  const diagramSection = previewSections(page).filter({ has: page.locator('.ex-mermaid') })
+  const indexBefore = Number(await diagramSection.getAttribute('data-section-index'))
+  await p.locator('.ex-mermaid svg').first().evaluate((el) => {
+    ;(window as unknown as { __exSvg: Element }).__exSvg = el
+  })
+
+  await editor(page).locator('.ex-md-h2', { hasText: '公式' }).click()
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('# 插入的标题')
+  await expect(p.locator('h1', { hasText: '插入的标题' })).toBeVisible()
+
+  await expect(diagramSection).toHaveAttribute('data-section-index', String(indexBefore + 1))
+  expect(await page.evaluate(() => (window as unknown as { __exSvg: Element }).__exSvg.isConnected)).toBe(true)
+  await expect(previewSections(page)).toHaveCount(await editor(page).locator('.ex-editor-section').count())
+  const indices = await previewSections(page).evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.sectionIndex))
+  expect(indices).toEqual(indices.map((_, i) => String(i)))
+})
+
 type LatencyWindow = Window & { __exLatency: number[] }
 
 // 从事件创建时刻（e.timeStamp，与 performance.now 同一时钟）到下一帧之后的任务
@@ -271,6 +292,22 @@ async function typeAndMeasure(page: Page, keys: string, delay: number) {
   })
   await page.keyboard.type(keys, { delay })
   await expect.poll(() => page.evaluate(() => (window as unknown as LatencyWindow).__exLatency.length)).toBe(keys.length)
+  return latencyStats(page)
+}
+
+async function pressAndMeasure(page: Page, keys: string[], gap: number) {
+  await page.evaluate(() => {
+    ;(window as unknown as LatencyWindow).__exLatency = []
+  })
+  for (const key of keys) {
+    await page.keyboard.press(key)
+    await page.waitForTimeout(gap)
+  }
+  await expect.poll(() => page.evaluate(() => (window as unknown as LatencyWindow).__exLatency.length)).toBe(keys.length)
+  return latencyStats(page)
+}
+
+async function latencyStats(page: Page) {
   const samples = await page.evaluate(() => (window as unknown as LatencyWindow).__exLatency)
   const sorted = [...samples].sort((a, b) => a - b)
   return {
@@ -283,7 +320,8 @@ async function typeAndMeasure(page: Page, keys: string, delay: number) {
 test.describe('性能', () => {
   test.describe.configure({ mode: 'serial' })
 
-  test('10k 行文档单次按键延迟 < 50ms（连续输入与停顿输入）', { tag: '@perf' }, async ({ page }) => {
+  test('10k 行文档单次按键延迟 < 50ms（连续输入、停顿输入与回车/退格）', { tag: '@perf' }, async ({ page }) => {
+    test.setTimeout(90_000)
     await loadLargeDoc(page)
     await editor(page).click({ position: { x: 60, y: 30 } })
     await page.keyboard.press('End')
@@ -306,13 +344,41 @@ test.describe('性能', () => {
     // 260ms 间隔让 200ms 防抖的预览渲染落在两次按键之间
     const pausedKeys = '456789abcdefghijklmnopqrstuvwx'
     const paused = await typeAndMeasure(page, pausedKeys, 260)
-    test.info().annotations.push({ type: 'latency-ms', description: JSON.stringify({ burst, paused }) })
+    const before = await editorValue(page)
+    const lines = await pressAndMeasure(page, [...Array<string>(10).fill('Enter'), ...Array<string>(10).fill('Backspace')], 260)
+    test.info().annotations.push({ type: 'latency-ms', description: JSON.stringify({ burst, paused, lines }) })
 
-    expect(await editorValue(page)).toContain(burstKeys + pausedKeys)
+    expect(before).toContain(burstKeys + pausedKeys)
+    await expect.poll(() => editorValue(page)).toBe(before)
     expect(burst.median).toBeLessThan(50)
     expect(burst.p95).toBeLessThan(50)
     expect(paused.median).toBeLessThan(50)
     expect(paused.p95).toBeLessThan(50)
+    expect(lines.median).toBeLessThan(50)
+    expect(lines.p95).toBeLessThan(50)
+  })
+
+  test('10k 行文档顶部插入标题：预览更新无 > 50ms 的长任务', { tag: '@perf' }, async ({ page }) => {
+    await loadLargeDoc(page)
+    const sections = await previewSections(page).count()
+    await editor(page).click({ position: { x: 60, y: 30 } })
+    await page.keyboard.press('End')
+    await page.evaluate(() => {
+      const w = window as unknown as { __exLongTasks: number[] }
+      w.__exLongTasks = []
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) w.__exLongTasks.push(entry.duration)
+      }).observe({ type: 'longtask' })
+    })
+    await page.keyboard.press('Enter')
+    await page.keyboard.type('# H')
+    await expect(previewSections(page)).toHaveCount(sections + 1)
+    await expect(preview(page).locator('h1', { hasText: /^H$/ })).toHaveCount(1)
+    // 等预览更新的后续任务（统计、图表）跑完
+    await page.waitForTimeout(500)
+    const longTasks = await page.evaluate(() => (window as unknown as { __exLongTasks: number[] }).__exLongTasks)
+    test.info().annotations.push({ type: 'long-tasks-ms', description: JSON.stringify(longTasks) })
+    expect(longTasks).toEqual([])
   })
 })
 
