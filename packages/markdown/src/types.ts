@@ -26,12 +26,18 @@ export interface MarkdownEditorHandle {
   runCommand(name: string, args?: unknown): boolean
   /** 在光标处插入（html 会转为 Markdown） */
   insert(content: InsertContent): void
+  /** 立即保存草稿（无改动也保存）；未配置 onSaveDraft 或失败时返回 false */
+  saveDraft(): Promise<boolean>
   getEngine(): EditorEngine
 }
 
 export interface MarkdownEditorSlots {
   /** 模式切换右侧（CSDN：「使用富文本编辑器」） */
   headerEnd?: ReactNode
+  /** 状态栏中部（CSDN：发文额度提示） */
+  statusCenter?: ReactNode
+  /** 状态栏右侧（CSDN：保存草稿、发布文章） */
+  statusEnd?: ReactNode
 }
 
 export interface MarkdownEditorProps {
@@ -51,6 +57,8 @@ export interface MarkdownEditorProps {
   toolbarLayout?: ToolbarLayout
   /** 缺失 adapter 的扩展：隐藏（默认）或禁用 */
   missingAdapter?: MissingAdapterPolicy
+  /** 自动保存间隔（ms），需 adapters.onSaveDraft；0 或不设置为关闭。只在内容变化后保存 */
+  autoSaveInterval?: number
   viewMode?: ViewMode
   defaultViewMode?: ViewMode
   onViewModeChange?(mode: ViewMode): void

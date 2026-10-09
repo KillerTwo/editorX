@@ -28,6 +28,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
+import { createDraftSaver } from './autosave'
 import { createMarkdownContext } from './context'
 import { MARKDOWN_TOOLBAR_LAYOUT, markdownCoreExtensions } from './core-extensions'
 import { cx } from './cx'
@@ -35,6 +36,7 @@ import { drawDiagramsForExport } from './export-html'
 import { isolateFullscreen } from './fullscreen'
 import { ModeTabs } from './mode-tabs'
 import { useEditorRuntime } from './runtime'
+import { StatusBar } from './status-bar'
 import { createEditorStore, useEditorState } from './store'
 import type { MarkdownEditorProps } from './types'
 import { observeFailedPlaceholders } from './uploads/failed-marker'
@@ -107,6 +109,7 @@ function EditorShell({
   coreExtensions = markdownCoreExtensions,
   toolbarLayout = MARKDOWN_TOOLBAR_LAYOUT,
   missingAdapter = 'hide',
+  autoSaveInterval = 0,
   viewMode: viewModeProp,
   defaultViewMode = 'split',
   onViewModeChange,
@@ -207,6 +210,31 @@ function EditorShell({
   )
   useExtensionSetup(active, ctx, reportError)
 
+  const [saver] = useState(() =>
+    createDraftSaver({
+      store,
+      getMarkdown: () => engine.getValue(),
+      getDocument: () => ctx.getDocument(),
+      getAdapter: () => live.current.adapters.onSaveDraft,
+      onError: (error) => {
+        if (!mountedRef.current) return
+        const m = live.current.messages
+        live.current.notify(formatMessage(m.errors.save, { message: errorMessage(error) }), 'error')
+      },
+    }),
+  )
+
+  // 声明在 useEditorRuntime 之后：引擎已挂载，初始内容视为已保存
+  useEffect(() => {
+    saver.markSaved(engine.getValue())
+  }, [saver, engine])
+
+  useEffect(() => {
+    if (!(autoSaveInterval > 0)) return
+    const timer = setInterval(() => void saver.save(), autoSaveInterval)
+    return () => clearInterval(timer)
+  }, [saver, autoSaveInterval])
+
   const resolveOptions = useMemo(
     () => ({ editorType: 'markdown' as const, adapters, missingAdapter }),
     [adapters, missingAdapter],
@@ -254,14 +282,18 @@ function EditorShell({
     () => ({
       focus: () => engine.focus(),
       getValue: () => engine.getValue(),
-      setValue: (markdown) => runtime.setValue(markdown),
+      setValue: (markdown) => {
+        runtime.setValue(markdown)
+        saver.markSaved(engine.getValue())
+      },
       getHtml: () => runtime.getRenderer().render(engine.getValue()).html,
       getDocument: () => ctx.getDocument(),
       runCommand: (name, args) => ctx.commands.run(name, args),
       insert: (content) => ctx.insert(content),
+      saveDraft: () => saver.save(true),
       getEngine: () => engine,
     }),
-    [engine, runtime, ctx],
+    [engine, runtime, ctx, saver],
   )
 
   // React 合成事件会穿过 portal 冒泡；只处理 DOM 上位于编辑器内部的按键
@@ -314,6 +346,7 @@ function EditorShell({
           onRemove={uploader.remove}
           onEmptied={() => engine.focus()}
         />
+        <StatusBar store={store} viewMode={viewMode} center={slots?.statusCenter} end={slots?.statusEnd} />
       </div>
     </div>
   )
