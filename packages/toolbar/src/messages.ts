@@ -16,7 +16,16 @@ const syntaxItems: SyntaxItem[] = [
   ['流程图', '```mermaid\nflowchart LR\n  A --> B\n```'],
 ]
 
-export const zhCN = {
+function deepFreeze<T>(value: T): T {
+  if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) deepFreeze(child)
+    Object.freeze(value)
+  }
+  return value
+}
+
+/** 深度冻结：多个编辑器共享这一默认对象，修改它会影响所有实例；需要改动时用 mergeMessages 生成新对象 */
+export const zhCN = deepFreeze({
   toolbar: {
     label: '编辑工具栏',
     more: '更多',
@@ -113,6 +122,9 @@ export const zhCN = {
     failedItem: '{name} 上传失败',
     retry: '重试',
     remove: '删除',
+    /** 失败列表中重试/删除按钮的无障碍名称 */
+    retryItem: '重试 {name}',
+    removeItem: '删除 {name}',
     notImage: '仅支持上传图片文件',
     noAdapter: '未配置图片上传',
     error: '图片 {name} 上传失败：{message}',
@@ -125,12 +137,13 @@ export const zhCN = {
   errors: {
     extension: '扩展 {name} 出错：{message}',
     import: '导入失败：{message}',
+    export: '导出失败：{message}',
     save: '保存失败：{message}',
   },
   syntax: {
     items: syntaxItems,
   },
-}
+})
 
 export type Messages = typeof zhCN
 
@@ -147,7 +160,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 function mergeDeep(base: Record<string, unknown>, override: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { ...base }
   for (const [key, value] of Object.entries(override)) {
-    if (value === undefined) continue
+    if (value === undefined || value === null) continue
     const current = out[key]
     out[key] = isPlainObject(current) && isPlainObject(value) ? mergeDeep(current, value) : value
   }

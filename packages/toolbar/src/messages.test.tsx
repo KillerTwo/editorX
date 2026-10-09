@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { formatMessage, mergeMessages, zhCN } from './messages'
+import { errorMessage, formatMessage, mergeMessages, zhCN } from './messages'
 import { MessagesProvider, useMessages } from './messages-context'
 
 function Probe() {
@@ -21,6 +21,39 @@ describe('Messages', () => {
     expect(merged.toolbar.italic).toBe('斜体')
     expect(merged.syntax.items).toEqual([['A', 'a']])
     expect(zhCN.toolbar.bold).toBe('加粗')
+  })
+
+  it('mergeMessages 跳过 null / undefined 覆盖值（来自 JSON 的语言包）', () => {
+    const override = JSON.parse('{"toolbar":{"bold":null,"italic":"Italic"},"dialog":null}')
+    const merged = mergeMessages(zhCN, override)
+    expect(merged.toolbar.bold).toBe('加粗')
+    expect(merged.toolbar.italic).toBe('Italic')
+    expect(merged.dialog.close).toBe('关闭')
+  })
+
+  it('mergeMessages 未传覆盖时原样返回 base', () => {
+    expect(mergeMessages(zhCN)).toBe(zhCN)
+    expect(mergeMessages(zhCN, undefined)).toBe(zhCN)
+  })
+
+  it('zhCN 深度冻结，合并结果不修改它', () => {
+    expect(Object.isFrozen(zhCN)).toBe(true)
+    expect(Object.isFrozen(zhCN.toolbar)).toBe(true)
+    expect(Object.isFrozen(zhCN.syntax.items)).toBe(true)
+    expect(Object.isFrozen(zhCN.syntax.items[0])).toBe(true)
+    expect(() => {
+      ;(zhCN.toolbar as { bold: string }).bold = 'x'
+    }).toThrow(TypeError)
+    const merged = mergeMessages(zhCN, { toolbar: { bold: 'Bold' } })
+    expect(Object.isFrozen(merged.toolbar)).toBe(false)
+    expect(zhCN.toolbar.bold).toBe('加粗')
+  })
+
+  it('errorMessage 取 Error.message，其余转字符串', () => {
+    expect(errorMessage(new Error('boom'))).toBe('boom')
+    expect(errorMessage('plain')).toBe('plain')
+    expect(errorMessage(42)).toBe('42')
+    expect(errorMessage(undefined)).toBe('undefined')
   })
 
   it('formatMessage 替换 {name} 占位，未知占位保持原样', () => {
