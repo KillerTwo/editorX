@@ -40,6 +40,7 @@ import { PanelHost } from './panels/panel-host'
 import { scrollToHeading } from './panels/scroll-to-heading'
 import { SideRail } from './panels/side-rail'
 import { useEditorRuntime } from './runtime'
+import { clampSplit, SPLIT_VAR, Splitter } from './splitter'
 import { StatusBar } from './status-bar'
 import { createEditorStore, useEditorState } from './store'
 import type { MarkdownEditorProps } from './types'
@@ -120,6 +121,7 @@ function EditorShell({
   onViewModeChange,
   defaultPanel = null,
   showRail = true,
+  defaultSplit = 0.5,
   readOnly = false,
   placeholder,
   ariaLabel,
@@ -135,7 +137,10 @@ function EditorShell({
   const [engine] = useState(() => (engineFactory ?? createDefaultEngine)())
   const [store] = useState(() => createEditorStore({ panel: defaultPanel }))
   const [viewMode, setViewMode] = useControllableState(viewModeProp, defaultViewMode, onViewModeChange)
+  const [split, setSplit] = useState(() => clampSplit(defaultSplit))
   const rootRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const panelIdsRef = useRef<ReadonlySet<string>>(new Set())
   const hostRef = useRef<HTMLDivElement>(null)
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -206,6 +211,7 @@ function EditorShell({
           previewEl: previewRef.current,
           previewScroller: previewScrollRef.current,
         }),
+      hasPanel: (id) => panelIdsRef.current.has(id),
       // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
       renderExportHtml: async () => {
         await runtime.flush()
@@ -261,6 +267,9 @@ function EditorShell({
   const panels = useMemo(() => resolvePanels(active, resolveOptions), [active, resolveOptions])
   const rightPanels = useMemo(() => panels.filter((p) => p.panel.position === 'right'), [panels])
   const bottomPanels = useMemo(() => panels.filter((p) => p.panel.position === 'bottom'), [panels])
+  const panelIds = useMemo<ReadonlySet<string>>(() => new Set(panels.map((p) => p.panel.id)), [panels])
+  // 在 render 中写入：工具栏随后在同一次渲染中经 ctx 求值 disabled/active（useLatest 要到提交后才更新）
+  panelIdsRef.current = panelIds
   const mac = useIsMacPlatform()
 
   const formatsKey = useEditorState(store, (s) => s.formatsKey)
@@ -271,6 +280,13 @@ function EditorShell({
     if (!fullscreen || !rootRef.current) return
     return isolateFullscreen(rootRef.current)
   }, [fullscreen])
+
+  const appliedSplit = useRef(split)
+  useEffect(() => {
+    if (appliedSplit.current === split) return
+    appliedSplit.current = split
+    runtime.refreshLayout()
+  }, [split, runtime])
 
   useEffect(() => {
     const detach = uploader.attach(hostRef.current)
@@ -329,6 +345,7 @@ function EditorShell({
   }
 
   const style = { '--ex-mde-height': typeof height === 'number' ? `${height}px` : height } as CSSProperties
+  const bodyStyle = { [SPLIT_VAR]: String(split) } as CSSProperties
 
   return (
     <div
@@ -353,8 +370,9 @@ function EditorShell({
           stateKey={`${formatsKey}|${panel ?? ''}|${fullscreen}`}
           onError={reportError}
         />
-        <div className="ex-mde-body">
+        <div ref={bodyRef} className="ex-mde-body" style={bodyStyle}>
           <div ref={hostRef} className="ex-mde-editor" hidden={viewMode === 'preview'} />
+          {viewMode === 'split' && <Splitter value={split} onChange={setSplit} bodyRef={bodyRef} />}
           <div ref={previewScrollRef} className="ex-mde-preview-pane" hidden={viewMode === 'edit'}>
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>

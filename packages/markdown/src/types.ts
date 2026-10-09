@@ -69,6 +69,8 @@ export interface MarkdownEditorProps {
   defaultPanel?: string | null
   /** 是否显示右侧面板图标栏，默认 true */
   showRail?: boolean
+  /** 比对模式编辑区所占比例（0.2–0.8），默认 0.5 */
+  defaultSplit?: number
   /**
    * 首次渲染时传入 theme 或 defaultTheme（或没有外层 ThemeProvider）则编辑器自建 ThemeProvider，否则复用外层。
    * 该决定在组件实例生命周期内不变；复用外层时 theme/defaultTheme/onThemeChange/themeStorageKey 均被忽略

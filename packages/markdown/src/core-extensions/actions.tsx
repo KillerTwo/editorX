@@ -55,6 +55,7 @@ async function exportHtmlFile(ctx: ExtensionContext) {
 }
 
 const isFullscreen = (ctx: ExtensionContext | undefined) => (ctx && getMarkdownInternals(ctx)?.isFullscreen()) ?? false
+const hasSyntaxPanel = (ctx: ExtensionContext) => getMarkdownInternals(ctx)?.hasPanel('syntax') ?? true
 
 export const moreActionsExtension: EditorExtension = {
   name: NAME,
@@ -104,8 +105,11 @@ export const moreActionsExtension: EditorExtension = {
           title: (m) => m.toolbar.syntax,
           icon: <BookOpen size={ICON_SIZE} />,
           allowReadOnly: true,
-          active: (ctx) => ctx.activePanel === 'syntax',
-          run: (ctx) => ctx.togglePanel('syntax'),
+          active: (ctx) => hasSyntaxPanel(ctx) && ctx.activePanel === 'syntax',
+          disabled: (ctx) => !hasSyntaxPanel(ctx),
+          run: (ctx) => {
+            if (hasSyntaxPanel(ctx)) ctx.togglePanel('syntax')
+          },
         },
         {
           type: 'button',

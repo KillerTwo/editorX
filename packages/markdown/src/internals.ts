@@ -16,6 +16,8 @@ export interface MarkdownInternals {
   toggleFullscreen(): void
   /** 目录跳转；找不到标题返回 false */
   scrollToHeading(id: string): boolean
+  /** 面板 id 是否已解析（宿主可能移除内置面板） */
+  hasPanel(id: string): boolean
   /** 编辑器组件仍挂载；延迟执行的回调（如对话框关闭后的命令）据此跳过已卸载的编辑器 */
   isMounted(): boolean
 }

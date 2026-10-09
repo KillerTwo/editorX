@@ -41,6 +41,8 @@ export interface EditorRuntime {
   setValue(markdown: string): void
   /** 立即渲染预览；未挂载时立即完成 */
   flush(): Promise<void>
+  /** 编辑区/预览区尺寸变化后重新对齐同步滚动（非比对模式为空操作） */
+  refreshLayout(): void
 }
 
 /** 与引擎写入时的规范化一致（CRLF/CR → LF，去掉 NUL） */
@@ -91,6 +93,7 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
         readUi(engine, store)
       },
       flush: () => pipelineRef.current?.flush() ?? Promise.resolve(),
+      refreshLayout: () => syncRef.current?.refresh(),
     }),
     [engine, store, live],
   )
