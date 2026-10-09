@@ -14,7 +14,7 @@ export { errorMessage, formatMessage, mergeMessages, zhCN } from './messages'
 export type { DeepPartial, Messages } from './messages'
 export { MessagesProvider, useMessages } from './messages-context'
 export type { MessagesProviderProps } from './messages-context'
-export { resolveText } from './extension'
+export { resolveText, safeResolveText } from './extension'
 export type {
   CommandRegistry,
   EditorExtension,
@@ -45,7 +45,14 @@ export {
   resolvePanels,
   resolveToolbar,
 } from './layout'
-export type { ResolvedChild, ResolvedGroup, ResolvedItem, ResolvedPanel, ResolveOptions } from './layout'
+export type {
+  ResolvedChild,
+  ResolvedGroup,
+  ResolvedItem,
+  ResolvedPanel,
+  ResolvedSeparator,
+  ResolveOptions,
+} from './layout'
 export {
   collectShortcuts,
   formatShortcut,

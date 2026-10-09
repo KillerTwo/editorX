@@ -25,7 +25,12 @@ interface ItemBase {
 
 export interface ToolbarButton extends ItemBase {
   type: 'button'
-  /** 如 'Mod-B'、'Mod-Shift-K'；Mod 在 mac 上为 ⌘，其他平台为 Ctrl */
+  /**
+   * 如 'Mod-B'、'Mod-Shift-K'；Mod 在 mac 上为 ⌘，其他平台为 Ctrl。
+   * 快捷键与布局无关：条目即使不在 toolbarLayout 中（或被溢出到「更多」）也会绑定。
+   * 位于 dropdown 内时只检查自身的 disabled / allowReadOnly，不继承父级 dropdown 的 disabled。
+   * 其余限制见 EditorExtension.shortcuts。
+   */
   shortcut?: string
   run(ctx: ExtensionContext): void
 }
@@ -46,6 +51,7 @@ export interface ToolbarModal extends ItemBase {
   render(ctx: ExtensionContext, close: () => void): ReactNode
 }
 
+/** 只在 dropdown 的 items 中生效；EditorExtension.toolbar 顶层的分隔线被忽略（分组之间的分隔由布局决定） */
 export interface ToolbarSeparator {
   type: 'separator'
   id?: string
@@ -54,6 +60,7 @@ export interface ToolbarSeparator {
 export type ToolbarItem = ToolbarButton | ToolbarDropdown | ToolbarPopover | ToolbarModal | ToolbarSeparator
 export type ToolbarActionItem = Exclude<ToolbarItem, ToolbarSeparator>
 
+/** 扩展缺少 requires 中的 adapter 时面板总是隐藏（不受 missingAdapter: 'disable' 影响，面板没有禁用态） */
 export interface PanelDef {
   id: string
   title: MessageText
@@ -120,17 +127,50 @@ export interface EditorExtension {
   name: string
   editors?: readonly EditorType[]
   requires?: readonly AdapterName[]
+  /** 顶层条目按 id 被布局引用；顶层 separator 被忽略，只在 dropdown 内有效 */
   toolbar?: readonly ToolbarItem[]
+  /**
+   * 额外快捷键（不在工具栏上显示），写法同 ToolbarButton.shortcut；只读时不触发。
+   * - Windows Chromium 上 Ctrl+Alt 可能被报告为 AltGraph（getModifierState('AltGraph') 为 true），
+   *   这类按键一律不匹配，以免拦截 AltGr 字符输入；因此 Windows 上不要依赖 Mod-Alt-* 组合。
+   * - 浏览器会先占用部分组合：Mod-Shift-C 在 Chromium/Edge 打开开发者工具（元素选择），
+   *   Firefox 另占用 Mod-Shift-B（书签栏）、Mod-Shift-P（隐私窗口）、Mod-Shift-M（响应式设计）等，
+   *   这些组合在编辑器内可能收不到。
+   */
   shortcuts?: Readonly<Record<string, ExtensionShortcut>>
+  /** 缺少 requires 中的 adapter 时总是隐藏，见 PanelDef */
   panels?: readonly PanelDef[]
   embeds?: readonly EmbedDef[]
   setup?(ctx: ExtensionContext): void | (() => void)
 }
 
-/** 分组的 id 列表；字符串为单项一组，'*' 为其余全部条目 */
+/**
+ * 分组的 id 列表；字符串为单项一组，'*' 为其余全部条目（按 group 分组、order 排序）。
+ * '*' 只能作为顶层条目，写在分组数组内（如 ['bold', '*']）时被当作普通 id 而匹配不到。
+ * 只引用扩展 toolbar 的顶层条目 id；布局不影响快捷键（未列出的条目的快捷键仍然生效）。
+ */
 export type ToolbarLayout = ReadonlyArray<string | readonly string[]>
 export type MissingAdapterPolicy = 'hide' | 'disable'
 
 export function resolveText(text: MessageText, messages: Messages, ctx?: ExtensionContext): string {
   return typeof text === 'function' ? text(messages, ctx) : text
+}
+
+/**
+ * 在 render 期间求值扩展文案：函数抛错（如读取 Messages 中不存在的键）时 console.error 并返回 fallback（通常为条目 id），
+ * 不让一个扩展的文案拖垮整个编辑器。
+ */
+export function safeResolveText(
+  text: MessageText,
+  messages: Messages,
+  ctx: ExtensionContext | undefined,
+  extension: string,
+  fallback: string,
+): string {
+  try {
+    return resolveText(text, messages, ctx)
+  } catch (error) {
+    console.error(`[editorx] 扩展 ${extension} 的文案求值出错`, error)
+    return fallback
+  }
 }

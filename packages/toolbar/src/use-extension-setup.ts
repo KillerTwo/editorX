@@ -14,6 +14,7 @@ export function useStableArray<T>(list: readonly T[]): readonly T[] {
 /**
  * 依次调用扩展的 setup，卸载或扩展数组变化时调用其清理函数。
  * 任一扩展抛错只上报，不影响其他扩展与编辑器。
+ * 不做过滤：调用方传入 activeExtensions(…, editorType) 的结果（同名替换、editors 过滤后的列表），并保持引用稳定。
  */
 export function useExtensionSetup(
   extensions: readonly EditorExtension[],

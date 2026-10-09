@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@editorx/theme'
 import { ToastProvider } from '@editorx/ui'
@@ -341,7 +341,7 @@ describe('Toolbar', () => {
     expect(screen.getByRole('toolbar').querySelectorAll('.ex-toolbar__divider:not(.is-overflow)')).toHaveLength(0)
     await userEvent.click(more)
     const menu = await screen.findByRole('menu', { name: '更多' })
-    await userEvent.click(within(menu).getByRole('menuitem', { name: /加粗/ }))
+    await userEvent.click(within(menu).getByRole('menuitemcheckbox', { name: /加粗/ }))
     expect(bold).toHaveBeenCalled()
   })
 
@@ -493,6 +493,142 @@ describe('Toolbar', () => {
       ),
     )
     expect(screen.queryByText('表情面板')).toBeNull()
+  })
+
+  describe('扩展文案求值出错', () => {
+    const boom = (): string => {
+      throw new TypeError('bad title')
+    }
+
+    it('title / label 抛错：回退为条目 id，其余条目照常渲染，console.error 带扩展名', () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const ext: EditorExtension = {
+        name: 'third-party',
+        toolbar: [
+          { type: 'button', id: 'save', title: boom, icon: <span>S</span>, run: vi.fn() },
+          { type: 'button', id: 'labelled', title: '有标签', label: boom, run: vi.fn() },
+        ],
+      }
+      setup([core, ext])
+      expect(screen.getByRole('button', { name: 'save' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'labelled' })).toHaveTextContent('labelled')
+      expect(screen.getByRole('button', { name: '加粗' })).toBeInTheDocument()
+      expect(error).toHaveBeenCalledWith(expect.stringContaining('third-party'), expect.any(TypeError))
+    })
+
+    it('菜单子项与对话框标题抛错同样回退为 id', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const ext: EditorExtension = {
+        name: 'menu-text',
+        toolbar: [
+          {
+            type: 'dropdown',
+            id: 'menu',
+            title: '菜单',
+            label: '菜单',
+            items: [{ type: 'button', id: 'child', title: boom, run: vi.fn() }],
+          },
+          { type: 'modal', id: 'dlg', title: boom, icon: <span>D</span>, render: () => <p>内容</p> },
+        ],
+      }
+      setup([ext])
+      await userEvent.click(screen.getByRole('button', { name: '菜单' }))
+      expect(within(await screen.findByRole('menu')).getByRole('menuitem', { name: 'child' })).toBeInTheDocument()
+      await userEvent.keyboard('{Escape}')
+      await userEvent.click(screen.getByRole('button', { name: 'dlg' }))
+      expect(await screen.findByRole('dialog', { name: 'dlg' })).toHaveTextContent('内容')
+    })
+  })
+
+  it('打开的对话框条目以同 id 重新解析为 button 时关闭，不渲染空对话框', async () => {
+    const ctx = makeCtx()
+    const groups = resolveToolbar([core], undefined, md)
+    const { rerender } = wrap(<Toolbar groups={groups} ctx={ctx} />)
+    await userEvent.click(screen.getByRole('button', { name: '表格' }))
+    expect(await screen.findByRole('dialog', { name: '表格' })).toBeInTheDocument()
+    const asButton = resolveToolbar(
+      [
+        {
+          ...core,
+          toolbar: core.toolbar!.map((item) =>
+            item.type === 'modal' ? { type: 'button' as const, id: 'table', title: '表格', icon: <span>T</span>, run: vi.fn() } : item,
+          ),
+        },
+      ],
+      undefined,
+      md,
+    )
+    act(() =>
+      rerender(
+        <ThemeProvider defaultTheme="light" storageKey={false}>
+          <ToastProvider>
+            <Toolbar groups={asButton} ctx={ctx} />
+          </ToastProvider>
+        </ThemeProvider>,
+      ),
+    )
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('卸载后不再执行关闭对话框的延迟焦点归还', async () => {
+    const ctx = makeCtx()
+    const { unmount } = setup([core], undefined, ctx)
+    await userEvent.click(screen.getByRole('button', { name: '表格' }))
+    const dialog = await screen.findByRole('dialog', { name: '表格' })
+    fireEvent.click(within(dialog).getByRole('button', { name: '插入' }))
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(ctx.focus).not.toHaveBeenCalled()
+  })
+
+  it('溢出菜单中嵌套 id 与其他扩展的顶层 id 相同时，按扩展区分选择', async () => {
+    mockWidths(100, 150)
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const topRun = vi.fn()
+    const nestedRun = vi.fn()
+    const a: EditorExtension = {
+      name: 'a',
+      toolbar: [
+        { type: 'button', id: 'first', title: '第一', icon: <span>1</span>, run: vi.fn() },
+        { type: 'button', id: 'same', title: '顶层同名', icon: <span>S</span>, run: topRun },
+      ],
+    }
+    const b: EditorExtension = {
+      name: 'b',
+      toolbar: [{ type: 'dropdown', id: 'group-b', title: 'B 菜单', items: [{ type: 'button', id: 'same', title: '嵌套同名', run: nestedRun }] }],
+    }
+    setup([a, b], [['first'], ['same'], ['group-b']])
+    await userEvent.click(screen.getByRole('button', { name: '更多' }))
+    const menu = await screen.findByRole('menu', { name: '更多' })
+    await userEvent.click(within(menu).getByRole('menuitem', { name: '嵌套同名' }))
+    expect(nestedRun).toHaveBeenCalledTimes(1)
+    expect(topRun).not.toHaveBeenCalled()
+    expect(error.mock.calls.some((args) => String(args[0]).includes('same key'))).toBe(false)
+  })
+
+  it('菜单子项带 active 时渲染为 menuitemcheckbox 并反映状态', async () => {
+    const ext: EditorExtension = {
+      name: 'heading',
+      toolbar: [
+        {
+          type: 'dropdown',
+          id: 'heading',
+          title: '标题',
+          label: '标题',
+          items: [
+            { type: 'button', id: 'h1', title: '一级标题', active: 'heading1', run: vi.fn() },
+            { type: 'button', id: 'h2', title: '二级标题', active: (c) => c.formats.has('heading2'), run: vi.fn() },
+            { type: 'button', id: 'plain', title: '正文', run: vi.fn() },
+          ],
+        },
+      ],
+    }
+    setup([ext], undefined, makeCtx({ formats: new Set(['heading1']) }))
+    await userEvent.click(screen.getByRole('button', { name: '标题' }))
+    const menu = await screen.findByRole('menu', { name: '标题' })
+    expect(within(menu).getByRole('menuitemcheckbox', { name: '一级标题' })).toHaveAttribute('aria-checked', 'true')
+    expect(within(menu).getByRole('menuitemcheckbox', { name: '二级标题' })).toHaveAttribute('aria-checked', 'false')
+    expect(within(menu).getByRole('menuitem', { name: '正文' })).not.toHaveAttribute('aria-checked')
   })
 
   describe('ResizeObserver', () => {
