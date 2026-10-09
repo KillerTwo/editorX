@@ -1,8 +1,9 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { ThemeProvider, useTheme } from './theme-provider'
+import { ThemeProvider, useOptionalTheme, useTheme } from './theme-provider'
 
 function mockSystemDark(initial: boolean) {
   const listeners = new Set<(e: MediaQueryListEvent) => void>()
@@ -137,5 +138,75 @@ describe('ThemeProvider', () => {
   it('Provider 外调用 useTheme 抛错', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<Probe />)).toThrow('useTheme must be used within <ThemeProvider>')
+  })
+})
+
+function ReadyProbe() {
+  const { ready } = useTheme()
+  return <span data-testid="ready">{`ready:${ready}`}</span>
+}
+
+function OptionalProbe() {
+  const theme = useOptionalTheme()
+  return <span data-testid="optional">{`optional:${theme ? theme.resolved : 'none'}`}</span>
+}
+
+const bodyPortals = () => document.querySelectorAll<HTMLElement>('body > .ex-root.ex-body-portal')
+
+describe('ThemeProvider（阶段 3 补充）', () => {
+  it('useOptionalTheme：Provider 外返回 null，内部返回上下文', () => {
+    const { unmount } = render(<OptionalProbe />)
+    expect(screen.getByTestId('optional')).toHaveTextContent('optional:none')
+    unmount()
+    render(<ThemeProvider defaultTheme="dark" storageKey={false}><OptionalProbe /></ThemeProvider>)
+    expect(screen.getByTestId('optional')).toHaveTextContent('optional:dark')
+  })
+
+  it('ready：SSR 输出为 false，客户端挂载后为 true', () => {
+    expect(renderToString(<ThemeProvider defaultTheme="light"><ReadyProbe /></ThemeProvider>)).toContain('ready:false')
+    render(<ThemeProvider defaultTheme="light" storageKey={false}><ReadyProbe /></ThemeProvider>)
+    expect(screen.getByTestId('ready')).toHaveTextContent('ready:true')
+  })
+
+  it('bodyPortalRoot：挂在 body 下、同步主题、卸载时移除；StrictMode 下只有一个', async () => {
+    let captured: HTMLElement | null = null
+    function Capture() {
+      captured = useTheme().bodyPortalRoot
+      return null
+    }
+    const { unmount } = render(
+      <StrictMode>
+        <ThemeProvider defaultTheme="light" storageKey={false}>
+          <Capture />
+          <Probe />
+        </ThemeProvider>
+      </StrictMode>,
+    )
+    expect(bodyPortals()).toHaveLength(1)
+    expect(captured).toBe(bodyPortals()[0])
+    expect(bodyPortals()[0]).toHaveAttribute('data-ex-theme', 'light')
+    await userEvent.click(screen.getByText('to-dark'))
+    expect(bodyPortals()[0]).toHaveAttribute('data-ex-theme', 'dark')
+    unmount()
+    expect(bodyPortals()).toHaveLength(0)
+  })
+
+  it('切换主题时在两帧内标记 data-ex-theme-switching，随后移除', async () => {
+    const frames: FrameRequestCallback[] = []
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      frames.push(cb)
+      return frames.length
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    render(<ThemeProvider defaultTheme="light" storageKey={false}><Probe /></ThemeProvider>)
+    frames.splice(0).forEach((cb) => cb(0))
+    await userEvent.click(screen.getByText('to-dark'))
+    expect(root()).toHaveAttribute('data-ex-theme-switching')
+    expect(bodyPortals()[0]).toHaveAttribute('data-ex-theme-switching')
+    act(() => frames.splice(0).forEach((cb) => cb(0)))
+    expect(root()).toHaveAttribute('data-ex-theme-switching')
+    act(() => frames.splice(0).forEach((cb) => cb(0)))
+    expect(root()).not.toHaveAttribute('data-ex-theme-switching')
+    expect(bodyPortals()[0]).not.toHaveAttribute('data-ex-theme-switching')
   })
 })

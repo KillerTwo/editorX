@@ -84,3 +84,10 @@ describe('styles.css @supports 兜底块', () => {
     }
   })
 })
+
+describe('styles.css 主题切换', () => {
+  it('切换期间禁用 transition', () => {
+    expect(css).toContain('.ex-root[data-ex-theme-switching] *')
+    expect(css).toMatch(/\[data-ex-theme-switching\][^{]*\{\s*transition: none !important;/)
+  })
+})

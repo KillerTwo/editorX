@@ -80,6 +80,13 @@
   color: var(--ex-color-text);
 }
 
+.ex-root[data-ex-theme-switching],
+.ex-root[data-ex-theme-switching] *,
+.ex-root[data-ex-theme-switching] *::before,
+.ex-root[data-ex-theme-switching] *::after {
+  transition: none !important;
+}
+
 /* Static values must mirror the light-dark() pairs above */
 @supports not (color: light-dark(#000, #fff)) {
   .ex-root,
