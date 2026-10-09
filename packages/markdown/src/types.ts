@@ -56,12 +56,17 @@ export interface MarkdownEditorProps {
   onViewModeChange?(mode: ViewMode): void
   /**
    * 首次渲染时传入 theme 或 defaultTheme（或没有外层 ThemeProvider）则编辑器自建 ThemeProvider，否则复用外层。
-   * 该决定在组件实例生命周期内不变；复用外层时 theme/defaultTheme/onThemeChange/themeStorageKey 均被忽略。
+   * 该决定在组件实例生命周期内不变；复用外层时 theme/defaultTheme/onThemeChange/themeStorageKey 均被忽略
+   * （之后才传入 theme/defaultTheme 时开发环境 console.warn 一次）。
    */
   theme?: ThemeMode
   defaultTheme?: ThemeMode
   onThemeChange?(mode: ThemeMode): void
   themeStorageKey?: string | false
+  /**
+   * 覆盖部分文案（叠加在外层 MessagesProvider / zhCN 之上）。请传稳定引用（模块常量或 useMemo）：
+   * 内联对象每次渲染都会重新合并，工具栏与所有文案使用方随之重新渲染。
+   */
   locale?: DeepPartial<Messages>
   readOnly?: boolean
   placeholder?: string

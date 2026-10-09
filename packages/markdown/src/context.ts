@@ -17,6 +17,8 @@ export interface MarkdownContextDeps {
   uploadImages(files: readonly File[]): Promise<void>
   getLiveHtml(): string
   renderExportHtml(): Promise<string>
+  /** 默认始终为 true */
+  isMounted?(): boolean
 }
 
 function toMarkdown(content: InsertContent): string {
@@ -114,6 +116,7 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
     renderExportHtml: deps.renderExportHtml,
     isFullscreen: () => store.get().fullscreen,
     toggleFullscreen: () => store.set({ fullscreen: !store.get().fullscreen }),
+    isMounted: () => deps.isMounted?.() ?? true,
   })
   return ctx
 }

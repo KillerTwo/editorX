@@ -1,6 +1,7 @@
 import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
 import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
 import {
+  activeExtensions,
   collectShortcuts,
   errorMessage,
   formatMessage,
@@ -46,6 +47,15 @@ const createDefaultEngine = (): EditorEngine => new ClEditEngine()
 const NO_ADAPTERS: EditorAdapters = {}
 const NO_EXTENSIONS: readonly EditorExtension[] = []
 
+/** 字面量 process.env.NODE_ENV 供打包器替换；无打包器时 process 不存在，按生产环境处理 */
+function isDev(): boolean {
+  try {
+    return process.env.NODE_ENV !== 'production'
+  } catch {
+    return false
+  }
+}
+
 function LocalizedToasts({ children }: { children: ReactNode }) {
   const m = useMessages()
   return <ToastProvider closeLabel={m.dialog.close}>{children}</ToastProvider>
@@ -56,6 +66,16 @@ export function MarkdownEditor(props: MarkdownEditorProps) {
   const { theme, defaultTheme, onThemeChange, themeStorageKey, locale } = props
   // 只在首次渲染决定是否自建主题：树形状切换会重建 EditorShell（新引擎，内容与撤销丢失）
   const [ownTheme] = useState(() => !outer || theme !== undefined || defaultTheme !== undefined)
+  const themeIgnored = !ownTheme && (theme !== undefined || defaultTheme !== undefined)
+  const warnedRef = useRef(false)
+  useEffect(() => {
+    if (!themeIgnored || warnedRef.current || !isDev()) return
+    warnedRef.current = true
+    console.warn(
+      '[editorx/markdown] 首次渲染时复用了外层 ThemeProvider，之后传入的 theme / defaultTheme 被忽略；' +
+        '需要自建主题请在首次渲染时传入，或更换 key 重新挂载编辑器',
+    )
+  }, [themeIgnored])
   const content = (
     <MessagesProvider messages={locale}>
       <LocalizedToasts>
@@ -112,7 +132,9 @@ function EditorShell({
   const live = useLatest({ adapters, messages, notify, title, readOnly, theme: resolved })
 
   const allExtensions = useStableArray(useMemo(() => [...coreExtensions, ...extensions], [coreExtensions, extensions]))
-  const embeds = useMemo(() => allExtensions.flatMap((ext) => ext.embeds ?? []), [allExtensions])
+  /** 同名替换与 editors 过滤后的扩展；setup、embeds、工具栏、快捷键都只看它 */
+  const active = useMemo(() => activeExtensions(allExtensions, 'markdown'), [allExtensions])
+  const embeds = useMemo(() => active.flatMap((ext) => ext.embeds ?? []), [active])
   const rendererOptions = useMemo<RendererOptions>(() => ({ embeds }), [embeds])
 
   const runtime = useEditorRuntime({
@@ -144,6 +166,14 @@ function EditorShell({
     }),
   )
 
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   const [ctx] = useState(() =>
     createMarkdownContext({
       engine,
@@ -163,6 +193,7 @@ function EditorShell({
         const html = previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html
         return drawDiagramsForExport(html, live.current.theme)
       },
+      isMounted: () => mountedRef.current,
     }),
   )
 
@@ -174,17 +205,14 @@ function EditorShell({
     },
     [live],
   )
-  useExtensionSetup(allExtensions, ctx, reportError)
+  useExtensionSetup(active, ctx, reportError)
 
   const resolveOptions = useMemo(
     () => ({ editorType: 'markdown' as const, adapters, missingAdapter }),
     [adapters, missingAdapter],
   )
-  const groups = useMemo(
-    () => resolveToolbar(allExtensions, toolbarLayout, resolveOptions),
-    [allExtensions, toolbarLayout, resolveOptions],
-  )
-  const shortcuts = useMemo(() => collectShortcuts(allExtensions, resolveOptions), [allExtensions, resolveOptions])
+  const groups = useMemo(() => resolveToolbar(active, toolbarLayout, resolveOptions), [active, toolbarLayout, resolveOptions])
+  const shortcuts = useMemo(() => collectShortcuts(active, resolveOptions), [active, resolveOptions])
   const mac = useIsMacPlatform()
 
   const formatsKey = useEditorState(store, (s) => s.formatsKey)

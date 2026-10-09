@@ -48,13 +48,13 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-const openMenuItem = async (menu: string, item: string | RegExp) => {
+const openMenuItem = async (menu: string, item: string | RegExp, role: 'menuitem' | 'menuitemcheckbox' = 'menuitem') => {
   await userEvent.click(screen.getByRole('button', { name: menu }))
-  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+  await userEvent.click(await screen.findByRole(role, { name: item }))
 }
 
 const enterFullscreen = async () => {
-  await openMenuItem('更多操作', '全屏')
+  await openMenuItem('更多操作', '全屏', 'menuitemcheckbox')
   expect(editorRoot()).toHaveAttribute('data-fullscreen')
 }
 
@@ -120,12 +120,22 @@ describe('内置扩展', () => {
     const { handle } = renderEditor({ defaultValue: 'a' })
     act(() => handle().getEngine().setSelection(0, 1))
     await userEvent.click(screen.getByRole('button', { name: '列表' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: /有序列表/ }))
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /有序列表/ }))
     expect(handle().getValue()).toBe('1. a')
     act(() => handle().getEngine().setSelection(3, 4))
     await userEvent.click(screen.getByRole('button', { name: '更多格式' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: '高亮' }))
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '高亮' }))
     expect(handle().getValue()).toBe('1. ==a==')
+  })
+
+  it('下拉菜单项反映光标处格式（aria-checked）', async () => {
+    const { handle } = renderEditor({ defaultValue: '1. a' })
+    act(() => handle().getEngine().setSelection(4, 4))
+    await waitFor(() => expect(screen.getByRole('button', { name: '列表' })).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: '列表' }))
+    const menu = await screen.findByRole('menu', { name: '列表' })
+    await waitFor(() => expect(within(menu).getByRole('menuitemcheckbox', { name: /有序列表/ })).toHaveAttribute('aria-checked', 'true'))
+    expect(within(menu).getByRole('menuitemcheckbox', { name: /无序列表/ })).toHaveAttribute('aria-checked', 'false')
   })
 
   it('链接对话框：以选中文本预填，确定后插入链接', async () => {
@@ -140,6 +150,19 @@ describe('内置扩展', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: '确定' }))
     await waitFor(() => expect(handle().getValue()).toBe('[文档](https://e.com)'))
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('对话框确定后编辑器随即卸载：延迟执行的命令不再改动已销毁的引擎', async () => {
+    const { handle, unmount } = renderEditor({ defaultValue: '文档' })
+    const engine = handle().getEngine()
+    act(() => engine.setSelection(0, 2))
+    await userEvent.click(screen.getByRole('button', { name: '链接' }))
+    const dialog = await screen.findByRole('dialog', { name: '链接' })
+    fireEvent.change(within(dialog).getByLabelText('链接地址'), { target: { value: 'https://e.com' } })
+    fireEvent.submit(dialog.querySelector('form')!)
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(engine.getValue()).toBe('文档')
   })
 
   it('链接对话框：初始焦点在首个输入框；地址为空或仅 https:// 时不能确定', async () => {
@@ -234,10 +257,10 @@ describe('内置扩展', () => {
   it('全屏：菜单项显示「退出全屏」，点击退出', async () => {
     renderEditor()
     await enterFullscreen()
-    await openMenuItem('更多操作', '退出全屏')
+    await openMenuItem('更多操作', '退出全屏', 'menuitemcheckbox')
     expect(editorRoot()).not.toHaveAttribute('data-fullscreen')
     await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
-    expect(await screen.findByRole('menuitem', { name: '全屏' })).toBeInTheDocument()
+    expect(await screen.findByRole('menuitemcheckbox', { name: '全屏' })).toHaveAttribute('aria-checked', 'false')
   })
 
   describe('全屏隔离页面', () => {
@@ -251,25 +274,29 @@ describe('内置扩展', () => {
       document.body.append(outside, already)
       extras.push(outside, already)
       html.style.overflow = 'scroll'
+      document.body.style.overflow = 'auto'
       return { outside, already }
     }
 
     afterEach(() => {
       extras.splice(0).forEach((el) => el.remove())
       html.style.overflow = ''
+      document.body.style.overflow = ''
     })
 
-    it('锁定页面滚动、页面其余部分 inert（浮层容器除外）；退出后还原', async () => {
+    it('锁定页面滚动（html 与 body）、页面其余部分 inert（浮层容器除外）；退出后还原', async () => {
       const page = setupPage()
       renderEditor()
       await enterFullscreen()
       expect(html.style.overflow).toBe('hidden')
+      expect(document.body.style.overflow).toBe('hidden')
       expect(page.outside).toHaveAttribute('inert')
       expect(editorRoot().closest('[inert]')).toBeNull()
       expect(document.querySelector('.ex-portal')!.closest('[inert]')).toBeNull()
       expect(document.querySelector('.ex-body-portal')!.closest('[inert]')).toBeNull()
       fireEvent.keyDown(editorContent(), { key: 'Escape' })
       expect(html.style.overflow).toBe('scroll')
+      expect(document.body.style.overflow).toBe('auto')
       expect(page.outside).not.toHaveAttribute('inert')
       expect(page.already).toHaveAttribute('inert')
     })
@@ -280,6 +307,7 @@ describe('内置扩展', () => {
       await enterFullscreen()
       unmount()
       expect(html.style.overflow).toBe('scroll')
+      expect(document.body.style.overflow).toBe('auto')
       expect(page.outside).not.toHaveAttribute('inert')
       expect(page.already).toHaveAttribute('inert')
     })
@@ -359,6 +387,90 @@ describe('内置扩展', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('扩展 demo 出错：boom')
     unmount()
     expect(cleanup.mock.calls.length).toBe(setup.mock.calls.length)
+  })
+
+  it('editors 不含 markdown 的扩展：不调用 setup，不注册 embeds', async () => {
+    const setup = vi.fn()
+    const richOnly: EditorExtension = {
+      name: 'rich-only',
+      editors: ['richtext'],
+      setup,
+      embeds: [{ type: 'rt-card', renderHtml: () => '<b data-test="rt-card">RT</b>' }],
+    }
+    const mdCard: EditorExtension = {
+      name: 'md-card',
+      embeds: [{ type: 'md-card', renderHtml: () => '<b data-test="md-card">MD</b>' }],
+    }
+    renderEditor({
+      extensions: [richOnly, mdCard],
+      defaultValue: '```ex-embed:rt-card\n{}\n```\n\n```ex-embed:md-card\n{}\n```\n',
+    })
+    await waitFor(() => expect(previewEl().querySelector('[data-test="md-card"]')).not.toBeNull())
+    expect(previewEl().querySelector('[data-test="rt-card"]')).toBeNull()
+    expect(setup).not.toHaveBeenCalled()
+  })
+
+  it('同名替换的内置扩展：不调用其 setup，不注册其 embeds；替换者生效', async () => {
+    const oldSetup = vi.fn()
+    const newSetup = vi.fn()
+    const original: EditorExtension = {
+      name: 'core:card',
+      setup: oldSetup,
+      embeds: [{ type: 'old-card', renderHtml: () => '<b data-test="old-card">OLD</b>' }],
+    }
+    const replacement: EditorExtension = {
+      name: 'core:card',
+      setup: newSetup,
+      embeds: [{ type: 'new-card', renderHtml: () => '<b data-test="new-card">NEW</b>' }],
+    }
+    renderEditor({
+      coreExtensions: [original],
+      extensions: [replacement],
+      defaultValue: '```ex-embed:old-card\n{}\n```\n\n```ex-embed:new-card\n{}\n```\n',
+    })
+    await waitFor(() => expect(previewEl().querySelector('[data-test="new-card"]')).not.toBeNull())
+    expect(previewEl().querySelector('[data-test="old-card"]')).toBeNull()
+    expect(oldSetup).not.toHaveBeenCalled()
+    expect(newSetup).toHaveBeenCalled()
+  })
+
+  it('扩展 title 函数抛错：编辑器与其余工具栏照常渲染，按钮以 id 命名', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const bad: EditorExtension = {
+      name: 'bad-title',
+      toolbar: [
+        {
+          type: 'button',
+          id: 'bad:save',
+          title: (m) => (m as unknown as { myExt: { save: string } }).myExt.save,
+          icon: <span>S</span>,
+          run: () => {},
+        },
+      ],
+    }
+    renderEditor({ extensions: [bad] })
+    expect(screen.getByRole('button', { name: 'bad:save' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '加粗' })).toBeInTheDocument()
+    expect(editorContent()).toBeInTheDocument()
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('bad-title'), expect.any(TypeError))
+  })
+
+  it('导出 HTML 失败：提示 errors.export，不显示内部扩展名', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.stubGlobal(
+      'URL',
+      class extends URL {
+        static createObjectURL = () => {
+          throw new Error('quota')
+        }
+        static revokeObjectURL = () => {}
+      },
+    )
+    renderEditor({ defaultValue: '# x' })
+    await openMenuItem('更多操作', '导出为 HTML')
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('导出失败：quota')
+    expect(alert).not.toHaveTextContent('core:more-actions')
   })
 
   it('快捷键处理函数抛错：提示且编辑器继续工作', async () => {

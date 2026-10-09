@@ -2,15 +2,18 @@ import type { ExtensionContext } from '@editorx/toolbar'
 import { Button } from '@editorx/ui'
 import { Upload } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { getMarkdownInternals } from '../internals'
 
 interface DialogProps {
   ctx: ExtensionContext
   close: () => void
 }
 
-/** 等对话框卸载、焦点归还后再执行，让命令最终把焦点交给编辑区 */
-const afterClose = (fn: () => void) => {
-  setTimeout(fn, 0)
+/** 等对话框卸载、焦点归还后再执行，让命令最终把焦点交给编辑区；其间编辑器已卸载则跳过 */
+const afterClose = (ctx: ExtensionContext, fn: () => void) => {
+  setTimeout(() => {
+    if (getMarkdownInternals(ctx)?.isMounted() ?? true) fn()
+  }, 0)
 }
 
 function Field({ label, children }: { label: string; children: (id: string) => ReactNode }) {
@@ -51,7 +54,7 @@ export function LinkDialog({ ctx, close }: DialogProps) {
     e.preventDefault()
     if (!canSubmit) return
     close()
-    afterClose(() => ctx.commands.run('link', { text: text || undefined, url: url.trim() }))
+    afterClose(ctx, () => ctx.commands.run('link', { text: text || undefined, url: url.trim() }))
   }
   return (
     <form className="ex-mde-dialog" onSubmit={submit}>
@@ -76,13 +79,13 @@ export function ImageDialog({ ctx, close }: DialogProps) {
     e.preventDefault()
     if (!canSubmit) return
     close()
-    afterClose(() => ctx.commands.run('image', { url: url.trim(), text: alt || undefined }))
+    afterClose(ctx, () => ctx.commands.run('image', { url: url.trim(), text: alt || undefined }))
   }
   const onFiles = (files: FileList | null) => {
     const list = Array.from(files ?? [])
     if (list.length === 0) return
     close()
-    afterClose(() => void ctx.uploadImages(list))
+    afterClose(ctx, () => void ctx.uploadImages(list))
   }
   return (
     <form className="ex-mde-dialog" onSubmit={submit}>
@@ -114,7 +117,7 @@ export function TableDialog({ ctx, close }: DialogProps) {
   const submit = (e: FormEvent) => {
     e.preventDefault()
     close()
-    afterClose(() => ctx.commands.run('table', { rows: clampCount(rows), cols: clampCount(cols) }))
+    afterClose(ctx, () => ctx.commands.run('table', { rows: clampCount(rows), cols: clampCount(cols) }))
   }
   return (
     <form className="ex-mde-dialog" onSubmit={submit}>

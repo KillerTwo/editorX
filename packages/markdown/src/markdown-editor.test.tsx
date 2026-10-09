@@ -241,6 +241,29 @@ describe('MarkdownEditor', () => {
     expect(ref.current!.getValue()).toBe('甲乙')
   })
 
+  it('复用外层 ThemeProvider 后才传入 theme / defaultTheme：开发环境 console.warn 一次', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const ui = (props: { theme?: 'dark'; defaultTheme?: 'dark' } = {}) => (
+      <ThemeProvider defaultTheme="light" storageKey={false}>
+        <MarkdownEditor {...props} />
+      </ThemeProvider>
+    )
+    const { rerender } = render(ui(), strict)
+    expect(warn).not.toHaveBeenCalled()
+    rerender(ui({ theme: 'dark' }))
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('[editorx/markdown]'))
+    rerender(ui({ defaultTheme: 'dark' }))
+    expect(warn).toHaveBeenCalledTimes(1)
+  })
+
+  it('自建主题时传入 theme 不警告', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { rerender } = render(<MarkdownEditor themeStorageKey={false} theme="light" />, strict)
+    rerender(<MarkdownEditor themeStorageKey={false} theme="dark" />)
+    expect(warn).not.toHaveBeenCalled()
+  })
+
   it('无外层 ThemeProvider 时切换 theme / defaultTheme 有无，不重建引擎', () => {
     const ref = createRef<MarkdownEditorHandle>()
     const { rerender } = render(<MarkdownEditor ref={ref} themeStorageKey={false} defaultValue="甲" />, strict)
