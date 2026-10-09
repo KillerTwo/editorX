@@ -1,6 +1,6 @@
 import { errorMessage, type EditorExtension, type ExtensionContext, type Template } from '@editorx/toolbar'
 import { Button } from '@editorx/ui'
-import { Bot, History, LayoutTemplate, Megaphone } from 'lucide-react'
+import { Bot, History, Megaphone } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 function TemplatePicker({ ctx, close }: { ctx: ExtensionContext; close(): void }) {
@@ -41,6 +41,16 @@ function TemplatePicker({ ctx, close }: { ctx: ExtensionContext; close(): void }
   )
 }
 
+/** CSDN 模板按钮的草稿（软盘）图标：14×14 外框 */
+function DraftIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1}>
+      <path d="M1.5 1.5h13V13a1.5 1.5 0 0 1-1.5 1.5H3A1.5 1.5 0 0 1 1.5 13z" />
+      <path d="M4.5 1.5v5h7v-5M9.5 3v2.5" />
+    </svg>
+  )
+}
+
 function AiPanel() {
   return (
     <div className="pg-mde-panel">
@@ -61,7 +71,7 @@ export const csdnTemplateExtension: EditorExtension = {
       title: '模板',
       icon: (
         <span className="pg-mde-badge-icon">
-          <LayoutTemplate size={16} />
+          <DraftIcon />
           <span className="pg-mde-dot" />
         </span>
       ),

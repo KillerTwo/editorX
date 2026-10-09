@@ -31,7 +31,7 @@ import { useMessages } from './messages-context'
 import { formatShortcut } from './shortcuts'
 import { useIsMacPlatform } from './use-mac-platform'
 
-/** 与 styles.css 中分隔线（1px + 左右 8px 外边距）和「更多」按钮（28px + 分隔线 + 余量）保持一致 */
+/** 与 styles.css 中分隔线（1px + 左右 8px 外边距）和「更多」按钮（28px + 分隔线 + 余量）保持一致；分隔线已渲染时以实测为准 */
 const DIVIDER_WIDTH = 17
 const MORE_WIDTH = 49
 const MORE_KEY = '__more'
@@ -64,6 +64,14 @@ interface ItemMatch {
   item: ResolvedItem
   /** 所在下拉（任一层）已禁用 */
   parentDisabled: boolean
+}
+
+/** 宿主样式可能改动分隔线外边距（如 CSDN 的 16px） */
+function dividerWidth(root: HTMLElement): number {
+  const divider = root.querySelector<HTMLElement>(':scope > .ex-toolbar__divider')
+  if (!divider || divider.offsetWidth === 0) return DIVIDER_WIDTH
+  const style = getComputedStyle(divider)
+  return divider.offsetWidth + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0)
 }
 
 /** 深度优先查找首个匹配条目 */
@@ -160,7 +168,8 @@ function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, classN
         return
       }
       const widths = groups.map((_, i) => groupRefs.current[i]?.offsetWidth ?? 0)
-      const next = fitGroups(widths, available, DIVIDER_WIDTH, MORE_WIDTH)
+      const divider = dividerWidth(root)
+      const next = fitGroups(widths, available, divider, MORE_WIDTH - DIVIDER_WIDTH + divider)
       const active = document.activeElement
       const focusedGroup = active ? groupRefs.current.findIndex((g) => g?.contains(active)) : -1
       focusMoreRef.current = focusedGroup >= next && focusedGroup < groups.length

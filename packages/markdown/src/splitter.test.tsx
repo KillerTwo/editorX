@@ -85,6 +85,16 @@ describe('Splitter 拖动', () => {
     expect(onChange).toHaveBeenCalledTimes(1)
   })
 
+  it('按位移换算比例：按下位置偏离分隔条时不跳动', () => {
+    const { onChange, sep } = setup()
+    fireEvent.pointerDown(sep, { button: 0, pointerId: 1, clientX: 587 })
+    fireEvent.pointerMove(sep, { pointerId: 1, clientX: 588 })
+    expect(sep).toHaveAttribute('aria-valuenow', '50')
+    fireEvent.pointerMove(sep, { pointerId: 1, clientX: 387 })
+    fireEvent.pointerUp(sep, { pointerId: 1, clientX: 387 })
+    expect(onChange).toHaveBeenCalledWith(0.3)
+  })
+
   it('pointercancel 恢复拖动前的比例且不提交', () => {
     const { bodyRef, onChange, sep } = setup()
     fireEvent.pointerDown(sep, { button: 0, pointerId: 1, clientX: 600 })

@@ -71,13 +71,15 @@ export function Splitter({
     const rect = body.getBoundingClientRect()
     const start = value
     let current = value
+    // 按位移换算：分隔条与按比例算出的位置有固定偏差（样式中的 -13px），也不因按下位置偏离分隔条而跳动
+    const grabOffset = e.clientX - (rect.left + start * rect.width)
     const apply = (next: number) => {
       current = next
       body.style.setProperty(SPLIT_VAR, String(next))
       handle.setAttribute('aria-valuenow', percent(next))
     }
     const move = (ev: globalThis.PointerEvent) => {
-      const next = splitFromPointer(ev.clientX, rect)
+      const next = splitFromPointer(ev.clientX - grabOffset, rect)
       if (next !== null && next !== current) apply(next)
     }
     const doc = handle.ownerDocument

@@ -71,7 +71,20 @@
   border-bottom: 1px solid var(--ex-color-mde-divider);
 }
 
-.ex-mde-toolbar .ex-toolbar__item { color: var(--ex-color-mde-chrome-text); font-size: 13px; }
+/* CSDN：分隔线左右 16px；带文字按钮左右 10px、图标/文字/下拉箭头间距 6px；纯文字按钮文字前多留 6px（空图标位） */
+.ex-mde-toolbar .ex-toolbar__divider { margin: 0 16px; }
+.ex-mde-toolbar .ex-toolbar__item { color: var(--ex-color-mde-chrome-text); font-size: 12px; }
+.ex-mde-toolbar .ex-toolbar__item.has-label { gap: 6px; padding: 0 10px; }
+.ex-mde-toolbar .ex-toolbar__label:first-child { margin-left: 6px; }
+
+/* 下拉箭头为 8×4 实心三角 */
+.ex-mde-toolbar .ex-toolbar__caret {
+  width: 12px;
+  height: 4px;
+  background: currentColor;
+  clip-path: polygon(2px 0, 10px 0, 6px 4px);
+}
+.ex-mde-toolbar .ex-toolbar__caret > * { display: none; }
 .ex-mde-toolbar .ex-toolbar__item:disabled { color: var(--ex-color-mde-disabled-text); }
 .ex-mde-toolbar .ex-toolbar__item.is-active { color: var(--ex-color-primary); }
 .ex-mde-toolbar .ex-toolbar__item.is-active:disabled { color: var(--ex-color-mde-disabled-text); }
@@ -100,7 +113,8 @@
   display: none;
 }
 
-.ex-mde[data-view='split'] .ex-mde-editor { flex: 0 0 calc(var(--ex-mde-split, 0.5) * 100%); }
+/* CSDN 比对模式编辑区比按比例算出的宽度窄 13px（外框 2050px 时 1012 / 1038） */
+.ex-mde[data-view='split'] .ex-mde-editor { flex: 0 0 calc(var(--ex-mde-split, 0.5) * 100% - 13px); }
 .ex-mde[data-view='split'] .ex-mde-preview-pane { background: var(--ex-color-mde-split-preview-bg); }
 
 /* CSDN 正文西文先用 Arial，中文回落到苹方/雅黑（与参考截图字宽一致） */
@@ -114,7 +128,7 @@
   color: var(--ex-color-mde-body-text);
 }
 
-.ex-mde[data-view='split'] .ex-editor-content { padding: 16px 24px; }
+.ex-mde[data-view='split'] .ex-editor-content { padding: 16px; }
 
 .ex-mde .ex-md-heading { color: var(--ex-color-mde-body-text); }
 .ex-mde .ex-md-h1,
@@ -166,7 +180,8 @@
   padding: 16px 20cqi;
 }
 
-.ex-mde[data-view='split'] .ex-mde-preview { padding: 16px 40px; }
+/* 参考截图实测：正文起点距预览区左缘 42px、顶 19px，右侧换行位置对应 24px */
+.ex-mde[data-view='split'] .ex-mde-preview { padding: 19px 24px 16px 42px; }
 
 /* ---------- 预览排版（CSDN 实测：正文 16/26px，标题 22/20/18px） ---------- */
 .ex-mde .ex-preview {
@@ -345,7 +360,7 @@
   white-space: nowrap;
 }
 
-.ex-mde-toc__list { margin: 0; padding: 8px 0; list-style: none; }
+.ex-mde-toc__list { margin: 0; padding: 3px 0 8px; list-style: none; }
 
 .ex-mde-toc__link {
   display: block;

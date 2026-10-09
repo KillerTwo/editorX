@@ -221,12 +221,15 @@ test('分隔条：拖动调整宽度，键盘 End 到 80%', async ({ page }) => 
   const y = body.y + body.height / 2
   await page.mouse.move(handle.x + 2, y)
   await page.mouse.down()
-  await page.mouse.move(body.x + body.width * 0.3, y, { steps: 5 })
+  // 按位移拖动：从 50% 向左移 20% 的宽度
+  await page.mouse.move(handle.x + 2 - body.width * 0.2, y, { steps: 5 })
   await page.mouse.up()
   await expect.poll(async () => Number(await sep.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(29)
   expect(Number(await sep.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(31)
   const editorWidth = (await editorScroller(page).boundingBox())!.width
-  expect(Math.abs(editorWidth - body.width * 0.3)).toBeLessThan(body.width * 0.012)
+  const handleAfter = (await sep.boundingBox())!
+  expect(Math.abs(handleAfter.x - (handle.x - body.width * 0.2))).toBeLessThan(body.width * 0.012)
+  expect(Math.abs(editorWidth - (body.width * 0.3 - 13))).toBeLessThan(body.width * 0.012)
   await sep.focus()
   await page.keyboard.press('End')
   await expect(sep).toHaveAttribute('aria-valuenow', '80')

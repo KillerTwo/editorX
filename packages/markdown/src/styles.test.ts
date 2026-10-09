@@ -20,9 +20,9 @@ describe('markdown styles.css', () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|light-dark\(/)
   })
 
-  it('类名以 ex- 开头（状态类 is-* 除外）', () => {
+  it('类名以 ex- 开头（状态类 is-* 与工具栏修饰类 has-* 除外）', () => {
     for (const [, c] of css.matchAll(/\.([a-zA-Z_][\w-]*)/g)) {
-      expect(c!.startsWith('ex-') || c!.startsWith('is-'), c).toBe(true)
+      expect(c!.startsWith('ex-') || c!.startsWith('is-') || c!.startsWith('has-'), c).toBe(true)
     }
   })
 
@@ -54,10 +54,14 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-status \{[^}]*padding: 9px 24px 12px 25px;[^}]*font-size: 12px;[^}]*line-height: 21px;/)
     expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)
     expect(css).toMatch(/\.ex-mde-rail \{[^}]*width: 56px;/)
-    expect(css).toContain('calc(var(--ex-mde-split, 0.5) * 100%)')
+    expect(css).toContain('calc(var(--ex-mde-split, 0.5) * 100% - 13px)')
+    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-editor-content \{ padding: 16px; \}/)
     expect(css).toMatch(/\.ex-mde \.ex-editor-content \{[^}]*padding: 16px 20cqi;[^}]*font-size: 16px;[^}]*line-height: 26px;/)
     expect(css).toMatch(/\.ex-mde-body \{[^}]*container-type: inline-size;/)
-    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-mde-preview \{[^}]*padding: 16px 40px;/)
+    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-mde-preview \{[^}]*padding: 19px 24px 16px 42px;/)
+    expect(css).toMatch(/\.ex-mde-toolbar \.ex-toolbar__divider \{ margin: 0 16px; \}/)
+    expect(css).toMatch(/\.ex-mde-toolbar \.ex-toolbar__item\.has-label \{ gap: 6px; padding: 0 10px; \}/)
+    expect(css).toMatch(/\.ex-mde-toc__list \{[^}]*padding: 3px 0 8px;/)
     expect(css).toMatch(/::-webkit-scrollbar \{[^}]*width: 8px;/)
   })
 
