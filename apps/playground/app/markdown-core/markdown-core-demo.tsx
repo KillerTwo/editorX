@@ -6,10 +6,10 @@ import {
   countWords,
   createRenderer,
   createScrollSync,
+  patchPreview,
   renderDiagrams,
   type HtmlCount,
   type RenderedSection,
-  type RenderResult,
   type WordCount,
 } from '@editorx/markdown-core'
 import { ThemeProvider, useTheme } from '@editorx/theme'
@@ -19,29 +19,6 @@ import { generateLargeDoc, SAMPLE } from './sample'
 
 const PREVIEW_DELAY = 200
 const STATS_TIMEOUT = 300
-
-function buildSection(doc: Document, html: string, index: number): HTMLElement {
-  const el = doc.createElement('div')
-  el.className = 'ex-preview-section'
-  el.dataset.sectionIndex = String(index)
-  el.innerHTML = html
-  return el
-}
-
-/** Sections stay direct children of the `.ex-preview` container; only sections whose HTML changed are replaced. */
-function patchPreview(container: HTMLElement, result: RenderResult, previous: string[]): void {
-  const doc = container.ownerDocument
-  const items = result.sections.map((s) => s.html)
-  items.forEach((html, i) => {
-    const current = container.children[i] as HTMLElement | undefined
-    if (current && previous[i] === html) return
-    const el = buildSection(doc, html, i)
-    if (current) container.replaceChild(el, current)
-    else container.appendChild(el)
-  })
-  while (container.children.length > items.length) container.lastElementChild!.remove()
-  previous.splice(0, previous.length, ...items)
-}
 
 function yieldToMain(): Promise<void> {
   const scheduler = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler
@@ -108,7 +85,8 @@ function createStatsCounter() {
 
 interface DemoApi {
   engine: ClEditEngine
-  renderNow(full: boolean): void
+  renderNow(): void
+  redrawDiagrams(): void
 }
 
 function Workbench() {
@@ -136,7 +114,7 @@ function Workbench() {
     let cancelStats = () => {}
     let refreshFrame = 0
 
-    engine.mount(editorEl, { value: SAMPLE, placeholder: '开始写作…' })
+    engine.mount(editorEl, { value: SAMPLE, placeholder: '开始写作…', ariaLabel: 'Markdown 编辑区' })
     const sync = createScrollSync(engine, editorEl, scrollEl)
     const refreshSoon = () => {
       cancelAnimationFrame(refreshFrame)
@@ -155,18 +133,24 @@ function Workbench() {
       })
     }
 
+    // Already-drawn diagrams are skipped; blocks drawn for another theme are redrawn.
+    const redrawDiagrams = () => {
+      void renderDiagrams(previewEl, { theme: themeRef.current }).then(() => {
+        if (!disposed) refreshSoon()
+      })
+    }
+
     // Each step runs in its own task so a pending keystroke is never blocked behind the whole preview update.
-    const renderNow = async (full: boolean) => {
+    const renderNow = async () => {
       clearTimeout(timer)
       const current = ++generation
       const stale = () => disposed || current !== generation
       const result = renderer.render(engine.getValue())
       await yieldToMain()
       if (stale()) return
-      if (full) previous.length = 0
-      patchPreview(previewEl, result, previous)
+      patchPreview(previewEl, result.sections, previous)
       refreshSoon()
-      void renderDiagrams(previewEl, { theme: themeRef.current }).then(refreshSoon)
+      redrawDiagrams()
       countStats(result.sections, current)
     }
 
@@ -176,12 +160,12 @@ function Workbench() {
       setChangeCount((c) => c + 1)
       updateCursor()
       clearTimeout(timer)
-      timer = setTimeout(() => void renderNow(false), PREVIEW_DELAY)
+      timer = setTimeout(() => void renderNow(), PREVIEW_DELAY)
     })
     const offSelection = engine.on('selectionChange', updateCursor)
-    void renderNow(true)
+    void renderNow()
     updateCursor()
-    apiRef.current = { engine, renderNow: (full) => void renderNow(full) }
+    apiRef.current = { engine, renderNow: () => void renderNow(), redrawDiagrams }
 
     return () => {
       disposed = true
@@ -202,14 +186,14 @@ function Workbench() {
   useEffect(() => {
     if (themeRef.current === resolved) return
     themeRef.current = resolved
-    apiRef.current?.renderNow(true)
+    apiRef.current?.redrawDiagrams()
   }, [resolved])
 
   const loadLargeDoc = () => {
     const api = apiRef.current
     if (!api) return
     api.engine.setValue(generateLargeDoc(10000))
-    api.renderNow(true)
+    api.renderNow()
     setCursor(api.engine.getCursorPosition())
   }
 
