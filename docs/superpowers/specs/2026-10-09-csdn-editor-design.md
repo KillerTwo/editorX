@@ -281,7 +281,7 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 
 ## 8. 还原度保障
 
-- playground `/compare` 页：组件与 CSDN 参考截图并排 / 叠加（透明度可调）。参考截图由用户登录 CSDN 后手动截取，放入 `apps/playground/reference/`；不爬取 CSDN。
+- playground `/compare` 页：组件与 CSDN 参考截图并排 / 叠加（透明度可调）。参考截图由用户登录 CSDN 后手动截取，放入 `apps/playground/public/reference/`（由 Next.js 静态托管）；不爬取 CSDN。
 - 设计 token（颜色、间距、字号、圆角、阴影）统一定义在 `@editorx/theme`，组件中不出现硬编码视觉值。
 - Playwright 视觉回归覆盖：亮/暗 × 三种视图模式、所有弹窗/弹层、发布面板、富文本工具栏；像素差异阈值 0.1%。
 
@@ -310,5 +310,5 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 |---|---|
 | cledit 中文输入法 / 大文档表现不佳 | 阶段 2 尽早做 IME 与 10k 行 E2E；不达标则启用 `CodeMirrorEngine` 实现（接口已预留） |
 | GPL 传染 | `rich-text` 独立包 + optional peer；文档中明确说明 |
-| CSDN 改版导致还原基准漂移 | 以 `reference/` 截图为冻结基准，改版需显式更新截图 |
+| CSDN 改版导致还原基准漂移 | 以 `public/reference/` 截图为冻结基准，改版需显式更新截图 |
 | Mermaid / KaTeX 体积大 | 按需动态加载，首次遇到对应语法时才加载 |
