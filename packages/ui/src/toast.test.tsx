@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { ThemeProvider } from '@editorx/theme'
-import type { ReactNode } from 'react'
+import { StrictMode, useEffect, type ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider, useToast, type ToastType } from './toast'
 
@@ -64,6 +64,28 @@ describe('Toast', () => {
     fireEvent.click(screen.getByText('notify'))
     unmount()
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('StrictMode 下挂载时触发的提示也会按时消失', () => {
+    function MountNotify() {
+      const { notify } = useToast()
+      useEffect(() => {
+        notify('挂载提示')
+      }, [notify])
+      return null
+    }
+    render(
+      <StrictMode>
+        <ThemeProvider defaultTheme="light" storageKey={false}>
+          <ToastProvider duration={1000}>
+            <MountNotify />
+          </ToastProvider>
+        </ThemeProvider>
+      </StrictMode>,
+    )
+    expect(screen.queryAllByRole('status').length).toBeGreaterThan(0)
+    act(() => vi.advanceTimersByTime(1000))
+    expect(screen.queryAllByRole('status')).toHaveLength(0)
   })
 
   it('Provider 外调用 useToast 抛错', () => {
