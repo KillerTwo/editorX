@@ -95,7 +95,12 @@ export function createScrollSync(
   }
   const offChange = engine.on('change', invalidate)
   // Sections skipped by `content-visibility: auto` report estimated sizes until rendered; the event does not bubble.
-  editorScrollEl.addEventListener('contentvisibilityautostatechange', invalidate, true)
+  // Re-aligning from the last source is safe: the source lock keeps the written side from echoing back.
+  const onVisibilityChange = () => {
+    invalidate()
+    scheduleSync(lastSource)
+  }
+  editorScrollEl.addEventListener('contentvisibilityautostatechange', onVisibilityChange, true)
   const resizeObserver =
     typeof ResizeObserver === 'undefined'
       ? null
@@ -123,7 +128,7 @@ export function createScrollSync(
       locked = null
       pairs = null
       offChange()
-      editorScrollEl.removeEventListener('contentvisibilityautostatechange', invalidate, true)
+      editorScrollEl.removeEventListener('contentvisibilityautostatechange', onVisibilityChange, true)
       resizeObserver?.disconnect()
       editorScrollEl.removeEventListener('scroll', onEditorScroll)
       previewEl.removeEventListener('scroll', onPreviewScroll)

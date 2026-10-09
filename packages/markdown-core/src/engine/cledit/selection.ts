@@ -134,14 +134,14 @@ export class SelectionManager {
     ) {
       return
     }
-    const range = this.createRange(this.start, this.end)
+    const range = this.root.ownerDocument.createRange()
+    range.setStart(anchor.node, anchor.offset)
     sel.removeAllRanges()
     if (this.start > this.end) {
-      const anchor = range.cloneRange()
-      anchor.collapse(false)
-      sel.addRange(anchor)
-      sel.extend(range.startContainer, range.startOffset)
+      sel.addRange(range)
+      sel.extend(focus.node, focus.offset)
     } else {
+      range.setEnd(focus.node, focus.offset)
       sel.addRange(range)
     }
   }

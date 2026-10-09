@@ -152,8 +152,8 @@ describe('createScrollSync', () => {
     expect(editor.scrollTop).toBe(40)
   })
 
-  it('编辑区段的 contentvisibilityautostatechange（不冒泡，捕获监听）使段尺寸缓存失效', () => {
-    const { editor, engine, sync } = setup()
+  it('编辑区段的 contentvisibilityautostatechange（不冒泡，捕获监听）使段尺寸缓存失效并按最近的源重新同步', () => {
+    const { editor, preview, engine, sync } = setup()
     const offsets = vi.mocked(engine.getSectionOffsets)
     scrollTo(editor, 50)
     vi.advanceTimersByTime(10)
@@ -161,13 +161,16 @@ describe('createScrollSync', () => {
     scrollTo(editor, 60)
     vi.advanceTimersByTime(10)
     expect(offsets.mock.calls.length).toBe(calls)
+    vi.advanceTimersByTime(60)
 
     const section = document.createElement('div')
     editor.appendChild(section)
+    editor.scrollTop = 70
     section.dispatchEvent(new Event('contentvisibilityautostatechange'))
-    scrollTo(editor, 70)
+    expect(offsets.mock.calls.length).toBe(calls)
     vi.advanceTimersByTime(10)
     expect(offsets.mock.calls.length).toBe(calls + 1)
+    expect(preview.scrollTop).toBe(210)
 
     const remove = vi.spyOn(editor, 'removeEventListener')
     sync.destroy()

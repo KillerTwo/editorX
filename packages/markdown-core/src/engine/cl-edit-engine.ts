@@ -41,12 +41,32 @@ function editableMode(doc: Document): 'plaintext-only' | 'true' {
   return probe.contentEditable === 'plaintext-only' ? 'plaintext-only' : 'true'
 }
 
+/**
+ * Read once per mount for the per-section `contain-intrinsic-size` estimate (hard lines × line height; soft wraps
+ * are not counted). The estimate only matters until a section is first rendered: `auto` then keeps its real size.
+ */
 function measureLineHeight(el: HTMLElement): number {
   const value = el.ownerDocument.defaultView?.getComputedStyle(el).lineHeight ?? ''
   const px = value.endsWith('px') ? Number.parseFloat(value) : Number.NaN
   return Number.isFinite(px) && px > 0 ? px : DEFAULT_LINE_HEIGHT
 }
 
+/** Ctrl/Cmd+Home/End and (macOS) Cmd+ArrowUp/ArrowDown: `true` = document end, `false` = start, `null` = other keys. */
+function documentBoundary(e: KeyboardEvent): boolean | null {
+  if (e.altKey) return null
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'Home' || e.key === 'End')) return e.key === 'End'
+  if (e.metaKey && !e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return e.key === 'ArrowDown'
+  return null
+}
+
+/**
+ * contenteditable Markdown editor with per-section highlighting.
+ *
+ * Editor sections use `content-visibility: auto`, so off-screen sections are not laid out. The engine moves the caret
+ * to the document boundaries itself (see {@link documentBoundary}) because native navigation cannot enter skipped
+ * sections. Known limitation: PageUp/PageDown move by estimated heights across not-yet-rendered sections, so the
+ * distance per page can differ from the visible page height (the caret still lands on a valid position).
+ */
 export class ClEditEngine implements EditorEngine {
   private host: HTMLElement | null = null
   private content: HTMLElement | null = null
@@ -351,10 +371,10 @@ export class ClEditEngine implements EditorEngine {
       else this.undo()
       return
     }
-    if (mod && !e.altKey && (e.key === 'Home' || e.key === 'End')) {
-      // Native document-boundary navigation cannot place the caret inside sections skipped by `content-visibility: auto`.
+    const boundary = documentBoundary(e)
+    if (boundary !== null) {
       e.preventDefault()
-      this.moveToBoundary(e.key === 'End', e.shiftKey)
+      this.moveToBoundary(boundary, e.shiftKey)
       return
     }
     if (e.key !== 'Enter' && e.key !== 'Tab' && e.key !== 'Backspace') return
@@ -396,7 +416,13 @@ export class ClEditEngine implements EditorEngine {
     scroll()
     // The target section only gets its real size once rendered, a frame or two later.
     const win = host.ownerDocument.defaultView
-    if (end && win) win.requestAnimationFrame(() => win.requestAnimationFrame(scroll))
+    if (!end || !win) return
+    const scrolledTo = host.scrollTop
+    win.requestAnimationFrame(() =>
+      win.requestAnimationFrame(() => {
+        if (this.host === host && host.scrollTop === scrolledTo) scroll()
+      }),
+    )
   }
 
   private bindEvents(host: HTMLElement, content: HTMLElement): void {

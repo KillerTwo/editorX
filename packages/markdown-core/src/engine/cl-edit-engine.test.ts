@@ -291,6 +291,56 @@ describe('ClEditEngine 输入', () => {
     expect(keydown(content, 'End', { ctrlKey: true, altKey: true }).defaultPrevented).toBe(false)
   })
 
+  it('macOS：Cmd+ArrowUp/ArrowDown 移到文首/文末（Shift 扩展），Ctrl/Alt 组合不处理', () => {
+    const { engine, content } = setup('# A\n\nx\n## B\n\ny')
+    content.focus()
+    engine.setSelection(5, 5)
+    const down = keydown(content, 'ArrowDown', { metaKey: true })
+    expect(down.defaultPrevented).toBe(true)
+    expect(engine.getSelection()).toEqual({ start: 14, end: 14 })
+    const up = keydown(content, 'ArrowUp', { metaKey: true, shiftKey: true })
+    expect(up.defaultPrevented).toBe(true)
+    expect(engine.getSelection()).toEqual({ start: 0, end: 14 })
+    expect(keydown(content, 'ArrowDown').defaultPrevented).toBe(false)
+    expect(keydown(content, 'ArrowDown', { metaKey: true, ctrlKey: true }).defaultPrevented).toBe(false)
+    expect(keydown(content, 'ArrowDown', { metaKey: true, altKey: true }).defaultPrevented).toBe(false)
+    expect(keydown(content, 'ArrowDown', { ctrlKey: true }).defaultPrevented).toBe(false)
+  })
+
+  it('文末的延迟二次滚动：期间用户滚动过或引擎已销毁则跳过', () => {
+    const frames: FrameRequestCallback[] = []
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => frames.push(cb))
+    const runFrames = () => {
+      while (frames.length) frames.shift()!(0)
+    }
+    const { engine, content, host } = setup('# A\n\nx\n## B\n\ny')
+    let top = 0
+    let height = 500
+    Object.defineProperties(host, {
+      scrollTop: { get: () => top, set: (v: number) => (top = v), configurable: true },
+      scrollHeight: { get: () => height, configurable: true },
+    })
+    content.focus()
+
+    keydown(content, 'End', { ctrlKey: true })
+    expect(top).toBe(500)
+    height = 800
+    runFrames()
+    expect(top).toBe(800)
+
+    keydown(content, 'End', { ctrlKey: true })
+    height = 900
+    top = 300
+    runFrames()
+    expect(top).toBe(300)
+
+    keydown(content, 'End', { ctrlKey: true })
+    height = 1000
+    engine.destroy()
+    runFrames()
+    expect(top).toBe(900)
+  })
+
   it('Enter 续写列表并阻止默认行为', () => {
     const { engine, content } = setup('- a')
     content.focus()
