@@ -24,6 +24,29 @@ describe('Dropdown', () => {
     expect(await screen.findAllByRole('menuitem')).toHaveLength(3)
   })
 
+  it('checked 项渲染为 menuitemcheckbox 并带 aria-checked 与 is-active；未设置时保持 menuitem', async () => {
+    renderWithTheme(
+      <Dropdown
+        items={[
+          { key: 'h1', label: '一级标题', checked: true },
+          { key: 'h2', label: '二级标题', checked: false },
+          { key: 'x', label: '其他' },
+        ]}
+        onSelect={() => {}}
+      >
+        <button>标题</button>
+      </Dropdown>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '标题' }))
+    const on = await screen.findByRole('menuitemcheckbox', { name: '一级标题' })
+    expect(on).toHaveAttribute('aria-checked', 'true')
+    expect(on).toHaveClass('is-active')
+    const off = screen.getByRole('menuitemcheckbox', { name: '二级标题' })
+    expect(off).toHaveAttribute('aria-checked', 'false')
+    expect(off).not.toHaveClass('is-active')
+    expect(screen.getByRole('menuitem', { name: '其他' })).not.toHaveAttribute('aria-checked')
+  })
+
   it('选择后回调 key 并关闭', async () => {
     const onSelect = vi.fn()
     renderWithTheme(

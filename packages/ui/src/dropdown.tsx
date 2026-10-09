@@ -28,6 +28,8 @@ export interface DropdownItem {
   /** 右侧附加信息，如快捷键 */
   extra?: ReactNode
   disabled?: boolean
+  /** 设置后渲染为 menuitemcheckbox（aria-checked），为 true 时加 is-active；不设置为普通 menuitem */
+  checked?: boolean
   /** 为 true 时渲染分隔线，其余字段忽略 */
   separator?: boolean
 }
@@ -93,8 +95,9 @@ function DropdownInner({ items, onSelect, children, placement = 'bottom-start', 
                           listRef.current[index] = node
                         }}
                         type="button"
-                        role="menuitem"
-                        className="ex-dropdown__item"
+                        role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+                        aria-checked={item.checked}
+                        className={cx('ex-dropdown__item', item.checked && 'is-active')}
                         tabIndex={activeIndex === index ? 0 : -1}
                         disabled={item.disabled}
                         {...getItemProps({
