@@ -1,0 +1,21 @@
+{
+  "name": "@editorx/theme",
+  "version": "0.0.0",
+  "type": "module",
+  "sideEffects": ["*.css"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup && node ../../tooling/copy-css.mjs",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
