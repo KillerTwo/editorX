@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { SAMPLE } from '../app/markdown-core/sample'
+import { installKeyLatencyProbe, pressAndMeasure, typeAndMeasure } from './support/latency'
 
 const editor = (page: Page) => page.locator('.ex-editor-content')
 const preview = (page: Page) => page.getByTestId('preview')
@@ -283,41 +284,6 @@ test('在图表上方插入标题：预览增量更新，已渲染的图表 SVG 
   expect(indices).toEqual(indices.map((_, i) => String(i)))
 })
 
-type LatencyWindow = Window & { __exLatency: number[] }
-
-// 从事件创建时刻（e.timeStamp，与 performance.now 同一时钟）到下一帧之后的任务
-async function typeAndMeasure(page: Page, keys: string, delay: number) {
-  await page.evaluate(() => {
-    ;(window as unknown as LatencyWindow).__exLatency = []
-  })
-  await page.keyboard.type(keys, { delay })
-  await expect.poll(() => page.evaluate(() => (window as unknown as LatencyWindow).__exLatency.length)).toBe(keys.length)
-  return latencyStats(page)
-}
-
-async function pressAndMeasure(page: Page, keys: string[], gap: number) {
-  await page.evaluate(() => {
-    ;(window as unknown as LatencyWindow).__exLatency = []
-  })
-  for (const key of keys) {
-    await page.keyboard.press(key)
-    await page.waitForTimeout(gap)
-  }
-  await expect.poll(() => page.evaluate(() => (window as unknown as LatencyWindow).__exLatency.length)).toBe(keys.length)
-  return latencyStats(page)
-}
-
-async function latencyStats(page: Page) {
-  const samples = await page.evaluate(() => (window as unknown as LatencyWindow).__exLatency)
-  const sorted = [...samples].sort((a, b) => a - b)
-  return {
-    median: sorted[Math.floor(sorted.length / 2)]!,
-    p95: sorted[Math.ceil(sorted.length * 0.95) - 1]!,
-    max: sorted.at(-1)!,
-    samples: samples.map((s) => Math.round(s)),
-  }
-}
-
 test.describe('性能', () => {
   test.describe.configure({ mode: 'serial' })
 
@@ -326,19 +292,7 @@ test.describe('性能', () => {
     await loadLargeDoc(page)
     await editor(page).click({ position: { x: 60, y: 30 } })
     await page.keyboard.press('End')
-    await page.evaluate(() => {
-      const w = window as unknown as LatencyWindow
-      document.querySelector('.ex-editor-content')!.addEventListener(
-        'keydown',
-        (e) => {
-          const t0 = e.timeStamp
-          requestAnimationFrame(() => {
-            setTimeout(() => w.__exLatency.push(performance.now() - t0), 0)
-          })
-        },
-        { capture: true },
-      )
-    })
+    await installKeyLatencyProbe(page)
 
     const burstKeys = 'abcdefghijklmnopqrstuvwxyz0123'
     const burst = await typeAndMeasure(page, burstKeys, 80)
