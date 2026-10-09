@@ -1,5 +1,5 @@
 import type { TextState } from '../types'
-import { toggleWrap } from './helpers'
+import { toggleWrap, toggleWrapOrTag } from './helpers'
 
 export interface PlaceholderArgs {
   placeholder?: string
@@ -17,7 +17,7 @@ export const italic = (state: TextState, args?: PlaceholderArgs): TextState =>
   toggleWrap(state, '*', args?.placeholder ?? '斜体文本')
 
 export const strikethrough = (state: TextState, args?: PlaceholderArgs): TextState =>
-  toggleWrap(state, '~~', args?.placeholder ?? '删除线文本')
+  toggleWrapOrTag(state, '~~', args?.placeholder ?? '删除线文本', { tag: 's', char: '~' })
 
 export const inlineCode = (state: TextState, args?: PlaceholderArgs): TextState =>
   toggleWrap(state, '`', args?.placeholder ?? '行内代码')
@@ -26,10 +26,10 @@ export const mark = (state: TextState, args?: PlaceholderArgs): TextState =>
   toggleWrap(state, '==', args?.placeholder ?? '高亮文本')
 
 export const superscript = (state: TextState, args?: PlaceholderArgs): TextState =>
-  toggleWrap(state, '^', args?.placeholder ?? '上标')
+  toggleWrapOrTag(state, '^', args?.placeholder ?? '上标', { tag: 'sup', char: '^', whitespace: true })
 
 export const subscript = (state: TextState, args?: PlaceholderArgs): TextState =>
-  toggleWrap(state, '~', args?.placeholder ?? '下标')
+  toggleWrapOrTag(state, '~', args?.placeholder ?? '下标', { tag: 'sub', char: '~', whitespace: true })
 
 function linkLike(state: TextState, bang: '' | '!', args: LinkArgs, placeholder: string): TextState {
   const { text } = state

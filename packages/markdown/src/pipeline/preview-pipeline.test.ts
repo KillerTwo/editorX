@@ -1,6 +1,6 @@
 import { createRenderer, renderDiagrams, type EditorEngine } from '@editorx/markdown-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createPreviewPipeline, type PreviewPipelineOptions } from './preview-pipeline'
+import { createPreviewPipeline, type PreviewPipeline, type PreviewPipelineOptions } from './preview-pipeline'
 
 vi.mock('@editorx/markdown-core', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@editorx/markdown-core')>()),
@@ -27,6 +27,8 @@ function fakeEngine(initial: string) {
   }
 }
 
+const created: PreviewPipeline[] = []
+
 function setup(initial: string, over: Partial<PreviewPipelineOptions> = {}) {
   const fake = fakeEngine(initial)
   const previewEl = document.createElement('div')
@@ -42,11 +44,16 @@ function setup(initial: string, over: Partial<PreviewPipelineOptions> = {}) {
     onLayout: vi.fn(),
     ...over,
   }
-  return { ...fake, previewEl, opts, pipeline: createPreviewPipeline(opts) }
+  const pipeline = createPreviewPipeline(opts)
+  created.push(pipeline)
+  return { ...fake, previewEl, opts, pipeline }
 }
 
 describe('createPreviewPipeline', () => {
-  afterEach(() => vi.useRealTimers())
+  afterEach(() => {
+    created.splice(0).forEach((pipeline) => pipeline.destroy())
+    vi.useRealTimers()
+  })
 
   it('flush 渲染到预览并回调 onRendered(result, markdown)、绘制图表', async () => {
     const { pipeline, previewEl, opts } = setup('# 标题\n\n正文')
@@ -113,5 +120,89 @@ describe('createPreviewPipeline', () => {
     expect(previewEl.childElementCount).toBe(0)
     await vi.advanceTimersByTimeAsync(500)
     expect(opts.onRendered).not.toHaveBeenCalled()
+  })
+
+  it('destroy 之后 schedule/flush/redrawDiagrams 均为空操作，不改动 DOM', async () => {
+    const { pipeline, previewEl, opts } = setup('# 标题')
+    await pipeline.flush()
+    pipeline.destroy()
+    vi.mocked(opts.onRendered).mockClear()
+    vi.mocked(renderDiagrams).mockClear()
+    const getRenderer = vi.fn(opts.getRenderer)
+    opts.getRenderer = getRenderer
+    const mutations: MutationRecord[] = []
+    const observer = new MutationObserver((records) => mutations.push(...records))
+    observer.observe(previewEl, { childList: true, subtree: true, attributes: true, characterData: true })
+    vi.useFakeTimers()
+    pipeline.schedule()
+    expect(vi.getTimerCount()).toBe(0)
+    await pipeline.flush()
+    pipeline.redrawDiagrams()
+    await vi.advanceTimersByTimeAsync(500)
+    mutations.push(...observer.takeRecords())
+    observer.disconnect()
+    expect(mutations).toHaveLength(0)
+    expect(getRenderer).not.toHaveBeenCalled()
+    expect(renderDiagrams).not.toHaveBeenCalled()
+    expect(opts.onRendered).not.toHaveBeenCalled()
+  })
+
+  it('flush 进行中 destroy：不回调、预览保持为空', async () => {
+    const { pipeline, previewEl, opts } = setup('# 标题')
+    const pending = pipeline.flush()
+    pipeline.destroy()
+    await pending
+    expect(opts.onRendered).not.toHaveBeenCalled()
+    expect(previewEl.childElementCount).toBe(0)
+  })
+
+  it('只修改一段时只替换该段的预览节点', async () => {
+    const { pipeline, previewEl, type } = setup('# 一\n\n段一\n\n## 二\n\n段二\n')
+    await pipeline.flush()
+    const [first, second] = Array.from(previewEl.children)
+    expect(previewEl.childElementCount).toBe(2)
+    type('# 一\n\n段一\n\n## 二\n\n段二改\n')
+    await pipeline.flush()
+    expect(previewEl.children[0]).toBe(first)
+    expect(previewEl.children[1]).not.toBe(second)
+    expect(previewEl.children[1]).toHaveTextContent('段二改')
+  })
+
+  it('渲染抛错：flush 不拒绝，console.error 带前缀', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { pipeline } = setup('x', {
+      getRenderer: () => {
+        throw new Error('boom')
+      },
+    })
+    await expect(pipeline.flush()).resolves.toBeUndefined()
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[editorx/markdown]'), expect.any(Error))
+  })
+
+  it('onRendered 抛错：防抖路径与 flush 均不产生未处理拒绝', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { pipeline, type } = setup('x', {
+      onRendered: () => {
+        throw new Error('consumer')
+      },
+    })
+    await expect(pipeline.flush()).resolves.toBeUndefined()
+    vi.useFakeTimers()
+    type('y')
+    await vi.advanceTimersByTimeAsync(250)
+    expect(error).toHaveBeenCalledTimes(2)
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[editorx/markdown]'), expect.any(Error))
+  })
+
+  it('图表渲染失败经 console.error 报告，不影响其余渲染', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(renderDiagrams).mockRejectedValueOnce(new Error('chunk'))
+    const { pipeline, previewEl, opts } = setup('# 标题')
+    await pipeline.flush()
+    expect(previewEl.querySelector('h1')).toHaveTextContent('标题')
+    expect(opts.onRendered).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() =>
+      expect(error).toHaveBeenCalledWith(expect.stringContaining('[editorx/markdown]'), expect.any(Error)),
+    )
   })
 })

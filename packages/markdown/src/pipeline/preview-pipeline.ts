@@ -21,7 +21,7 @@ export interface PreviewPipelineOptions {
 export interface PreviewPipeline {
   /** 防抖后渲染（change 时自动调用） */
   schedule(): void
-  /** 立即渲染当前值 */
+  /** 立即渲染当前值；从不拒绝（错误经 console.error 报告），destroy 后为空操作 */
   flush(): Promise<void>
   /** 已绘制的图表跳过，主题不同的重绘 */
   redrawDiagrams(): void
@@ -67,12 +67,12 @@ export function createPreviewPipeline(opts: PreviewPipelineOptions): PreviewPipe
       () => {
         if (!disposed) layoutSoon()
       },
-      () => {},
+      (error: unknown) => console.error('[editorx/markdown] 图表渲染失败', error),
     )
   }
 
   // 每一步在独立任务中执行，挂起的按键不会被整次预览更新阻塞
-  const flush = async () => {
+  const render = async () => {
     clearTimeout(timer)
     timer = undefined
     const current = ++generation
@@ -88,12 +88,20 @@ export function createPreviewPipeline(opts: PreviewPipelineOptions): PreviewPipe
     opts.onRendered(next, markdown)
   }
 
+  const flush = async () => {
+    if (disposed) return
+    try {
+      await render()
+    } catch (error) {
+      console.error('[editorx/markdown] 预览渲染失败', error)
+    }
+  }
+
   const schedule = () => {
+    if (disposed) return
     generation++
     clearTimeout(timer)
-    timer = setTimeout(() => {
-      flush().catch((error: unknown) => console.error(error))
-    }, delay)
+    timer = setTimeout(() => void flush(), delay)
   }
 
   const offChange = engine.on('change', schedule)
@@ -104,6 +112,7 @@ export function createPreviewPipeline(opts: PreviewPipelineOptions): PreviewPipe
     redrawDiagrams,
     getResult: () => result,
     destroy() {
+      if (disposed) return
       disposed = true
       clearTimeout(timer)
       cancelStats()

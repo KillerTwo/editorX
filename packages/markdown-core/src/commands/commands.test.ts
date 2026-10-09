@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createRenderer } from '../renderer/renderer'
 import type { EditorEngine, Selection, TextState } from '../types'
 import { MERMAID_TEMPLATES } from './block'
 import { type CommandTransform, commands, execCommand, minimalDiff, runCommand } from './registry'
@@ -78,6 +79,23 @@ const cases: Case[] = [
   ['superscript placeholder', commands.superscript, '«»', '^«上标»^'],
   ['subscript wraps', commands.subscript, 'H«2»O', 'H~«2»~O'],
   ['subscript placeholder', commands.subscript, '«»', '~«下标»~'],
+  ['superscript unwraps markers', commands.superscript, 'x^«2»^', 'x«2»'],
+  ['subscript unwraps markers', commands.subscript, 'H~«2»~O', 'H«2»O'],
+  ['subscript inside strikethrough uses <sub> around the run', commands.subscript, '~~«b»~~', '<sub>~~«b»~~</sub>'],
+  ['subscript selection containing ~ uses <sub>', commands.subscript, '«~~b~~»', '<sub>«~~b~~»</sub>'],
+  ['subscript with whitespace uses <sub>', commands.subscript, 'a «x y» b', 'a <sub>«x y»</sub> b'],
+  ['superscript with whitespace uses <sup>', commands.superscript, '«x y»', '<sup>«x y»</sup>'],
+  ['superscript selection containing ^ uses <sup>', commands.superscript, '«^b»', '<sup>«^b»</sup>'],
+  ['strikethrough on subscript uses <s> around the run', commands.strikethrough, 'x~«b»~', 'x<s>~«b»~</s>'],
+  ['strikethrough selection containing ~ uses <s>', commands.strikethrough, '«~b~»', '<s>«~b~»</s>'],
+  ['subscript unwraps tags outside', commands.subscript, 'a <sub>«x y»</sub> b', 'a «x y» b'],
+  ['subscript unwraps tags inside', commands.subscript, '«<sub>b</sub>»', '«b»'],
+  ['subscript unwraps tags around the run', commands.subscript, '<sub>~~«b»~~</sub>', '~~«b»~~'],
+  ['superscript unwraps tags outside', commands.superscript, '<sup>«2»</sup>', '«2»'],
+  ['superscript unwraps tags inside', commands.superscript, 'x«<sup>2</sup>»', 'x«2»'],
+  ['strikethrough unwraps tags outside', commands.strikethrough, '<s>«b»</s>', '«b»'],
+  ['strikethrough unwraps tags inside', commands.strikethrough, '«<s>b</s>»', '«b»'],
+  ['strikethrough unwraps tags around the run', commands.strikethrough, 'x<s>~«b»~</s>', 'x~«b»~'],
 ]
 
 describe('command transforms', () => {
@@ -117,6 +135,18 @@ describe('command transforms', () => {
         'unorderedList',
       ].sort(),
     )
+  })
+
+  it.each([
+    ['strikethrough on line-start subscript', commands.strikethrough, '~«b»~ rest\n\nnext para', '<s><sub>b</sub></s>'],
+    ['subscript on line-start strikethrough', commands.subscript, '~~«b»~~ rest\n\nnext para', '<sub><s>b</s></sub>'],
+    ['subscript with whitespace', commands.subscript, 'a «x y» b\n\nnext para', '<sub>x y</sub>'],
+    ['superscript with whitespace', commands.superscript, 'a «x y» b\n\nnext para', '<sup>x y</sup>'],
+  ] as const)('%s renders without a code fence', (_name, transform, input, expected) => {
+    const { html } = createRenderer().render(transform(st(input)).text)
+    expect(html).toContain(expected)
+    expect(html).toContain('<p>next para</p>')
+    expect(html).not.toContain('<pre')
   })
 
   it('offers flowchart, sequence, gantt and class mermaid templates', () => {
