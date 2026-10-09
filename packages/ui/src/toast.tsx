@@ -31,7 +31,7 @@ function ToastView({ item, closeLabel, onDone }: { item: ToastItem; closeLabel: 
   }, [item.id, item.duration, onDone])
 
   return (
-    <div role={item.type === 'error' ? 'alert' : 'status'} className={`ex-toast ex-toast--${item.type}`}>
+    <div className={`ex-toast ex-toast--${item.type}`}>
       <span className="ex-toast__message">{item.message}</span>
       <button type="button" className="ex-toast__close" aria-label={closeLabel} onClick={() => onDone(item.id)}>
         <X size={14} aria-hidden="true" />
@@ -64,10 +64,22 @@ export function ToastProvider({ duration = 3000, closeLabel = '关闭', children
       {children}
       {portalRoot &&
         createPortal(
+          // 播报容器常驻：读屏器通常不播报「插入时已带内容」的新 live region
           <div className="ex-toast-stack">
-            {items.map((item) => (
-              <ToastView key={item.id} item={item} closeLabel={closeLabel} onDone={remove} />
-            ))}
+            <div role="status" className="ex-toast-region">
+              {items
+                .filter((item) => item.type !== 'error')
+                .map((item) => (
+                  <ToastView key={item.id} item={item} closeLabel={closeLabel} onDone={remove} />
+                ))}
+            </div>
+            <div role="alert" className="ex-toast-region">
+              {items
+                .filter((item) => item.type === 'error')
+                .map((item) => (
+                  <ToastView key={item.id} item={item} closeLabel={closeLabel} onDone={remove} />
+                ))}
+            </div>
           </div>,
           portalRoot,
         )}

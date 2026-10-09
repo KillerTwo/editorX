@@ -58,7 +58,7 @@ function PopoverInner({
   })
   const { getReferenceProps, getFloatingProps } = useInteractions([
     useClick(context),
-    useDismiss(context),
+    useDismiss(context, { bubbles: { escapeKey: false } }),
     useRole(context, { role: 'dialog' }),
   ])
   const childRef = (children.props as { ref?: Ref<Element> }).ref

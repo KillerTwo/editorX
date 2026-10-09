@@ -179,10 +179,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--ex-space-2);
   transform: translateX(-50%);
   pointer-events: none;
 }
+.ex-toast-region {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ex-space-2);
+}
+.ex-toast-region:not(:empty) + .ex-toast-region:not(:empty) { margin-top: var(--ex-space-2); }
 .ex-toast {
   display: flex;
   align-items: center;

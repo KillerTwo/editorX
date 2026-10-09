@@ -52,7 +52,11 @@ function ModalInner({
     },
   })
   const { getFloatingProps } = useInteractions([
-    useDismiss(context, { outsidePress: closeOnMaskClick, outsidePressEvent: 'mousedown' }),
+    useDismiss(context, {
+      outsidePress: closeOnMaskClick,
+      outsidePressEvent: 'mousedown',
+      bubbles: { escapeKey: false },
+    }),
     useRole(context, { role: 'dialog' }),
   ])
 

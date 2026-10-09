@@ -59,7 +59,7 @@ function DropdownInner({ items, onSelect, children, placement = 'bottom-start', 
   const disabledIndices = items.flatMap((item, index) => (item.disabled || item.separator ? [index] : []))
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
     useClick(context),
-    useDismiss(context),
+    useDismiss(context, { bubbles: { escapeKey: false } }),
     useRole(context, { role: 'menu' }),
     useListNavigation(context, { listRef, activeIndex, onNavigate: setActiveIndex, loop: true, disabledIndices }),
   ])

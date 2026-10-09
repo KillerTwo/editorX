@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Dropdown } from './dropdown'
 import { Modal } from './modal'
+import { Popover } from './popover'
 import { renderWithTheme } from './test-utils'
 import { Tooltip } from './tooltip'
 
@@ -133,6 +134,86 @@ describe('Dropdown', () => {
     expect(onClose).not.toHaveBeenCalled()
     await userEvent.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('Esc 关闭后焦点回到触发器', async () => {
+    renderWithTheme(
+      <Dropdown items={navItems} onSelect={() => {}}>
+        <button>标题</button>
+      </Dropdown>,
+    )
+    const trigger = screen.getByRole('button', { name: '标题' })
+    trigger.focus()
+    await userEvent.keyboard('{ArrowDown}')
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /甲/ })).toHaveFocus())
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).toBeNull()
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
+
+  it('Enter 选择后焦点回到触发器', async () => {
+    renderWithTheme(
+      <Dropdown items={navItems} onSelect={() => {}}>
+        <button>标题</button>
+      </Dropdown>,
+    )
+    const trigger = screen.getByRole('button', { name: '标题' })
+    trigger.focus()
+    await userEvent.keyboard('{ArrowDown}')
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /甲/ })).toHaveFocus())
+    await userEvent.keyboard('{Enter}')
+    expect(screen.queryByRole('menu')).toBeNull()
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
+
+  it('Home/End 跳到首个/末个可用项', async () => {
+    const items = [
+      { key: 'x', label: '首项禁用', disabled: true },
+      { key: 'a', label: '甲' },
+      { key: 'b', label: '乙' },
+      { key: 'c', label: '丙' },
+      { key: 'y', label: '末项禁用', disabled: true },
+    ]
+    renderWithTheme(
+      <Dropdown items={items} onSelect={() => {}}>
+        <button>标题</button>
+      </Dropdown>,
+    )
+    screen.getByRole('button', { name: '标题' }).focus()
+    await userEvent.keyboard('{ArrowDown}')
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: '甲' })).toHaveFocus())
+    await userEvent.keyboard('{End}')
+    expect(screen.getByRole('menuitem', { name: '丙' })).toHaveFocus()
+    await userEvent.keyboard('{Home}')
+    expect(screen.getByRole('menuitem', { name: '甲' })).toHaveFocus()
+  })
+
+  it('Popover 内的 Dropdown：点菜单项不关 Popover；Esc 先关菜单，再关 Popover', async () => {
+    const onSelect = vi.fn()
+    renderWithTheme(
+      <Popover
+        content={() => (
+          <Dropdown items={navItems} onSelect={onSelect}>
+            <button>标题</button>
+          </Dropdown>
+        )}
+      >
+        <button>设置</button>
+      </Popover>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '设置' }))
+    await userEvent.click(await screen.findByRole('button', { name: '标题' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: '乙' }))
+    expect(onSelect).toHaveBeenCalledWith('b')
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.getByRole('button', { name: '标题' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '标题' }))
+    expect(await screen.findByRole('menu')).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.getByRole('button', { name: '标题' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('button', { name: '标题' })).toBeNull()
   })
 
   it('Modal 内用键盘打开 Dropdown 后，焦点在菜单项上按 Esc 只关菜单', async () => {
