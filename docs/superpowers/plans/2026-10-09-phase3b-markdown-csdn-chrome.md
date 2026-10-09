@@ -679,7 +679,7 @@ describe('面板', () => {
     const panel = screen.getByRole('complementary', { name: '语法' })
     expect(within(panel).getByText('@[TOC](目录标题)')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: '语法说明' }))
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '语法说明' }))
     expect(screen.queryByRole('complementary')).toBeNull()
   })
 
@@ -687,7 +687,7 @@ describe('面板', () => {
     renderEditor({ showRail: false })
     expect(screen.queryByRole('navigation', { name: '侧边栏' })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: '语法说明' }))
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '语法说明' }))
     expect(screen.getByRole('complementary', { name: '语法' })).toBeInTheDocument()
   })
 
@@ -781,7 +781,7 @@ export function scrollToHeading({ id, viewMode, engine, editorHost, previewEl, p
 `packages/markdown/src/panels/panel-host.tsx`：
 
 ```tsx
-import { ExtensionErrorBoundary, resolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
+import { ExtensionErrorBoundary, safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
 import { cx } from '../cx'
 import { useEditorState, type EditorStore } from '../store'
 
@@ -805,7 +805,7 @@ export function PanelHost({
   return (
     <aside
       className={cx('ex-mde-panel', `ex-mde-panel--${position}`)}
-      aria-label={resolveText(current.panel.title, m)}
+      aria-label={safeResolveText(current.panel.title, m, ctx, current.extension, current.panel.id)}
       data-panel={current.panel.id}
     >
       <ExtensionErrorBoundary
@@ -822,7 +822,7 @@ export function PanelHost({
 `packages/markdown/src/panels/side-rail.tsx`：
 
 ```tsx
-import { resolveText, useMessages, type ResolvedPanel } from '@editorx/toolbar'
+import { safeResolveText, useMessages, type ResolvedPanel } from '@editorx/toolbar'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { cx } from '../cx'
@@ -856,7 +856,7 @@ export function SideRail({ panels, store }: { panels: readonly ResolvedPanel[]; 
         <span className="ex-mde-rail__label">{open ? m.panels.collapse : m.panels.expand}</span>
       </button>
       <span className="ex-mde-rail__divider" aria-hidden="true" />
-      {panels.map(({ panel }) => {
+      {panels.map(({ panel, extension }) => {
         const pressed = panel.id === active
         return (
           <button
@@ -871,7 +871,7 @@ export function SideRail({ panels, store }: { panels: readonly ResolvedPanel[]; 
                 {panel.icon}
               </span>
             )}
-            <span className="ex-mde-rail__label">{resolveText(panel.title, m)}</span>
+            <span className="ex-mde-rail__label">{safeResolveText(panel.title, m, undefined, extension, panel.id)}</span>
           </button>
         )
       })}
@@ -1072,7 +1072,16 @@ git commit -m "feat(markdown): 目录/语法面板与右侧图标栏" -m "面板
 - Create: `packages/markdown/src/splitter.tsx`、`packages/markdown/src/splitter.test.tsx`
 - Modify: `packages/markdown/src/types.ts`；`packages/markdown/src/markdown-editor.tsx`（全文替换为最终版）
 
-> **执行注意（3a 修复轮之后补充）：** 下文"最终版"全文写于 3a 各任务修复轮之前。替换时以当前文件为底稿按差异合入，3a 修复轮引入的行为都要保留（见 3a Task 9 开头的执行注意，以及 3a 最终修复波次之后的实际代码）。上传失败条按钮的可访问名称为 `重试 <文件名>` / `删除 <文件名>`。3a Task 9 实际产出与本计划锚点的差异：toolbar 导入中 `isMacPlatform` 换为 `useIsMacPlatform`（`const mac = useIsMacPlatform()`，SSR 安全）；markdown-core 导入新增 `renderDiagrams`；`createMarkdownContext` 依赖新增 `renderExportHtml`。
+> **执行注意（3a 完成后补充，基于 3a 最终代码 6af69b6）：** 下文"最终版"全文写于 3a 各修复轮之前，**不得整体粘贴**。以当前 `markdown-editor.tsx` 为底稿，只合入本任务新增的部分（分隔条、面板、状态栏、草稿保存等），并逐项确认以下现有行为仍在：
+> 1. 导入：toolbar 用 `useIsMacPlatform`（`const mac = useIsMacPlatform()`，不是 `useMemo(isMacPlatform, [])`）并导入 `activeExtensions`；导出相关用 `./export-html` 的 `drawDiagramsForExport`（不是 markdown-core 的 `renderDiagrams`）；上传相关导入 `observeFailedPlaceholders`。
+> 2. `MarkdownEditor`：是否自建 `ThemeProvider` 由首渲染时的 `ownTheme`（`useState`）决定，之后不再改变树形；`themeIgnored` 开发态警告；模块级 `isDev()`。
+> 3. `EditorShell`：`active = useMemo(() => activeExtensions(allExtensions, 'markdown'), [allExtensions])`，`embeds`、`useExtensionSetup`、`resolveToolbar`、`collectShortcuts` 都用 `active`；`resolvePanels` 也传 `active`。
+> 4. `mountedRef` + `createMarkdownContext({ ..., renderExportHtml, isMounted: () => mountedRef.current })`；`renderExportHtml` 体保持 `await runtime.flush(); … drawDiagramsForExport(html, live.current.theme)`。
+> 5. 全屏 `isolateFullscreen` effect（锁 `<html>`/`<body>` overflow、兄弟节点 `inert`、退出/卸载恢复）与 `--ex-z-fullscreen` 层级。
+> 6. 上传接线：uploader `isReadOnly`；effect 内 `attach/detach`、`observeFailedPlaceholders`、粘贴时 `text/plain` 非空不拦截；`<UploadFailures readOnly onRetry onRemove onEmptied />`。
+> 7. runtime 行为（卸载同步 flush `onChange`、`ref.setValue` 挂载前生效、CRLF 归一比较）位于 `runtime.ts`，合入时不要改动。
+>
+> 其他 3a 产出差异：上传失败条按钮名称为 `重试 <文件名>` / `删除 <文件名>`（`Messages.upload.retryItem/removeItem`）；带 `active` 的菜单项角色为 `menuitemcheckbox`（如「语法说明」「全屏」），测试按此查询；面板/图标栏标题用 `safeResolveText`。
 
 **Interfaces:**
 - Consumes：`Messages.editor.splitter`。
@@ -3064,7 +3073,7 @@ test('目录面板：Markdown 模式跳转编辑区', async ({ page }) => {
 test('语法面板：「更多操作 → 语法说明」与图标栏同步', async ({ page }) => {
   await open(page, '?view=split')
   await toolbar(page).getByRole('button', { name: '更多操作' }).click()
-  await page.getByRole('menuitem', { name: '语法说明' }).click()
+  await page.getByRole('menuitemcheckbox', { name: '语法说明' }).click()
   await expect(page.getByRole('complementary', { name: '语法' })).toContainText('@[TOC](目录标题)')
   await expect(rail(page).getByRole('button', { name: '语法' })).toHaveAttribute('aria-pressed', 'true')
   await rail(page).getByRole('button', { name: '收起' }).click()
