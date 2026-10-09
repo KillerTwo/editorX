@@ -3,6 +3,7 @@ import { moreActionsExtension } from './actions'
 import { codeExtension, listExtension, moreFormatExtension } from './blocks'
 import { formatExtension } from './format'
 import { imageExtension, linkExtension, moreInsertExtension } from './insert'
+import { syntaxPanelExtension, tocPanelExtension } from './panels'
 
 export const markdownCoreExtensions: readonly EditorExtension[] = [
   formatExtension,
@@ -13,6 +14,8 @@ export const markdownCoreExtensions: readonly EditorExtension[] = [
   linkExtension,
   moreInsertExtension,
   moreActionsExtension,
+  tocPanelExtension,
+  syntaxPanelExtension,
 ]
 
 /** CSDN Markdown 编辑器工具栏；csdn:* 由宿主扩展提供，缺失时跳过 */
@@ -33,4 +36,6 @@ export {
   moreActionsExtension,
   moreFormatExtension,
   moreInsertExtension,
+  syntaxPanelExtension,
+  tocPanelExtension,
 }

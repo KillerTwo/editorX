@@ -16,6 +16,7 @@ export interface MarkdownContextDeps {
   notify(message: string, type?: NotifyType): void
   uploadImages(files: readonly File[]): Promise<void>
   getLiveHtml(): string
+  scrollToHeading?(id: string): boolean
   renderExportHtml(): Promise<string>
   /** 默认始终为 true */
   isMounted?(): boolean
@@ -116,6 +117,7 @@ export function createMarkdownContext(deps: MarkdownContextDeps): ExtensionConte
     renderExportHtml: deps.renderExportHtml,
     isFullscreen: () => store.get().fullscreen,
     toggleFullscreen: () => store.set({ fullscreen: !store.get().fullscreen }),
+    scrollToHeading: (id) => deps.scrollToHeading?.(id) ?? false,
     isMounted: () => deps.isMounted?.() ?? true,
   })
   return ctx

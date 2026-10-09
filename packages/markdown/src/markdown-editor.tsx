@@ -7,6 +7,7 @@ import {
   formatMessage,
   handleShortcut,
   MessagesProvider,
+  resolvePanels,
   resolveToolbar,
   Toolbar,
   useExtensionSetup,
@@ -35,6 +36,9 @@ import { cx } from './cx'
 import { drawDiagramsForExport } from './export-html'
 import { isolateFullscreen } from './fullscreen'
 import { ModeTabs } from './mode-tabs'
+import { PanelHost } from './panels/panel-host'
+import { scrollToHeading } from './panels/scroll-to-heading'
+import { SideRail } from './panels/side-rail'
 import { useEditorRuntime } from './runtime'
 import { StatusBar } from './status-bar'
 import { createEditorStore, useEditorState } from './store'
@@ -113,6 +117,8 @@ function EditorShell({
   viewMode: viewModeProp,
   defaultViewMode = 'split',
   onViewModeChange,
+  defaultPanel = null,
+  showRail = true,
   readOnly = false,
   placeholder,
   ariaLabel,
@@ -126,13 +132,13 @@ function EditorShell({
   const { resolved, ready } = useTheme()
   const { notify } = useToast()
   const [engine] = useState(() => (engineFactory ?? createDefaultEngine)())
-  const [store] = useState(() => createEditorStore())
+  const [store] = useState(() => createEditorStore({ panel: defaultPanel }))
   const [viewMode, setViewMode] = useControllableState(viewModeProp, defaultViewMode, onViewModeChange)
   const rootRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
-  const live = useLatest({ adapters, messages, notify, title, readOnly, theme: resolved })
+  const live = useLatest({ adapters, messages, notify, title, readOnly, theme: resolved, viewMode })
 
   const allExtensions = useStableArray(useMemo(() => [...coreExtensions, ...extensions], [coreExtensions, extensions]))
   /** 同名替换与 editors 过滤后的扩展；setup、embeds、工具栏、快捷键都只看它 */
@@ -190,6 +196,15 @@ function EditorShell({
       notify: (message, type) => live.current.notify(message, type),
       uploadImages: (files) => uploader.upload(files),
       getLiveHtml: () => previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html,
+      scrollToHeading: (id) =>
+        scrollToHeading({
+          id,
+          viewMode: live.current.viewMode,
+          engine,
+          editorHost: hostRef.current,
+          previewEl: previewRef.current,
+          previewScroller: previewScrollRef.current,
+        }),
       // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
       renderExportHtml: async () => {
         await runtime.flush()
@@ -241,6 +256,9 @@ function EditorShell({
   )
   const groups = useMemo(() => resolveToolbar(active, toolbarLayout, resolveOptions), [active, toolbarLayout, resolveOptions])
   const shortcuts = useMemo(() => collectShortcuts(active, resolveOptions), [active, resolveOptions])
+  const panels = useMemo(() => resolvePanels(active, resolveOptions), [active, resolveOptions])
+  const rightPanels = useMemo(() => panels.filter((p) => p.panel.position === 'right'), [panels])
+  const bottomPanels = useMemo(() => panels.filter((p) => p.panel.position === 'bottom'), [panels])
   const mac = useIsMacPlatform()
 
   const formatsKey = useEditorState(store, (s) => s.formatsKey)
@@ -339,6 +357,7 @@ function EditorShell({
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>
         </div>
+        <PanelHost position="bottom" panels={bottomPanels} ctx={ctx} store={store} onError={reportError} />
         <UploadFailures
           store={store}
           readOnly={readOnly}
@@ -348,6 +367,8 @@ function EditorShell({
         />
         <StatusBar store={store} viewMode={viewMode} center={slots?.statusCenter} end={slots?.statusEnd} />
       </div>
+      <PanelHost position="right" panels={rightPanels} ctx={ctx} store={store} onError={reportError} />
+      {showRail && rightPanels.length > 0 && <SideRail panels={rightPanels} store={store} />}
     </div>
   )
 }

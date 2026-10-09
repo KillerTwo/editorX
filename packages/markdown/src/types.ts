@@ -62,6 +62,10 @@ export interface MarkdownEditorProps {
   viewMode?: ViewMode
   defaultViewMode?: ViewMode
   onViewModeChange?(mode: ViewMode): void
+  /** 初始打开的面板 id（如 'toc'），默认不打开 */
+  defaultPanel?: string | null
+  /** 是否显示右侧面板图标栏，默认 true */
+  showRail?: boolean
   /**
    * 首次渲染时传入 theme 或 defaultTheme（或没有外层 ThemeProvider）则编辑器自建 ThemeProvider，否则复用外层。
    * 该决定在组件实例生命周期内不变；复用外层时 theme/defaultTheme/onThemeChange/themeStorageKey 均被忽略

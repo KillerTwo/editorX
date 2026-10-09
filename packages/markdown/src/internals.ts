@@ -14,6 +14,8 @@ export interface MarkdownInternals {
   renderExportHtml(): Promise<string>
   isFullscreen(): boolean
   toggleFullscreen(): void
+  /** 目录跳转；找不到标题返回 false */
+  scrollToHeading(id: string): boolean
   /** 编辑器组件仍挂载；延迟执行的回调（如对话框关闭后的命令）据此跳过已卸载的编辑器 */
   isMounted(): boolean
 }

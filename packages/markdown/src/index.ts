@@ -11,4 +11,6 @@ export {
   moreActionsExtension,
   moreFormatExtension,
   moreInsertExtension,
+  syntaxPanelExtension,
+  tocPanelExtension,
 } from './core-extensions'
