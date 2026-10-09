@@ -19,6 +19,12 @@ describe('splitSections', () => {
     expect(splitSections('')).toEqual([{ text: '', start: 0, end: 0 }])
   })
 
+  it('does not split on headings inside CRLF fenced blocks', () => {
+    const md = '# A\r\n```js\r\n# not a heading\r\n```\r\n# B\r\n'
+    expect(texts(md)).toEqual(['# A\r\n```js\r\n# not a heading\r\n```\r\n', '# B\r\n'])
+    expectContiguous(md)
+  })
+
   it('keeps text without headings in a single section', () => {
     expect(texts('hello\n\nworld\n')).toEqual(['hello\n\nworld\n'])
   })

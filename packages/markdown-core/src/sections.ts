@@ -1,7 +1,7 @@
 // Portions adapted from StackEdit (https://github.com/benweet/stackedit), Apache-2.0.
 import type { SourceSection } from './types'
 
-const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})(.*)$/
+const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})([^\r\n]*)\r?$/
 const FENCE_CLOSE = /^ {0,3}(`{3,}|~{3,})[ \t\r]*$/
 const ATX_HEADING = /^ {0,3}#{1,6}(?:[ \t\r]|$)/
 const SETEXT_UNDERLINE = /^ {0,3}(?:=+|-+)[ \t\r]*$/

@@ -333,6 +333,17 @@ describe('createRenderer — incremental cache', () => {
     expect(result.sections[0]!.html).toContain('<a href="https://b.com">x</a>')
   })
 
+  it.each(['> see [foo\n> bar]', '> see [\n> foo bar]', '- > [foo\n  > bar]'])(
+    'invalidates labels split across container line markers: %j',
+    (ref) => {
+      const renderer = createRenderer()
+      renderer.render(`${ref}\n# B\n[foo bar]: https://a.com`)
+      const result = renderer.render(`${ref}\n# B\n[foo bar]: https://b.com`)
+      expect(result.sections[0]!.html).toContain('href="https://b.com"')
+      expect(result.sections[0]!.html).not.toContain('https://a.com')
+    },
+  )
+
   it('re-renders a footnote body when a link definition it uses changes', () => {
     const renderer = createRenderer()
     renderer.render('see[^n]\n\n[^n]: go [home][h]\n# B\n[h]: https://h.com')
@@ -349,5 +360,10 @@ describe('createRenderer — definitions and fences', () => {
     expect(result.sections[0]!.html).toContain('<a href="https://good.example">x</a>')
     expect(result.html).not.toContain('href="https://evil.example"')
     expect(collectDefinitions(md).map((entry) => entry.source)).toEqual(['[1]: https://good.example'])
+  })
+
+  it('does not collect definitions inside CRLF fenced blocks', () => {
+    const md = '[x][1]\r\n# B\r\n```js\r\n[1]: https://evil.example\r\n```\r\n\r\n[1]: https://good.example\r\n'
+    expect(collectDefinitions(md).map((entry) => entry.source.trim())).toEqual(['[1]: https://good.example'])
   })
 })

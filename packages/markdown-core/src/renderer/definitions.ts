@@ -76,7 +76,8 @@ export function joinDefinitions(entries: DefinitionEntry[]): string {
 export function definitionsUsedBy(text: string, entries: DefinitionEntry[]): string {
   if (entries.length === 0) return ''
   let normalized: string | undefined
-  const labels = () => (normalized ??= normalizeLabel(text).replace(/\[ /g, '['))
+  // markdown-it reads labels after stripping container markers on continuation lines
+  const labels = () => (normalized ??= normalizeLabel(text.replace(/\n[ \t>]*/g, ' ')).replace(/\[ /g, '['))
   const mayHideAbbr = HTML_ENTITY.test(text)
   const hasEscapes = text.includes('\\')
   const used = entries.filter((entry) => {
