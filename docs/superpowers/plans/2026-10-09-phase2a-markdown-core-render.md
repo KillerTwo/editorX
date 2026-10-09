@@ -1401,7 +1401,7 @@ Expected: 均无错误。
 - [ ] **Step 12: Commit**
 
 ```powershell
-git add packages/markdown-core/package.json pnpm-lock.yaml packages/markdown-core/src/vendor.d.ts packages/markdown-core/src/renderer/md-types.ts packages/markdown-core/src/renderer/escape.ts packages/markdown-core/src/renderer/sanitize.ts packages/markdown-core/src/renderer/prism.ts packages/markdown-core/src/renderer/task-lists.ts packages/markdown-core/src/renderer/headings.ts packages/markdown-core/src/renderer/definitions.ts packages/markdown-core/src/renderer/footnotes.ts packages/markdown-core/src/renderer/markdown-it.ts packages/markdown-core/src/renderer/renderer.ts packages/markdown-core/src/renderer/renderer.test.ts packages/markdown-core/src/index.ts
+git add packages/markdown-core/package.json pnpm-lock.yaml packages/markdown-core/src/vendor.d.ts packages/markdown-core/src/renderer/md-types.ts packages/markdown-core/src/renderer/escape.ts packages/markdown-core/src/renderer/sanitize.ts packages/markdown-core/src/renderer/prism-manual.ts packages/markdown-core/src/renderer/prism.ts packages/markdown-core/src/renderer/task-lists.ts packages/markdown-core/src/renderer/headings.ts packages/markdown-core/src/renderer/definitions.ts packages/markdown-core/src/renderer/footnotes.ts packages/markdown-core/src/renderer/markdown-it.ts packages/markdown-core/src/renderer/renderer.ts packages/markdown-core/src/renderer/renderer.test.ts packages/markdown-core/src/index.ts
 git commit -m "feat(markdown-core): 新增按 section 增量渲染的 Markdown 渲染器" -m "1. 基于 markdown-it 支持 GFM 表格/删除线/任务列表、缩写、上下标、==mark== 与 emoji，代码块使用 Prism 高亮
 2. 标题生成全文唯一 slug，[TOC]/@[TOC](标题) 输出全文嵌套目录；脚注全文编号并在文末统一列出
 3. 每段输出经 DOMPurify 净化并按段文本缓存，目录、标题 id、脚注编号在组装阶段回填保证缓存正确"
