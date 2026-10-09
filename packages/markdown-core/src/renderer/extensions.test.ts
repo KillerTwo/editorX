@@ -40,6 +40,32 @@ describe('math', () => {
     expect(render('$\\frac{$')).toContain('katex-error')
   })
 
+  it('treats $$..$$ followed by text as inline display math, not a block opener', () => {
+    const el = dom(render('$$E$$ 表示能量：\n\n$$\nE=mc^2\n$$'))
+    expect(el.querySelector('.katex-error')).toBeNull()
+    const para = el.querySelector('p')!
+    expect(para.querySelector('.katex-display')).not.toBeNull()
+    expect(para.textContent).toContain('表示能量：')
+    const blocks = el.querySelectorAll('.ex-math-block')
+    expect(blocks).toHaveLength(1)
+    expect(blocks[0]!.querySelector('annotation')?.textContent).toBe('E=mc^2')
+  })
+
+  it('never lets a math block scan into a fenced code block', () => {
+    const after = dom(render('$$E$$ 表示能量：\n\n```sh\necho $$\n```'))
+    expect(after.querySelector('pre code')?.textContent).toBe('echo $$\n')
+    const unclosed = dom(render('$$\nx\n\n```sh\necho $$\n```'))
+    expect(unclosed.querySelector('.ex-math-block')).toBeNull()
+    expect(unclosed.querySelector('pre code')?.textContent).toBe('echo $$\n')
+  })
+
+  it('requires inline $$..$$ to close on the same line', () => {
+    expect(render('a $$x$$ b')).toContain('katex-display')
+    const html = render('a $$x\ny$$ b')
+    expect(html).not.toContain('katex')
+    expect(html).toContain('$$x')
+  })
+
   it('can be disabled', () => {
     expect(createRenderer({ math: false }).render('$x$').html).toContain('<p>$x$</p>')
   })
@@ -81,6 +107,9 @@ describe('flowchart.js placeholders', () => {
     ['graph LR\nA-->B', false],
     ['sequenceDiagram\nA->>B: hi', false],
     ['flowchart\nA-->B', false],
+    ['flowchart\nA ==> B', false],
+    ['flowchart\nA==>B\nB ==> C', false],
+    ['flowchart\nA ==>|yes| B', false],
     ['', false],
   ])('isFlowchartJs(%j) === %s', (src, expected) => {
     expect(isFlowchartJs(src)).toBe(expected)
@@ -147,6 +176,12 @@ describe('ex-embed fences', () => {
     const el = dom(createRenderer({ embeds: [card] }).render(md).html)
     expect(el.querySelector('.ex-embed')).toBeNull()
     expect(el.querySelector('pre code')?.textContent).toBe(code)
+  })
+
+  it('preserves the embed type case in the fallback class', () => {
+    const html = createRenderer().render('```ex-embed:MyCard\n{}\n```').html
+    expect(html).toContain('<pre class="language-ex-embed:MyCard"><code class="language-ex-embed:MyCard">')
+    expect(createRenderer().render('```JS\nx\n```').html).toContain('class="language-js"')
   })
 
   it('falls back to a code block when renderHtml throws', () => {

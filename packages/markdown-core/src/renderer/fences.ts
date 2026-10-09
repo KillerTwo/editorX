@@ -1,7 +1,6 @@
 import type { EmbedDef } from '../types'
 import { encodeBase64Utf8 } from './base64'
 import { escapeHtml } from './escape'
-import { highlightCode } from './prism'
 
 export const EMBED_FENCE_PREFIX = 'ex-embed:'
 
@@ -20,7 +19,7 @@ export function isFlowchartJs(src: string): boolean {
     .filter(Boolean)
   const [first, ...rest] = lines
   if (first === undefined) return false
-  if (first === 'flowchart') return rest.some((line) => line.includes('=>'))
+  if (first === 'flowchart') return rest.some((line) => FLOWCHART_JS_NODE.test(line))
   return FLOWCHART_JS_NODE.test(first)
 }
 
@@ -43,5 +42,7 @@ export function renderEmbedFence(type: string, raw: string, embeds: Map<string, 
       // invalid JSON or a throwing embed renderer degrades to a plain code block
     }
   }
-  return highlightCode(raw, `${EMBED_FENCE_PREFIX}${type}`)
+  // keep the type's original case so the fence can be restored verbatim from the class
+  const cls = ` class="language-${escapeHtml(EMBED_FENCE_PREFIX + type)}"`
+  return `<pre${cls}><code${cls}>${escapeHtml(raw)}</code></pre>\n`
 }

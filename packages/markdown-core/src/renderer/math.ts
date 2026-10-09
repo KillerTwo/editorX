@@ -7,6 +7,7 @@ import type { StateBlock, StateInline } from './md-types'
 const DOLLAR = 0x24
 const BACKSLASH = 0x5c
 const MAX_CACHE = 500
+const FENCE_LINE = /^(?:`{3,}|~{3,})/
 const texCache = new Map<string, string>()
 
 export function renderTex(tex: string, displayMode: boolean): string {
@@ -40,8 +41,15 @@ function mathInline(state: StateInline, silent: boolean): boolean {
   if (src.charCodeAt(start) !== DOLLAR) return false
 
   if (src.charCodeAt(start + 1) === DOLLAR) {
+    const lineEnd = src.indexOf('\n', start + 2)
     const close = src.indexOf('$$', start + 2)
-    if (close <= start + 2) return false
+    if (close <= start + 2 || (lineEnd !== -1 && close > lineEnd)) {
+      if (close === start + 2) return false
+      // an unclosed `$$` is literal text; consuming it keeps the single-`$` rule from pairing across lines
+      if (!silent) state.pending += '$$'
+      state.pos = start + 2
+      return true
+    }
     if (!silent) {
       const token = state.push('math_inline_display', 'math', 0)
       token.content = src.slice(start + 2, close)
@@ -75,9 +83,12 @@ function mathBlock(state: StateBlock, startLine: number, endLine: number, silent
   if (state.src.slice(pos, pos + 2) !== '$$') return false
 
   const firstRest = state.src.slice(pos + 2, max).trimEnd()
+  const firstClose = firstRest.indexOf('$$')
   let next = startLine
   let content: string
-  if (firstRest.endsWith('$$')) {
+  if (firstClose !== -1) {
+    // `$$a$$ text` is inline display math inside a paragraph, not a block
+    if (firstClose !== firstRest.length - 2) return false
     content = firstRest.slice(0, -2)
   } else {
     const lines = [firstRest]
@@ -87,6 +98,7 @@ function mathBlock(state: StateBlock, startLine: number, endLine: number, silent
       const lineEnd = state.eMarks[next]!
       if (lineStart < lineEnd && state.sCount[next]! < state.blkIndent) break
       const line = state.src.slice(lineStart, lineEnd).trimEnd()
+      if (FENCE_LINE.test(line)) return false
       if (line.endsWith('$$')) {
         lines.push(line.slice(0, -2))
         closed = true
