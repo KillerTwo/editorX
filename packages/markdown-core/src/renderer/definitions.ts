@@ -75,16 +75,30 @@ export function joinDefinitions(entries: DefinitionEntry[]): string {
  */
 export function definitionsUsedBy(text: string, entries: DefinitionEntry[]): string {
   if (entries.length === 0) return ''
-  let normalized: string | undefined
-  // markdown-it reads labels after stripping container markers on continuation lines
-  const labels = () => (normalized ??= normalizeLabel(text.replace(/\n[ \t>]*/g, ' ')).replace(/\[ /g, '['))
+  let labels: string | undefined
+  // Substrings starting at each '[' of the labels, by length: `labels.includes(needle)` for '['-prefixed
+  // needles without rescanning the text once per definition.
+  const openings = new Map<number, Set<string>>()
+  const mentions = (needle: string) => {
+    // markdown-it reads labels after stripping container markers on continuation lines
+    labels ??= normalizeLabel(text.replace(/\n[ \t>]*/g, ' ')).replace(/\[ /g, '[')
+    let set = openings.get(needle.length)
+    if (!set) {
+      set = new Set()
+      for (let at = labels.indexOf('['); at !== -1; at = labels.indexOf('[', at + 1)) {
+        set.add(labels.slice(at, at + needle.length))
+      }
+      openings.set(needle.length, set)
+    }
+    return set.has(needle)
+  }
   const mayHideAbbr = HTML_ENTITY.test(text)
   const hasEscapes = text.includes('\\')
   const used = entries.filter((entry) => {
     if (entry.kind === 'abbr') {
       return text.includes(entry.key) || mayHideAbbr || (hasEscapes && ASCII_PUNCTUATION.test(entry.key))
     }
-    return labels().includes(entry.kind === 'footnote' ? `[^${entry.key}` : `[${entry.key}`)
+    return mentions(entry.kind === 'footnote' ? `[^${entry.key}` : `[${entry.key}`)
   })
   return joinDefinitions(used)
 }

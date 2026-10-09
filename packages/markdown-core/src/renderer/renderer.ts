@@ -31,6 +31,8 @@ export function createRenderer(options?: RendererOptions): Renderer {
   const md = createMarkdownIt(resolveRendererOptions(options))
   let cache = new Map<string, CachedSection>()
   let footnoteCache = new Map<string, CachedFootnoteBody>()
+  let usedByDefinitions = ''
+  let usedByCache = new Map<string, string>()
 
   function renderWithDefinitions(source: string, defs: DefinitionEnv): { html: string; env: RenderEnv } {
     const env: RenderEnv = seedEnv(defs)
@@ -57,8 +59,17 @@ export function createRenderer(options?: RendererOptions): Renderer {
       const sources = splitSections(markdown)
       const definitions = collectDefinitions(markdown)
       let defs: DefinitionEnv | undefined
-      const definitionEnv = () => (defs ??= parseDefinitions(md, joinDefinitions(definitions)))
-      const cacheKey = (text: string) => `${definitionsUsedBy(text, definitions)}\u0000${text}`
+      const allDefinitions = joinDefinitions(definitions)
+      const definitionEnv = () => (defs ??= parseDefinitions(md, allDefinitions))
+      // Unchanged sections reuse their used-definitions key while the document's definitions are unchanged.
+      const previousUsedBy = allDefinitions === usedByDefinitions ? usedByCache : new Map<string, string>()
+      const nextUsedBy = new Map<string, string>()
+      const cacheKey = (text: string) => {
+        let used = nextUsedBy.get(text) ?? previousUsedBy.get(text)
+        if (used === undefined) used = definitionsUsedBy(text, definitions)
+        nextUsedBy.set(text, used)
+        return `${used}\u0000${text}`
+      }
 
       const nextCache = new Map<string, CachedSection>()
       const rendered = sources.map((section) => {
@@ -88,6 +99,8 @@ export function createRenderer(options?: RendererOptions): Renderer {
         return resolveBodyFootnoteRefs(entry.html, entry.footnoteRefs, withRefs.footnotes)
       })
       footnoteCache = nextFootnoteCache
+      usedByDefinitions = allDefinitions
+      usedByCache = nextUsedBy
 
       const lastIndex = sources.length - 1
       const sections: RenderedSection[] = sources.map((section, i) => {
