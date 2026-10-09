@@ -13,7 +13,7 @@ beforeEach(() => {
     removeListener: vi.fn(),
     dispatchEvent: vi.fn(),
   }))
-  if (!('ResizeObserver' in window)) {
+  if (typeof window.ResizeObserver === 'undefined') {
     window.ResizeObserver = class {
       observe() {}
       unobserve() {}
