@@ -9,7 +9,10 @@ const inline: Prism.Grammar = {
   image: { pattern: /!\[[^\]\n]*\]\([^)\n]*\)/, inside: { marker: /^!\[|\]\(|\)$/ } },
   link: { pattern: /\[[^\]\n]*\]\([^)\n]*\)/, inside: { marker: /^\[|\]\(|\)$/ } },
   url: /<https?:\/\/[^>\s]+>|\bhttps?:\/\/[^\s<>()]+/,
-  tag: /<\/?[a-zA-Z][\w:-]*(?:\s[^<>\n]*)?\/?>/,
+  tag: {
+    pattern: /<\/?[a-zA-Z][\w:-]*(?:\s[^<>\n]*)?\/?>/,
+    inside: { 'tag-name': { pattern: /(^<\/?)[a-zA-Z][\w:-]*/, lookbehind: true } },
+  },
   strong: { pattern: /(\*\*|__)(?=\S)[^\n]*?\S\1/, inside: { marker: /^(?:\*\*|__)|(?:\*\*|__)$/ } },
   strike: { pattern: /~~(?=\S)[^\n]*?\S~~/, inside: { marker: /^~~|~~$/ } },
   mark: { pattern: /==(?=\S)[^\n]*?\S==/, inside: { marker: /^==|==$/ } },
@@ -42,6 +45,8 @@ export const markdownGrammar: Readonly<Prism.Grammar> = deepFreeze<Prism.Grammar
     { pattern: /^\$\$[ \t]*\n[\s\S]*?\n\$\$[ \t]*$/m, inside: { marker: /^\$\$|\$\$$/ } },
     { pattern: /^\$\$.*\$\$[ \t]*$/m, inside: { marker: /^\$\$|\$\$$/ } },
   ],
+  // Same marker forms as the renderer's TOC_MARKER (a paragraph that is only `@[TOC](title)` or `[TOC]`)
+  toc: { pattern: /^[ \t]{0,3}(?:@\[toc\](?:\([^)\n]*\))?|\[toc\])[ \t]*$/im, inside: inline },
   h1: atxHeading(1),
   h2: atxHeading(2),
   h3: atxHeading(3),

@@ -30,6 +30,13 @@ describe('highlightMarkdown', () => {
     const div = render('<b>x</b> & <script>alert(1)</script>')
     expect(div.querySelector('b, script')).toBeNull()
     expect(text(div, '.ex-md-tag')).toEqual(['<b>', '</b>', '<script>', '</script>'])
+    expect(text(div, '.ex-md-tag > .ex-md-tag-name')).toEqual(['b', 'b', 'script', 'script'])
+  })
+
+  it('目录标记行：@[TOC](标题) 与 [TOC]，内部仍做行内高亮', () => {
+    const div = render('@[TOC](自定义标题)\n\n[toc]\n\n正文 @[TOC](x)')
+    expect(text(div, '.ex-md-toc')).toEqual(['@[TOC](自定义标题)', '[toc]'])
+    expect(text(div, '.ex-md-toc > .ex-md-link')).toEqual(['[TOC](自定义标题)'])
   })
 
   it('ATX 标题：级别类 + heading 别名 + marker', () => {

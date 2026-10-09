@@ -15,7 +15,7 @@ const ruleBody = (selector: string) => {
 }
 
 // Container tokens whose own span carries no style; only their inner tokens are coloured
-const UNSTYLED_GRAMMAR_TOKENS = new Set(['table'])
+const UNSTYLED_GRAMMAR_TOKENS = new Set(['table', 'toc', 'tag-name'])
 
 function grammarClasses(grammar: Prism.Grammar, out = new Set<string>()): Set<string> {
   for (const [key, value] of Object.entries(grammar)) {
