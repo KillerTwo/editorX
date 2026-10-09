@@ -58,4 +58,14 @@ describe('Modal', () => {
     fireEvent.mouseDown(document.querySelector('.ex-modal-mask') as HTMLElement)
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  it('maskClassName 追加到遮罩', () => {
+    renderWithTheme(
+      <Modal open onClose={() => {}} title="发布文章" maskClassName="ex-pub-mask">
+        内容
+      </Modal>,
+    )
+    const mask = screen.getByRole('dialog', { name: '发布文章' }).closest('.ex-modal-mask')
+    expect(mask).toHaveClass('ex-modal-mask', 'ex-pub-mask')
+  })
 })

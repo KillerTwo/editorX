@@ -26,6 +26,8 @@ export interface ModalProps {
   closeOnMaskClick?: boolean
   closeLabel?: string
   className?: string
+  /** 追加到遮罩 .ex-modal-mask 的类名 */
+  maskClassName?: string
   children: ReactNode
 }
 
@@ -39,6 +41,7 @@ function ModalInner({
   closeOnMaskClick = true,
   closeLabel = '关闭',
   className,
+  maskClassName,
   children,
 }: ModalProps) {
   const { portalRoot } = useTheme()
@@ -64,7 +67,7 @@ function ModalInner({
     <FloatingNode id={nodeId}>
       {open && (
         <FloatingPortal root={portalRoot}>
-          <FloatingOverlay className="ex-modal-mask" lockScroll>
+          <FloatingOverlay className={cx('ex-modal-mask', maskClassName)} lockScroll>
             <FloatingFocusManager context={context}>
               <div
                 ref={refs.setFloating}
