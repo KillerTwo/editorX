@@ -120,6 +120,45 @@ describe('renderDiagrams', () => {
     expect(blocks(a)[0]!.dataset.exRenderedTheme).toBe('light')
     expect(blocks(b)[0]!.dataset.exRenderedTheme).toBe('dark')
   })
+
+  it('keeps mermaid scoped <style> but still strips <script>', async () => {
+    mermaidMock.render.mockImplementationOnce(async (id: string) => ({
+      svg: `<svg id="${id}"><style>#${id} .node{fill:red}</style><g class="node"></g><script>alert(1)</script></svg>`,
+    }))
+    const container = mount('graph TD\nS-->T9')
+    await renderDiagrams(container, { theme: 'light' })
+
+    const [block] = blocks(container)
+    const id = mermaidMock.render.mock.calls[0]![0] as string
+    expect(block!.querySelector('svg style')?.textContent).toBe(`#${id} .node{fill:red}`)
+    expect(block!.querySelector('script')).toBeNull()
+  })
+
+  it('skips blocks removed from the container while an earlier block renders', async () => {
+    const container = mount('graph TD\nU-->V10', 'graph TD\nW-->X10')
+    const [, second] = blocks(container)
+    mermaidMock.render.mockImplementationOnce(async (_id: string, source: string) => {
+      second!.remove()
+      return { svg: `<svg><text>${source}</text></svg>` }
+    })
+    await renderDiagrams(container, { theme: 'light' })
+
+    expect(mermaidMock.render).toHaveBeenCalledTimes(1)
+    expect(second!.hasAttribute('data-ex-rendered-theme')).toBe(false)
+  })
+
+  it('skips blocks removed before a queued call runs', async () => {
+    const a = mount('graph TD\nY-->Z11')
+    const b = mount('graph TD\nAA-->BB11')
+    mermaidMock.render.mockImplementationOnce(async (_id: string, source: string) => {
+      blocks(b)[0]!.remove()
+      return { svg: `<svg><text>${source}</text></svg>` }
+    })
+    await Promise.all([renderDiagrams(a, { theme: 'light' }), renderDiagrams(b, { theme: 'light' })])
+
+    expect(mermaidMock.render).toHaveBeenCalledTimes(1)
+    expect(mermaidMock.render).toHaveBeenCalledWith(expect.any(String), 'graph TD\nY-->Z11')
+  })
 })
 
 describe('renderDiagrams — flowchart.js', () => {

@@ -1,6 +1,6 @@
 import { decodeBase64Utf8 } from './base64'
 import { escapeHtml } from './escape'
-import { sanitizeSvg } from './sanitize'
+import { sanitizeMermaidSvg, sanitizeSvg } from './sanitize'
 
 export interface RenderDiagramsOptions {
   theme: 'light' | 'dark'
@@ -81,7 +81,8 @@ async function renderBlock(
   try {
     let svg = svgCache.get(key)
     if (svg === undefined) {
-      svg = sanitizeSvg(await draw(decodeBase64Utf8(encoded), id))
+      const raw = await draw(decodeBase64Utf8(encoded), id)
+      svg = kind === 'mermaid' ? sanitizeMermaidSvg(raw) : sanitizeSvg(raw)
       if (svgCache.size >= MAX_CACHE) svgCache.clear()
       svgCache.set(key, svg)
     }
@@ -117,6 +118,7 @@ async function renderNow(container: HTMLElement, { theme }: RenderDiagramsOption
       return mermaid
     })
     for (const block of mermaidBlocks) {
+      if (!container.contains(block)) continue
       await renderBlock(block, 'mermaid', theme, async (source, id) => (await (await ready).render(id, source)).svg)
     }
   }
@@ -125,6 +127,7 @@ async function renderNow(container: HTMLElement, { theme }: RenderDiagramsOption
   if (flowchartBlocks.length > 0) {
     const ready = loadFlowchart()
     for (const block of flowchartBlocks) {
+      if (!container.contains(block)) continue
       await renderBlock(block, 'flowchart', theme, async (source) => drawFlowchart(await ready, source, theme))
     }
   }
