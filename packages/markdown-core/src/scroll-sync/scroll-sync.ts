@@ -17,6 +17,10 @@ export interface ScrollSyncOptions {
  * Section sizes are cached and invalidated on `change` and container resizes. Call `refresh()` after every
  * preview render and after late preview content growth (images loading, diagrams rendering), which a
  * container-level ResizeObserver cannot see.
+ *
+ * Neither pane may use `scroll-behavior: smooth`: animated writes outlive the source lock and can ping-pong.
+ * The ResizeObserver's initial observation schedules an editor → preview sync right after mount, which
+ * overrides any preview scroll position restored before that.
  */
 export function createScrollSync(
   engine: EditorEngine,

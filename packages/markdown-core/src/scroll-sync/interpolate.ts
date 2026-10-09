@@ -35,7 +35,7 @@ function project(pos: number, src: Dimension, dst: Dimension): number {
 export function mapScrollTop(scrollTop: number, pairs: SectionPair[], from: ScrollSide): number {
   if (pairs.length === 0) return scrollTop
   const to: ScrollSide = from === 'editor' ? 'preview' : 'editor'
-  const pos = finite(scrollTop)
+  const pos = Math.max(0, finite(scrollTop))
   const first = pairs[0]!
   const headSrc = { top: 0, height: Math.max(0, finite(first[from].top)) }
   if (pos <= headSrc.height) return project(pos, headSrc, { top: 0, height: Math.max(0, finite(first[to].top)) })
@@ -51,7 +51,8 @@ export function mapScrollTop(scrollTop: number, pairs: SectionPair[], from: Scro
 /**
  * Scroll position for the target pane, clamped to `[0, dstMax]`. Near both ends the layout mapping is blended
  * linearly with scroll progress so that 0 ↔ 0 and srcMax ↔ dstMax, without jumps: the head window covers the
- * padding above the first section, the tail window starts at the last section (at most one viewport above srcMax).
+ * padding above the first section; the tail window starts at the last section's top or one viewport above srcMax,
+ * whichever is lower, so it always spans at least one viewport. Negative input (elastic overscroll) is treated as 0.
  */
 export function syncScrollTop(
   scrollTop: number,
@@ -62,7 +63,7 @@ export function syncScrollTop(
 ): number {
   const maxDst = Math.max(0, finite(dstMax))
   const clamp = (n: number) => Math.min(Math.max(0, finite(n)), maxDst)
-  const pos = finite(scrollTop)
+  const pos = Math.max(0, finite(scrollTop))
   if (pairs.length === 0) return clamp(pos)
   const srcMax = Math.max(0, finite(src.max))
   if (srcMax <= 0) return clamp(mapScrollTop(pos, pairs, from))
@@ -78,7 +79,7 @@ export function syncScrollTop(
 
   const first = pairs[0]!
   const headEnd = Math.min(tailStart, Math.max(0, finite(first[from].top), finite(first[to].top)))
-  if (pos < headEnd) return (clamp(mapScrollTop(headEnd, pairs, from)) * Math.max(0, pos)) / headEnd
+  if (headEnd > 0 && pos < headEnd) return (clamp(mapScrollTop(headEnd, pairs, from)) * pos) / headEnd
   return clamp(mapScrollTop(pos, pairs, from))
 }
 

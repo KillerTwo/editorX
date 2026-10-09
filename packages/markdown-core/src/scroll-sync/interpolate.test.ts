@@ -194,6 +194,28 @@ describe('syncScrollTop', () => {
     }
   })
 
+  it('负 scrollTop（弹性回弹）夹到 0，不产生 NaN 或负值', () => {
+    const atZero = buildPairs(
+      [
+        { start: 0, end: 5, top: 0, height: 100 },
+        { start: 5, end: 9, top: 100, height: 100 },
+      ],
+      [
+        { top: 0, height: 300 },
+        { top: 300, height: 100 },
+      ],
+    )
+    expect(syncScrollTop(-5, atZero, 'editor', { max: 100, viewport: 100 }, 300)).toBe(0)
+    expect(syncScrollTop(-5, atZero, 'preview', { max: 300, viewport: 100 }, 100)).toBe(0)
+    const short = syncScrollTop(-5, atZero, 'editor', { max: 50, viewport: 300 }, 100)
+    expect(short).toBe(0)
+    expect(syncScrollTop(-5, pairs, 'editor', EDITOR, PREVIEW.max)).toBe(0)
+    const mapped = mapScrollTop(-5, atZero, 'editor')
+    expect(Number.isFinite(mapped)).toBe(true)
+    expect(mapped).toBeGreaterThanOrEqual(0)
+    expect(mapScrollTop(-5, pairs, 'preview')).toBe(0)
+  })
+
   it('源侧不可滚动或无段时安全返回', () => {
     expect(syncScrollTop(0, pairs, 'editor', { max: 0, viewport: 100 }, PREVIEW.max)).toBe(0)
     expect(syncScrollTop(50, [], 'editor', EDITOR, 30)).toBe(30)
