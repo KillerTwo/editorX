@@ -148,3 +148,48 @@ describe('styles.css 主题切换', () => {
     expect(css).toMatch(/\[data-ex-theme-switching\][^{]*\{\s*transition: none !important;/)
   })
 })
+
+const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
+  ['--ex-color-on-primary', '#ffffff', '#ffffff'],
+  ['--ex-color-pub-label', '#606266', '#a3a6ad'],
+  ['--ex-color-pub-text', '#1a1a1a', '#e8e8ed'],
+  ['--ex-color-pub-border', '#dcdfe6', '#4c4d4f'],
+  ['--ex-color-pub-tag-border', '#e8e8ee', '#3a3b41'],
+  ['--ex-color-pub-upload-border', '#cccccc', '#4c4d4f'],
+  ['--ex-color-pub-upload-border-modal', '#dcddde', '#4c4d4f'],
+  ['--ex-color-pub-upload-icon', '#cccccc', '#6c6e72'],
+  ['--ex-color-pub-upload-icon-modal', '#a6a7a6', '#8d9095'],
+  ['--ex-color-pub-upload-text', '#999999', '#8d9095'],
+  ['--ex-color-pub-placeholder', '#a8abb2', '#6c6e72'],
+  ['--ex-color-pub-placeholder-modal', '#c0c4cc', '#6c6e72'],
+  ['--ex-color-pub-counter', '#909399', '#8d9095'],
+  ['--ex-color-pub-hint', '#999999', '#8d9095'],
+  ['--ex-color-pub-hint-modal', '#cccccc', '#6c6e72'],
+  ['--ex-color-pub-fill', '#f2f2f2', '#2e2f34'],
+  ['--ex-color-pub-check', '#006fff', '#3b8eff'],
+  ['--ex-color-pub-check-modal', '#409eff', '#409eff'],
+  ['--ex-color-pub-link', '#006fff', '#5aa0ff'],
+  ['--ex-color-pub-link-modal', '#4ea1db', '#6cb6ea'],
+  ['--ex-color-pub-verified', '#73bd88', '#73bd88'],
+  ['--ex-color-pub-disabled-bg', '#f5f7fa', '#26272b'],
+  ['--ex-color-pub-disabled-border', '#e4e7ed', '#363637'],
+  ['--ex-color-pub-select-text-modal', '#808080', '#a3a6ad'],
+  ['--ex-color-pub-select-arrow', '#bec0c5', '#6c6e72'],
+  ['--ex-color-pub-select-arrow-modal', '#cdd0d7', '#6c6e72'],
+  ['--ex-color-pub-sublabel', '#666666', '#a3a6ad'],
+  ['--ex-color-pub-bar-border', '#e8e8e8', '#2e2f34'],
+  ['--ex-color-pub-button-border', '#e5e5e5', '#3a3b41'],
+  ['--ex-color-pub-button-border-modal', '#e8e8ed', '#3a3b41'],
+  ['--ex-color-pub-chevron', '#797979', '#8d9095'],
+  ['--ex-color-pub-title', '#000000', '#f2f2f5'],
+  ['--ex-color-pub-close', '#8c8c8c', '#8d9095'],
+  ['--ex-color-pub-thumb-border', '#e5e5e5', '#3a3b41'],
+  ['--ex-color-pub-mask', 'rgba(0, 0, 0, 0.19)', 'rgba(0, 0, 0, 0.6)'],
+  ['--ex-color-pub-footer-shadow', 'rgba(0, 0, 0, 0.04)', 'rgba(0, 0, 0, 0.4)'],
+]
+
+describe('发布面板 token', () => {
+  it.each(PUB_TOKENS)('%s 亮色 %s / 暗色 %s（亮色为参考截图实测值）', (name, light, dark) => {
+    expect(expected.get(name)).toEqual([light, dark])
+  })
+})
