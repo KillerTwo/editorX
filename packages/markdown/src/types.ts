@@ -1,6 +1,15 @@
 import type { EditorEngine } from '@editorx/markdown-core'
 import type { ThemeMode } from '@editorx/theme'
-import type { DeepPartial, EditorAdapters, EditorDocument, Messages } from '@editorx/toolbar'
+import type {
+  DeepPartial,
+  EditorAdapters,
+  EditorDocument,
+  EditorExtension,
+  InsertContent,
+  Messages,
+  MissingAdapterPolicy,
+  ToolbarLayout,
+} from '@editorx/toolbar'
 import type { ReactNode, Ref } from 'react'
 
 export type ViewMode = 'edit' | 'split' | 'preview'
@@ -15,6 +24,8 @@ export interface MarkdownEditorHandle {
   getDocument(): EditorDocument
   /** markdown-core 命令名或 undo/redo；未知命令返回 false */
   runCommand(name: string, args?: unknown): boolean
+  /** 在光标处插入（html 会转为 Markdown） */
+  insert(content: InsertContent): void
   getEngine(): EditorEngine
 }
 
@@ -32,6 +43,14 @@ export interface MarkdownEditorProps {
   title?: string
   /** 宿主能力（图片上传、保存草稿等）；缺失项对应功能按 missingAdapter 隐藏/禁用 */
   adapters?: EditorAdapters
+  /** 追加的扩展（同名替换内置） */
+  extensions?: readonly EditorExtension[]
+  /** 替换整套内置扩展，默认 markdownCoreExtensions */
+  coreExtensions?: readonly EditorExtension[]
+  /** 默认 MARKDOWN_TOOLBAR_LAYOUT */
+  toolbarLayout?: ToolbarLayout
+  /** 缺失 adapter 的扩展：隐藏（默认）或禁用 */
+  missingAdapter?: MissingAdapterPolicy
   viewMode?: ViewMode
   defaultViewMode?: ViewMode
   onViewModeChange?(mode: ViewMode): void

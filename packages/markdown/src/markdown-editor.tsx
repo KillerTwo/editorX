@@ -1,13 +1,38 @@
-import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
+import { ClEditEngine, renderDiagrams, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
 import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
-import { MessagesProvider, useMessages, type EditorAdapters, type EditorDocument } from '@editorx/toolbar'
+import {
+  collectShortcuts,
+  errorMessage,
+  formatMessage,
+  handleShortcut,
+  MessagesProvider,
+  resolveToolbar,
+  Toolbar,
+  useExtensionSetup,
+  useIsMacPlatform,
+  useMessages,
+  useStableArray,
+  type EditorAdapters,
+  type EditorExtension,
+} from '@editorx/toolbar'
 import { ToastProvider, useToast } from '@editorx/ui'
-import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { createCommandRegistry } from './commands'
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
+import { createMarkdownContext } from './context'
+import { MARKDOWN_TOOLBAR_LAYOUT, markdownCoreExtensions } from './core-extensions'
 import { cx } from './cx'
 import { ModeTabs } from './mode-tabs'
 import { useEditorRuntime } from './runtime'
-import { createEditorStore } from './store'
+import { createEditorStore, useEditorState } from './store'
 import type { MarkdownEditorProps } from './types'
 import { observeFailedPlaceholders } from './uploads/failed-marker'
 import { UploadFailures } from './uploads/upload-failures'
@@ -16,8 +41,8 @@ import { useControllableState } from './use-controllable'
 import { useLatest } from './use-latest'
 
 const createDefaultEngine = (): EditorEngine => new ClEditEngine()
-const NO_RENDERER_OPTIONS: RendererOptions = {}
 const NO_ADAPTERS: EditorAdapters = {}
+const NO_EXTENSIONS: readonly EditorExtension[] = []
 
 function LocalizedToasts({ children }: { children: ReactNode }) {
   const m = useMessages()
@@ -56,6 +81,10 @@ function EditorShell({
   onChange,
   title = '',
   adapters = NO_ADAPTERS,
+  extensions = NO_EXTENSIONS,
+  coreExtensions = markdownCoreExtensions,
+  toolbarLayout = MARKDOWN_TOOLBAR_LAYOUT,
+  missingAdapter = 'hide',
   viewMode: viewModeProp,
   defaultViewMode = 'split',
   onViewModeChange,
@@ -70,26 +99,19 @@ function EditorShell({
 }: MarkdownEditorProps) {
   const messages = useMessages()
   const { resolved, ready } = useTheme()
+  const { notify } = useToast()
   const [engine] = useState(() => (engineFactory ?? createDefaultEngine)())
   const [store] = useState(() => createEditorStore())
-  const [commands] = useState(() => createCommandRegistry(engine))
   const [viewMode, setViewMode] = useControllableState(viewModeProp, defaultViewMode, onViewModeChange)
+  const rootRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
-  const titleRef = useLatest(title)
-  const { notify } = useToast()
-  const live = useLatest({ adapters, messages, notify, readOnly })
-  const [uploader] = useState(() =>
-    createUploader({
-      engine,
-      store,
-      getAdapters: () => live.current.adapters,
-      getMessages: () => live.current.messages,
-      notify: (message, type) => live.current.notify(message, type),
-      isReadOnly: () => live.current.readOnly,
-    }),
-  )
+  const live = useLatest({ adapters, messages, notify, title, readOnly, theme: resolved })
+
+  const allExtensions = useStableArray(useMemo(() => [...coreExtensions, ...extensions], [coreExtensions, extensions]))
+  const embeds = useMemo(() => allExtensions.flatMap((ext) => ext.embeds ?? []), [allExtensions])
+  const rendererOptions = useMemo<RendererOptions>(() => ({ embeds }), [embeds])
 
   const runtime = useEditorRuntime({
     engine,
@@ -105,9 +127,73 @@ function EditorShell({
     viewMode,
     theme: resolved,
     themeReady: ready,
-    rendererOptions: NO_RENDERER_OPTIONS,
+    rendererOptions,
     onChange,
   })
+
+  const [uploader] = useState(() =>
+    createUploader({
+      engine,
+      store,
+      getAdapters: () => live.current.adapters,
+      getMessages: () => live.current.messages,
+      notify: (message, type) => live.current.notify(message, type),
+      isReadOnly: () => live.current.readOnly,
+    }),
+  )
+
+  const [ctx] = useState(() =>
+    createMarkdownContext({
+      engine,
+      store,
+      getRenderer: () => runtime.getRenderer(),
+      getAdapters: () => live.current.adapters,
+      getTitle: () => live.current.title,
+      getTheme: () => live.current.theme,
+      getMessages: () => live.current.messages,
+      isReadOnly: () => live.current.readOnly,
+      notify: (message, type) => live.current.notify(message, type),
+      uploadImages: (files) => uploader.upload(files),
+      getLiveHtml: () => previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html,
+      // 编辑视图下预览不画图表：在离屏副本上补画，已绘制的块（同主题）直接沿用
+      renderExportHtml: async () => {
+        await runtime.flush()
+        const container = document.createElement('div')
+        container.innerHTML = previewRef.current?.innerHTML || runtime.getRenderer().render(engine.getValue()).html
+        try {
+          await renderDiagrams(container, { theme: live.current.theme })
+        } catch (error) {
+          console.error('[editorx/markdown] 导出时图表渲染失败', error)
+        }
+        return container.innerHTML
+      },
+    }),
+  )
+
+  const reportError = useCallback(
+    (name: string, error: unknown) => {
+      console.error(error)
+      const m = live.current.messages
+      live.current.notify(formatMessage(m.errors.extension, { name, message: errorMessage(error) }), 'error')
+    },
+    [live],
+  )
+  useExtensionSetup(allExtensions, ctx, reportError)
+
+  const resolveOptions = useMemo(
+    () => ({ editorType: 'markdown' as const, adapters, missingAdapter }),
+    [adapters, missingAdapter],
+  )
+  const groups = useMemo(
+    () => resolveToolbar(allExtensions, toolbarLayout, resolveOptions),
+    [allExtensions, toolbarLayout, resolveOptions],
+  )
+  const shortcuts = useMemo(() => collectShortcuts(allExtensions, resolveOptions), [allExtensions, resolveOptions])
+  const mac = useIsMacPlatform()
+
+  const formatsKey = useEditorState(store, (s) => s.formatsKey)
+  const panel = useEditorState(store, (s) => s.panel)
+  const fullscreen = useEditorState(store, (s) => s.fullscreen)
 
   useEffect(() => {
     const detach = uploader.attach(hostRef.current)
@@ -141,25 +227,51 @@ function EditorShell({
       getValue: () => engine.getValue(),
       setValue: (markdown) => runtime.setValue(markdown),
       getHtml: () => runtime.getRenderer().render(engine.getValue()).html,
-      getDocument: (): EditorDocument => {
-        const markdown = engine.getValue()
-        return { editorType: 'markdown', title: titleRef.current, markdown, html: runtime.getRenderer().render(markdown).html }
-      },
-      runCommand: (name, args) => commands.run(name, args),
+      getDocument: () => ctx.getDocument(),
+      runCommand: (name, args) => ctx.commands.run(name, args),
+      insert: (content) => ctx.insert(content),
       getEngine: () => engine,
     }),
-    [engine, runtime, commands, titleRef],
+    [engine, runtime, ctx],
   )
+
+  // React 合成事件会穿过 portal 冒泡；只处理 DOM 上位于编辑器内部的按键
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const target = e.target as Node
+    if (!rootRef.current?.contains(target)) return
+    if (e.key === 'Escape' && store.get().fullscreen && !e.nativeEvent.isComposing) {
+      store.set({ fullscreen: false })
+      return
+    }
+    if (!hostRef.current?.contains(target)) return
+    handleShortcut(e.nativeEvent, shortcuts, ctx, mac, reportError)
+  }
 
   const style = { '--ex-mde-height': typeof height === 'number' ? `${height}px` : height } as CSSProperties
 
   return (
-    <div className={cx('ex-mde', className)} data-view={viewMode} data-readonly={readOnly || undefined} style={style}>
+    <div
+      ref={rootRef}
+      className={cx('ex-mde', className)}
+      data-view={viewMode}
+      data-readonly={readOnly || undefined}
+      data-fullscreen={fullscreen || undefined}
+      style={style}
+      onKeyDown={onKeyDown}
+    >
       <div className="ex-mde-main">
         <div className="ex-mde-header">
           <ModeTabs value={viewMode} onChange={setViewMode} />
           {slots?.headerEnd && <div className="ex-mde-header__end">{slots.headerEnd}</div>}
         </div>
+        <Toolbar
+          className="ex-mde-toolbar"
+          groups={groups}
+          ctx={ctx}
+          readOnly={readOnly}
+          stateKey={`${formatsKey}|${panel ?? ''}|${fullscreen}`}
+          onError={reportError}
+        />
         <div className="ex-mde-body">
           <div ref={hostRef} className="ex-mde-editor" hidden={viewMode === 'preview'} />
           <div ref={previewScrollRef} className="ex-mde-preview-pane" hidden={viewMode === 'edit'}>

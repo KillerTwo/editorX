@@ -94,3 +94,32 @@
   outline: 1px dashed var(--ex-color-error);
   color: var(--ex-color-error);
 }
+
+.ex-mde-toolbar { flex: none; padding: var(--ex-space-2) var(--ex-space-3); border-bottom: 1px solid var(--ex-color-border); }
+
+.ex-mde[data-fullscreen] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ex-z-modal);
+  height: auto;
+  background: var(--ex-color-bg);
+}
+
+.ex-mde-dialog { display: flex; flex-direction: column; gap: var(--ex-space-3); }
+.ex-mde-dialog__row { display: flex; gap: var(--ex-space-3); }
+.ex-mde-dialog__actions { display: flex; justify-content: flex-end; gap: var(--ex-space-3); margin-top: var(--ex-space-2); }
+.ex-mde-field { display: flex; flex: 1; flex-direction: column; gap: var(--ex-space-1); }
+.ex-mde-field__label { color: var(--ex-color-text-secondary); font-size: var(--ex-font-size-sm); }
+
+.ex-mde-input {
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 var(--ex-space-3);
+  border: 1px solid var(--ex-color-border);
+  border-radius: var(--ex-radius-md);
+  background: var(--ex-color-surface);
+  color: var(--ex-color-text);
+  font: inherit;
+}
+
+.ex-mde-input:focus { border-color: var(--ex-color-primary); outline: none; }

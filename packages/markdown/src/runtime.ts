@@ -39,7 +39,8 @@ export interface EditorRuntime {
   getRenderResult(): RenderResult | null
   /** 写入引擎（不触发 onChange）并立即渲染预览 */
   setValue(markdown: string): void
-  flush(): void
+  /** 立即渲染预览；未挂载时立即完成 */
+  flush(): Promise<void>
 }
 
 /** 与引擎写入时的规范化一致（CRLF/CR → LF，去掉 NUL） */
@@ -89,9 +90,7 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
         void pipelineRef.current?.flush()
         readUi(engine, store)
       },
-      flush() {
-        void pipelineRef.current?.flush()
-      },
+      flush: () => pipelineRef.current?.flush() ?? Promise.resolve(),
     }),
     [engine, store, live],
   )
@@ -183,7 +182,7 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
     if (rendererOptionsRef.current === rendererOptions) return
     rendererOptionsRef.current = rendererOptions
     rendererRef.current = null
-    runtime.flush()
+    void runtime.flush()
   }, [rendererOptions, runtime])
 
   // 主题、就绪或视图变化时补画/重画图表（预览隐藏时不画）

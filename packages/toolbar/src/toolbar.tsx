@@ -5,7 +5,6 @@ import {
   memo,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type FocusEvent,
@@ -27,7 +26,8 @@ import {
 } from './layout'
 import { errorMessage, formatMessage } from './messages'
 import { useMessages } from './messages-context'
-import { formatShortcut, isMacPlatform } from './shortcuts'
+import { formatShortcut } from './shortcuts'
+import { useIsMacPlatform } from './use-mac-platform'
 
 /** 与 styles.css 中分隔线（1px + 左右 8px 外边距）和「更多」按钮（28px + 分隔线 + 余量）保持一致 */
 const DIVIDER_WIDTH = 17
@@ -65,7 +65,7 @@ function findItem(groups: readonly ResolvedGroup[], extension: string, id: strin
 
 function ToolbarImpl({ groups, ctx, readOnly = false, onError, ariaLabel, className }: ToolbarProps) {
   const m = useMessages()
-  const mac = useMemo(isMacPlatform, [])
+  const mac = useIsMacPlatform()
   const rootRef = useRef<HTMLDivElement>(null)
   const groupRefs = useRef<Array<HTMLDivElement | null>>([])
   const [fit, setFit] = useState(groups.length)
