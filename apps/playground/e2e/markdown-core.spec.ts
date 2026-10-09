@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { SAMPLE } from '../app/markdown-core/sample'
+import { KEYS } from './platform'
 import { installKeyLatencyProbe, pressAndMeasure, typeAndMeasure } from './support/latency'
 
 const editor = (page: Page) => page.locator('.ex-editor-content')
@@ -12,7 +13,7 @@ const statNumber = async (page: Page, testId: string, pattern: RegExp) =>
 
 async function moveToEnd(page: Page) {
   await editor(page).click()
-  await page.keyboard.press('Control+End')
+  await page.keyboard.press(KEYS.docEnd)
 }
 
 async function loadLargeDoc(page: Page) {
@@ -94,12 +95,12 @@ test('撤销与重做', async ({ page }) => {
   await page.keyboard.press('Enter')
   await page.keyboard.type('undo-test')
   await expect.poll(() => editorValue(page)).toContain('undo-test')
-  await page.keyboard.press('Control+z')
+  await page.keyboard.press('ControlOrMeta+z')
   await expect.poll(() => editorValue(page)).not.toContain('undo-test')
-  await page.keyboard.press('Control+Shift+z')
+  await page.keyboard.press('ControlOrMeta+Shift+z')
   await expect.poll(() => editorValue(page)).toContain('undo-test')
-  await page.keyboard.press('Control+z')
-  await page.keyboard.press('Control+y')
+  await page.keyboard.press('ControlOrMeta+z')
+  await page.keyboard.press('ControlOrMeta+y')
   await expect.poll(() => editorValue(page)).toContain('undo-test')
 })
 
@@ -158,11 +159,11 @@ test('状态栏：字数/行数随输入更新，行列随光标移动更新', a
   await expect(md).toContainText(`${lines.length + 1} 行数`)
 
   // 行列：回到开头再移动光标
-  await page.keyboard.press('Control+Home')
+  await page.keyboard.press(KEYS.docStart)
   await expect(md).toContainText('当前行 1, 当前列 0')
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('End')
+  await page.keyboard.press(KEYS.lineEnd)
   await expect(md).toContainText(`当前行 3, 当前列 ${lines[2]!.length}`)
   await page.keyboard.type(' 新')
   await expect(md).toContainText(`当前行 3, 当前列 ${lines[2]!.length + 2}`)
@@ -272,7 +273,7 @@ test('在图表上方插入标题：预览增量更新，已渲染的图表 SVG 
   })
 
   await editor(page).locator('.ex-md-h2', { hasText: '公式' }).click()
-  await page.keyboard.press('End')
+  await page.keyboard.press(KEYS.lineEnd)
   await page.keyboard.press('Enter')
   await page.keyboard.type('# 插入的标题')
   await expect(p.locator('h1', { hasText: '插入的标题' })).toBeVisible()
@@ -291,7 +292,7 @@ test.describe('性能', () => {
     test.setTimeout(90_000)
     await loadLargeDoc(page)
     await editor(page).click({ position: { x: 60, y: 30 } })
-    await page.keyboard.press('End')
+    await page.keyboard.press(KEYS.lineEnd)
     await installKeyLatencyProbe(page)
 
     const burstKeys = 'abcdefghijklmnopqrstuvwxyz0123'
@@ -317,7 +318,7 @@ test.describe('性能', () => {
     await loadLargeDoc(page)
     const sections = await previewSections(page).count()
     await editor(page).click({ position: { x: 60, y: 30 } })
-    await page.keyboard.press('End')
+    await page.keyboard.press(KEYS.lineEnd)
     await page.evaluate(() => {
       const w = window as unknown as { __exLongTasks: number[] }
       w.__exLongTasks = []
@@ -340,7 +341,7 @@ test.describe('性能', () => {
 test('10k 行文档：Ctrl+End 跳到尚未渲染的末段后仍可输入', async ({ page }) => {
   await loadLargeDoc(page)
   await editor(page).click({ position: { x: 60, y: 30 } })
-  await page.keyboard.press('Control+End')
+  await page.keyboard.press(KEYS.docEnd)
   await page.keyboard.type('Z')
   await expect.poll(() => editorValue(page)).toMatch(/Z\n$/)
   await expect(page.getByTestId('status-md')).toContainText('当前行 10000,')

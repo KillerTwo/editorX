@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { SAMPLE } from '../app/markdown-core/sample'
+import { KEYS } from './platform'
 import { installKeyLatencyProbe, pressAndMeasure, typeAndMeasure } from './support/latency'
 
 const content = (page: Page) => page.locator('.ex-editor-content')
@@ -26,7 +27,7 @@ async function open(page: Page, query = '') {
 
 async function appendLine(page: Page, text: string) {
   await content(page).click()
-  await page.keyboard.press('Control+End')
+  await page.keyboard.press(KEYS.docEnd)
   await page.keyboard.press('Enter')
   await page.keyboard.type(text)
 }
@@ -82,14 +83,15 @@ test.afterEach(() => {
 test('工具栏「加粗」与 Ctrl+B，撤销恢复', async ({ page }) => {
   await open(page, '?view=edit')
   await appendLine(page, '甲乙')
-  await page.keyboard.press('Shift+Home')
+  await page.keyboard.press(`Shift+${KEYS.lineStart}`)
   await toolbar(page).getByRole('button', { name: '加粗' }).click()
   await expect.poll(() => editorValue(page)).toContain('**甲乙**')
-  await page.keyboard.press('Control+z')
+  await page.keyboard.press('ControlOrMeta+z')
   await expect.poll(() => editorValue(page)).not.toContain('**甲乙**')
   await page.keyboard.press('Enter')
   await page.keyboard.type('丙丁')
-  await page.keyboard.press('Shift+Home')
+  await page.keyboard.press(`Shift+${KEYS.lineStart}`)
+  // Desktop Chrome 设备的 UA 是 Windows，产品在任何宿主上都按 Windows 把 Mod 解析为 Ctrl
   await page.keyboard.press('Control+b')
   await expect.poll(() => editorValue(page)).toContain('**丙丁**')
   await expect(toolbar(page).getByRole('button', { name: '加粗' })).toHaveAttribute('aria-pressed', 'true')
@@ -313,7 +315,7 @@ test('10k 行文档：Ctrl+End 后仍可输入，状态栏行号正确', async (
   await open(page, '?view=split')
   await loadLargeDoc(page)
   await content(page).click({ position: { x: 60, y: 30 } })
-  await page.keyboard.press('Control+End')
+  await page.keyboard.press(KEYS.docEnd)
   await page.keyboard.type('Z')
   await expect.poll(() => editorValue(page)).toMatch(/Z\n$/)
   await expect(statusMd(page)).toContainText('当前行 10000,')
@@ -328,7 +330,7 @@ test.describe('性能（MarkdownEditor）', () => {
     await open(page, '?view=split&autosave=0')
     await loadLargeDoc(page)
     await content(page).click({ position: { x: 60, y: 30 } })
-    await page.keyboard.press('End')
+    await page.keyboard.press(KEYS.lineEnd)
     await installKeyLatencyProbe(page)
 
     const burstKeys = 'abcdefghijklmnopqrstuvwxyz0123'
@@ -355,7 +357,7 @@ test.describe('性能（MarkdownEditor）', () => {
     await loadLargeDoc(page)
     const sections = await previewSections(page).count()
     await content(page).click({ position: { x: 60, y: 30 } })
-    await page.keyboard.press('End')
+    await page.keyboard.press(KEYS.lineEnd)
     await page.evaluate(() => {
       const w = window as unknown as { __exLongTasks: number[] }
       w.__exLongTasks = []
