@@ -63,13 +63,19 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
   const layerClass = useModalLayerClass()
   const nodeId = useFloatingNodeId()
   const dayRef = useRef<HTMLButtonElement | null>(null)
+  /** 下次渲染后是否把焦点移到网格中的当前日（打开、网格内键盘移动、翻页按钮被禁用时） */
+  const focusDayRef = useRef(false)
   const titleId = useId()
+  const valueId = useId()
   const { refs, floatingStyles, context } = useFloating({
     nodeId,
     open,
     onOpenChange: (next) => {
       if (next && disabled) return
-      if (next) setFocused(clampDateKey(value ?? todayKey(), min, max))
+      if (next) {
+        focusDayRef.current = true
+        setFocused(clampDateKey(value ?? todayKey(), min, max))
+      }
       setOpen(next)
     },
     placement: 'bottom-start',
@@ -82,20 +88,27 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
     useRole(context, { role: 'dialog' }),
   ])
 
-  // 焦点跟随 focused（roving tabindex）；只操作 DOM，不 setState
+  // roving tabindex：只在 focusDayRef 要求时把焦点移进网格；只操作 DOM，不 setState
   useEffect(() => {
-    if (open) dayRef.current?.focus()
+    if (!open || !focusDayRef.current) return
+    focusDayRef.current = false
+    dayRef.current?.focus()
   }, [open, focused])
 
-  const move = (next: DateKey) => setFocused(clampDateKey(next, min, max))
+  const move = (next: DateKey, focusDay: boolean) => {
+    const clamped = clampDateKey(next, min, max)
+    if (clamped === focused) return
+    focusDayRef.current = focusDay
+    setFocused(clamped)
+  }
   const select = (key: DateKey) => {
     if (isDateDisabled(key, min, max)) return
     onChange(key)
     setOpen(false)
   }
-  /** 翻 months 个月后的整月是否与 [min, max] 有交集 */
-  const canPage = (months: number) => {
-    const first = addMonths(monthStart(focused), months)
+  /** 从 base 所在月翻 months 个月后的整月是否与 [min, max] 有交集 */
+  const canPage = (months: number, base: DateKey = focused) => {
+    const first = addMonths(monthStart(base), months)
     const last = addDays(addMonths(first, 1), -1)
     return !(min !== undefined && last < min) && !(max !== undefined && first > max)
   }
@@ -115,7 +128,7 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
     const step = steps[e.key]
     if (!step) return
     e.preventDefault()
-    move(step())
+    move(step(), true)
   }
 
   const view = parseDateKey(focused)!
@@ -128,7 +141,11 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
       className="ex-date-picker__nav"
       aria-label={name}
       disabled={!canPage(months)}
-      onClick={() => move(addMonths(focused, months))}
+      onClick={() => {
+        // 翻页后焦点留在按钮上（APG 日期选择对话框）；按钮随之禁用则无法保留，改落到网格
+        const next = clampDateKey(addMonths(focused, months), min, max)
+        move(next, !canPage(months, next))
+      }}
     >
       <span aria-hidden="true">{glyph}</span>
     </button>
@@ -142,10 +159,13 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
         className={cx('ex-picker-input ex-date-picker', open && 'is-open', !value && 'is-placeholder', className)}
         disabled={disabled}
         aria-label={label}
+        aria-describedby={valueId}
         {...getReferenceProps()}
       >
         <CalendarIcon />
-        <span className="ex-picker-input__value">{value ?? placeholder}</span>
+        <span id={valueId} className="ex-picker-input__value">
+          {value ?? placeholder}
+        </span>
       </button>
       <FloatingNode id={nodeId}>
         {open && (
@@ -170,8 +190,8 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
                 <table role="grid" className="ex-date-picker__grid" aria-labelledby={titleId} onKeyDown={onGridKeyDown}>
                   <thead>
                     <tr>
-                      {labels.weekdays.split(',').map((name) => (
-                        <th key={name} scope="col">
+                      {labels.weekdays.split(',').map((name, index) => (
+                        <th key={index} scope="col">
                           {name}
                         </th>
                       ))}

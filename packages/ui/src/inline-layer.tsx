@@ -1,5 +1,12 @@
-import { FloatingNode, useDismiss, useFloating, useFloatingNodeId, useInteractions } from '@floating-ui/react'
-import type { HTMLAttributes } from 'react'
+import {
+  FloatingNode,
+  useDismiss,
+  useFloating,
+  useFloatingNodeId,
+  useFloatingTree,
+  useInteractions,
+} from '@floating-ui/react'
+import { useEffect, useRef, type HTMLAttributes } from 'react'
 import { withFloatingTree } from './floating-tree'
 
 export interface InlineLayerProps extends HTMLAttributes<HTMLDivElement> {
@@ -13,16 +20,50 @@ export interface InlineLayerProps extends HTMLAttributes<HTMLDivElement> {
  */
 function InlineLayerInner({ onDismiss, children, ...rest }: InlineLayerProps) {
   const nodeId = useFloatingNodeId()
-  const { refs, context } = useFloating({
+  const tree = useFloatingTree()
+  const dismissRef = useRef(onDismiss)
+  useEffect(() => {
+    dismissRef.current = onDismiss
+  })
+  const { refs, context, elements } = useFloating({
     nodeId,
     open: true,
     onOpenChange: (next) => {
-      if (!next) onDismiss()
+      if (!next) dismissRef.current()
     },
   })
   const { getFloatingProps } = useInteractions([
     useDismiss(context, { outsidePress: false, bubbles: { escapeKey: false } }),
   ])
+
+  // 焦点不在层内时 useDismiss 收不到 Esc：外层 Modal 看到打开的子节点就放弃关闭，
+  // 而焦点在 body 时浏览器会在两个 document 监听之间刷新 React，导致两层一起关。
+  // 因此在捕获阶段先处理，除非焦点在其他（非祖先）浮层里——那由该浮层自己处理。
+  useEffect(() => {
+    const layer = elements.floating
+    if (!layer) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.isComposing) return
+      const target = event.target as Node
+      if (layer.contains(target)) return
+      const portal = target instanceof Element ? target.closest('[data-floating-ui-portal]') : null
+      if (portal && !portal.contains(layer)) return
+      const nodes = tree?.nodesRef.current ?? []
+      const parentOf = (id: string | null | undefined) => nodes.find((n) => n.id === id)?.parentId
+      const ancestors = new Set<string | undefined>()
+      for (let id = parentOf(nodeId); id; id = parentOf(id)) ancestors.add(id)
+      const inOtherLayer = nodes.some(
+        (n) => n.id !== nodeId && !ancestors.has(n.id) && n.context?.open && n.context.elements.floating?.contains(target),
+      )
+      if (inOtherLayer) return
+      event.stopPropagation()
+      dismissRef.current()
+    }
+    const doc = layer.ownerDocument
+    doc.addEventListener('keydown', onKeyDown, true)
+    return () => doc.removeEventListener('keydown', onKeyDown, true)
+  }, [elements.floating, nodeId, tree])
+
   return (
     <FloatingNode id={nodeId}>
       <div ref={refs.setFloating} {...getFloatingProps(rest)}>

@@ -15,6 +15,12 @@ describe('TimePicker', () => {
     expect(timeSlots(60)).toHaveLength(24)
   })
 
+  it('timeSlots：步长必须是有限正数', () => {
+    for (const step of [0, -30, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => timeSlots(step), String(step)).toThrow(RangeError)
+    }
+  })
+
   it('时钟前缀、无下拉箭头；禁用选项不可选；选择后回调', async () => {
     const onChange = vi.fn()
     renderWithTheme(

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -106,8 +106,59 @@ describe('DatePicker', () => {
     expect(within(dialog).getByRole('button', { name: '后一年' })).toBeDisabled()
     await userEvent.click(within(dialog).getByRole('button', { name: '下个月' }))
     expect(within(dialog).getByText('2026 年 11 月')).toBeInTheDocument()
-    expect(day('2026-11-02')).toHaveFocus()
+    expect(day('2026-11-02')).toHaveAttribute('tabindex', '0')
     expect(within(dialog).getByRole('button', { name: '下个月' })).toBeDisabled()
+    // 翻页后按钮已禁用、无法保留焦点，焦点落到网格中的当前日
+    expect(day('2026-11-02')).toHaveFocus()
+  })
+
+  it('翻页按钮保留焦点：在「下个月」上按两次 Enter 前进两个月且不选中日期', async () => {
+    const onChange = vi.fn()
+    renderWithTheme(
+      <StrictMode>
+        <Harness onChange={onChange} />
+      </StrictMode>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '发布日期' }))
+    await waitFor(() => expect(day('2026-10-09')).toHaveFocus())
+    const dialog = screen.getByRole('dialog', { name: '发布日期' })
+    const next = within(dialog).getByRole('button', { name: '下个月' })
+    act(() => next.focus())
+    await userEvent.keyboard('{Enter}{Enter}')
+    expect(within(dialog).getByText('2026 年 12 月')).toBeInTheDocument()
+    expect(next).toHaveFocus()
+    expect(day('2026-12-09')).toHaveAttribute('tabindex', '0')
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog', { name: '发布日期' })).toBeInTheDocument()
+    await userEvent.keyboard('{Tab}')
+    expect(within(dialog).getByRole('button', { name: '后一年' })).toHaveFocus()
+    await userEvent.keyboard('{Tab}')
+    expect(day('2026-12-09')).toHaveFocus()
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(day('2026-12-08')).toHaveFocus()
+  })
+
+  it('触发器：名称为 label，所选日期作为描述', async () => {
+    renderWithTheme(
+      <StrictMode>
+        <Harness value="2026-10-12" />
+      </StrictMode>,
+    )
+    const trigger = screen.getByRole('button', { name: '发布日期' })
+    expect(trigger).toHaveAccessibleName('发布日期')
+    expect(trigger).toHaveAccessibleDescription('2026-10-12')
+  })
+
+  it('星期标签可重复（如英文单字母）', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    renderWithTheme(
+      <StrictMode>
+        <Harness labels={{ weekdays: 'S,M,T,W,T,F,S' }} />
+      </StrictMode>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '发布日期' }))
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual(['S', 'M', 'T', 'W', 'T', 'F', 'S'])
+    expect(error).not.toHaveBeenCalled()
   })
 
   it('已有值越界时打开焦点夹回区间内', async () => {

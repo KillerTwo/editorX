@@ -22,6 +22,7 @@ export interface TimePickerProps {
 const pad = (n: number) => String(n).padStart(2, '0')
 
 export function timeSlots(stepMinutes = 30): string[] {
+  if (!Number.isFinite(stepMinutes) || stepMinutes <= 0) throw new RangeError(`stepMinutes 必须是有限正数：${stepMinutes}`)
   const slots: string[] = []
   for (let minutes = 0; minutes < 24 * 60; minutes += stepMinutes) slots.push(`${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`)
   return slots
