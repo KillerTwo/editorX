@@ -9,7 +9,7 @@ import {
 } from '@editorx/toolbar'
 import type { ToastType } from '@editorx/ui'
 import { useCallback, useLayoutEffect, useReducer, useRef, useState } from 'react'
-import { formatScheduleTime } from './schedule'
+import { formatScheduleTime, type ScheduleRange } from './schedule'
 import { createSettings, toPayload } from './settings'
 import { useLatest } from './use-latest'
 import { firstError, validatePublish, type PublishErrors, type PublishField, type PublishRules } from './validate'
@@ -24,6 +24,7 @@ export interface PublishControllerOptions {
   document?: EditorDocument
   adapters: EditorAdapters
   rules?: PublishRules
+  scheduleRange?: ScheduleRange
   messages: Messages['publish']
   notify: (message: string, type?: ToastType) => void
   /** 发布成功（已提示成功）后调用；它抛出的异常不算发布失败，原样由 publish() 的 Promise 拒绝 */
@@ -100,12 +101,12 @@ export function usePublishController(options: PublishControllerOptions): Publish
 
   const publish = useCallback(
     async (scheduledAt?: string) => {
-      const { adapters, document: doc, rules, messages, notify, now = Date.now } = latest.current
+      const { adapters, document: doc, rules, scheduleRange, messages, notify, now = Date.now } = latest.current
       if (busyRef.current || !adapters.onPublish) return false
       const target: PublishSettings = { ...pending.current }
       if (scheduledAt === undefined) delete target.scheduledAt
       else target.scheduledAt = scheduledAt
-      const found = validatePublish(target, { messages, now: now(), title: doc?.title }, rules)
+      const found = validatePublish(target, { messages, now: now(), title: doc?.title, scheduleRange }, rules)
       const first = firstError(found)
       if (first) {
         setErrors(found)

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { PublishModal, PublishPanel } from './publish-panel'
+import { fromLocalInputValue, toLocalInputValue } from './schedule'
 import { renderWithProviders } from './test-utils'
 
 const doc: EditorDocument = {
@@ -211,11 +212,12 @@ describe('PublishPanel（内联）', () => {
     const dialog = await screen.findByRole('dialog', { name: '定时发布' })
     const input = screen.getByLabelText('发布时间')
     expect(input).toHaveAttribute('type', 'datetime-local')
-    fireEvent.change(input, { target: { value: '2099-01-01T10:00' } })
+    const value = toLocalInputValue(new Date(Date.now() + 5 * 3_600_000))
+    fireEvent.change(input, { target: { value } })
     await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
     await waitFor(() =>
       expect(a.onPublish).toHaveBeenCalledWith(
-        expect.objectContaining({ scheduledAt: new Date(2099, 0, 1, 10, 0).toISOString() }),
+        expect.objectContaining({ scheduledAt: fromLocalInputValue(value) }),
       ),
     )
     await waitFor(() => expect(dialog).not.toBeInTheDocument())

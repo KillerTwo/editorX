@@ -1,3 +1,25 @@
+import { formatMessage, type Messages } from '@editorx/toolbar'
+import { addDays, timeSlots, toDateKey, type DateKey, type TimeOption } from '@editorx/ui'
+
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+export const SCHEDULE_MIN_OFFSET_MS = 4 * HOUR
+export const SCHEDULE_MAX_OFFSET_MS = 7 * DAY
+
+export interface ScheduleRange {
+  /** 距当前时间的最小提前量（ms），闭区间 */
+  minOffsetMs: number
+  /** 最大提前量（ms），闭区间；按绝对毫秒计，跨夏令时本地时刻可能偏 1 小时 */
+  maxOffsetMs: number
+}
+
+export const DEFAULT_SCHEDULE_RANGE: ScheduleRange = {
+  minOffsetMs: SCHEDULE_MIN_OFFSET_MS,
+  maxOffsetMs: SCHEDULE_MAX_OFFSET_MS,
+}
+
 const pad = (n: number) => String(n).padStart(2, '0')
 
 export function toLocalInputValue(date: Date): string {
@@ -12,13 +34,62 @@ export function fromLocalInputValue(value: string): string | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
 }
 
-const STEP = 5 * 60 * 1000
-const HOUR = 60 * 60 * 1000
-
-export function defaultScheduleTime(now: number): Date {
-  return new Date(Math.ceil((now + HOUR) / STEP) * STEP)
-}
-
 export function formatScheduleTime(iso: string): string {
   return toLocalInputValue(new Date(iso)).replace('T', ' ')
+}
+
+export function scheduleBounds(now: number, range: ScheduleRange = DEFAULT_SCHEDULE_RANGE) {
+  return { min: now + range.minOffsetMs, max: now + range.maxOffsetMs }
+}
+
+/** 本地日期 + 'HH:mm' → 时间戳；格式无效或该本地时刻不存在（夏令时跳过的时段）时为 undefined */
+export function combineLocal(date: string, time: string): number | undefined {
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  const t = /^(\d{2}):(\d{2})$/.exec(time)
+  if (!d || !t) return undefined
+  const [year, month, day] = [Number(d[1]), Number(d[2]) - 1, Number(d[3])]
+  const [hours, minutes] = [Number(t[1]), Number(t[2])]
+  const value = new Date(year, month, day, hours, minutes)
+  const same =
+    value.getFullYear() === year &&
+    value.getMonth() === month &&
+    value.getDate() === day &&
+    value.getHours() === hours &&
+    value.getMinutes() === minutes
+  return same ? value.getTime() : undefined
+}
+
+/** 某本地日期的全部时间档；不存在的时刻与区间外的时刻禁用 */
+export function scheduleTimeSlots(
+  date: string,
+  now: number,
+  range: ScheduleRange = DEFAULT_SCHEDULE_RANGE,
+  stepMinutes = 30,
+): TimeOption[] {
+  const { min, max } = scheduleBounds(now, range)
+  return timeSlots(stepMinutes).map((value) => {
+    const at = combineLocal(date, value)
+    return { value, disabled: at === undefined || at < min || at > max }
+  })
+}
+
+/** 可选日期区间：首末日都至少有一个可用时间档；区间内没有整档时为 undefined */
+export function scheduleDateLimits(
+  now: number,
+  range: ScheduleRange = DEFAULT_SCHEDULE_RANGE,
+  stepMinutes = 30,
+): { min: DateKey; max: DateKey } | undefined {
+  const { min, max } = scheduleBounds(now, range)
+  const usable = (date: DateKey) => scheduleTimeSlots(date, now, range, stepMinutes).some((s) => !s.disabled)
+  let first = toDateKey(new Date(min))
+  let last = toDateKey(new Date(max))
+  if (!usable(first)) first = addDays(first, 1)
+  if (!usable(last)) last = addDays(last, -1)
+  return first <= last && usable(first) ? { min: first, max: last } : undefined
+}
+
+export function formatOffset(ms: number, units: Messages['publish']['schedule']['units']): string {
+  if (ms > 0 && ms % DAY === 0) return formatMessage(units.days, { count: ms / DAY })
+  if (ms > 0 && ms % HOUR === 0) return formatMessage(units.hours, { count: ms / HOUR })
+  return formatMessage(units.minutes, { count: Math.round(ms / MINUTE) })
 }

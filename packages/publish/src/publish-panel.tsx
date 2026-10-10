@@ -82,6 +82,7 @@ function usePublishParts(
     document: props.document,
     adapters,
     rules: props.rules,
+    scheduleRange: props.scheduleRange,
     messages: m.publish,
     notify,
     onPublished: (payload) => {

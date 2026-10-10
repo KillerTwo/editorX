@@ -2,7 +2,7 @@ import { zhCN, type EditorAdapters, type PublishSettings } from '@editorx/toolba
 import { describe, expect, it } from 'vitest'
 import { adapterState } from './adapter-state'
 import { extractImages, extractSummary, htmlToText } from './extract'
-import { defaultScheduleTime, formatScheduleTime, fromLocalInputValue, toLocalInputValue } from './schedule'
+import { formatScheduleTime, fromLocalInputValue, toLocalInputValue } from './schedule'
 import {
   createSettings,
   DEFAULT_SETTINGS,
@@ -18,6 +18,8 @@ import { countChars, firstError, sliceChars, validatePublish, type RuleContext }
 const NOW = new Date(2026, 9, 9, 12, 0).getTime()
 const ctx = (extra: Partial<RuleContext> = {}): RuleContext => ({ messages: zhCN.publish, now: NOW, ...extra })
 const valid = (patch: Partial<PublishSettings> = {}) => createSettings({ tags: ['React'], ...patch })
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
 
 describe('settings', () => {
   it('默认值与 CSDN 初始态一致', () => {
@@ -93,10 +95,25 @@ describe('validatePublish', () => {
     expect(validatePublish(valid({ articleType: 'reprint', sourceUrl: 'https://x.com/a' }), ctx()).sourceUrl).toBeUndefined()
   })
 
-  it('定时时间需有效且晚于当前', () => {
+  it('定时时间：有效、晚于当前，且在 now+4h … now+7d 闭区间内（B34，文案 B27）', () => {
+    const at = (ms: number) => valid({ scheduledAt: new Date(ms).toISOString() })
+    const hint = '请选择当前时间后 4小时 至 7天 进行定时发布'
     expect(validatePublish(valid({ scheduledAt: 'abc' }), ctx()).scheduledAt).toBe('请选择有效的发布时间')
-    expect(validatePublish(valid({ scheduledAt: new Date(NOW).toISOString() }), ctx()).scheduledAt).toBe('发布时间需晚于当前时间')
-    expect(validatePublish(valid({ scheduledAt: new Date(NOW + 60_000).toISOString() }), ctx()).scheduledAt).toBeUndefined()
+    expect(validatePublish(at(NOW), ctx()).scheduledAt).toBe('发布时间需晚于当前时间')
+    expect(validatePublish(at(NOW + 60_000), ctx()).scheduledAt).toBe(hint)
+    expect(validatePublish(at(NOW + 4 * HOUR - 1), ctx()).scheduledAt).toBe(hint)
+    expect(validatePublish(at(NOW + 4 * HOUR), ctx()).scheduledAt).toBeUndefined()
+    expect(validatePublish(at(NOW + 7 * DAY), ctx()).scheduledAt).toBeUndefined()
+    expect(validatePublish(at(NOW + 7 * DAY + 1), ctx()).scheduledAt).toBe(hint)
+  })
+
+  it('scheduleRange 覆盖默认区间，错误文案随之变化', () => {
+    const range = { minOffsetMs: 30 * 60_000, maxOffsetMs: DAY }
+    const at = (ms: number) => valid({ scheduledAt: new Date(ms).toISOString() })
+    expect(validatePublish(at(NOW + 60_000), ctx({ scheduleRange: range })).scheduledAt).toBe(
+      '请选择当前时间后 30分钟 至 1天 进行定时发布',
+    )
+    expect(validatePublish(at(NOW + 30 * 60_000), ctx({ scheduleRange: range })).scheduledAt).toBeUndefined()
   })
 
   it('标题 5–100 字，仅在提供标题时校验', () => {
@@ -143,11 +160,6 @@ describe('schedule', () => {
     expect(fromLocalInputValue('')).toBeUndefined()
     expect(fromLocalInputValue('2026-10-09')).toBeUndefined()
     expect(formatScheduleTime(date.toISOString())).toBe('2026-10-09 08:05')
-  })
-
-  it('默认定时：一小时后向上取整到 5 分钟', () => {
-    expect(defaultScheduleTime(new Date(2026, 9, 9, 8, 2, 30).getTime())).toEqual(new Date(2026, 9, 9, 9, 5))
-    expect(defaultScheduleTime(new Date(2026, 9, 9, 8, 0).getTime())).toEqual(new Date(2026, 9, 9, 9, 0))
   })
 })
 

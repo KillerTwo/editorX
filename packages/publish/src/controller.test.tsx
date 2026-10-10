@@ -115,16 +115,32 @@ describe('usePublishController', () => {
 
   it('定时发布：payload 带 scheduledAt；过去时间报错', async () => {
     const { result, notify, onPublish } = setup({ defaultValue: { tags: ['React'] } })
-    const future = new Date(2026, 9, 9, 13, 5).toISOString()
+    const future = new Date(2026, 9, 9, 17, 5).toISOString()
     await act(async () => {
       await result.current.publish(future)
     })
     expect(onPublish.mock.lastCall![0].scheduledAt).toBe(future)
-    expect(notify).toHaveBeenCalledWith('已设置定时发布：2026-10-09 13:05', 'success')
+    expect(notify).toHaveBeenCalledWith('已设置定时发布：2026-10-09 17:05', 'success')
     await act(async () => {
       await result.current.publish(new Date(NOW - 1).toISOString())
     })
     expect(result.current.errors.scheduledAt).toBe('发布时间需晚于当前时间')
+    expect(onPublish).toHaveBeenCalledTimes(1)
+  })
+
+  it('scheduleRange 选项参与校验', async () => {
+    const { result, onPublish } = setup({
+      defaultValue: { tags: ['React'] },
+      scheduleRange: { minOffsetMs: 0, maxOffsetMs: 24 * 3_600_000 },
+    })
+    await act(async () => {
+      await result.current.publish(new Date(NOW + 60_000).toISOString())
+    })
+    expect(onPublish).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      await result.current.publish(new Date(NOW + 25 * 3_600_000).toISOString())
+    })
+    expect(result.current.errors.scheduledAt).toBe('请选择当前时间后 0分钟 至 1天 进行定时发布')
     expect(onPublish).toHaveBeenCalledTimes(1)
   })
 

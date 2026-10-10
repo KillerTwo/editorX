@@ -1,7 +1,7 @@
 import { useMessages } from '@editorx/toolbar'
 import { Button, Modal } from '@editorx/ui'
 import { useId, useState } from 'react'
-import { defaultScheduleTime, fromLocalInputValue, toLocalInputValue } from './schedule'
+import { fromLocalInputValue, toLocalInputValue } from './schedule'
 
 export interface ScheduleDialogProps {
   error?: string
@@ -16,7 +16,7 @@ export function ScheduleDialog({ error, busy = false, onCancel, onConfirm }: Sch
   const m = useMessages()
   const s = m.publish.schedule
   const inputId = useId()
-  const [value, setValue] = useState(() => toLocalInputValue(defaultScheduleTime(Date.now())))
+  const [value, setValue] = useState(() => toLocalInputValue(new Date(Date.now() + 5 * 3_600_000)))
   const [min] = useState(() => toLocalInputValue(new Date()))
   const iso = fromLocalInputValue(value)
   return (

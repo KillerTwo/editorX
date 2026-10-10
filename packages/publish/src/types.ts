@@ -11,6 +11,7 @@ import type {
   PublishSettings,
 } from '@editorx/toolbar'
 import type { ReactNode } from 'react'
+import type { ScheduleRange } from './schedule'
 import type { PublishRules } from './validate'
 
 export type PublishVariant = 'inline' | 'modal'
@@ -32,6 +33,8 @@ export interface PublishBaseProps {
   missingAdapter?: MissingAdapterPolicy
   /** 覆盖内置校验规则：函数替换，false 关闭 */
   rules?: PublishRules
+  /** 定时发布允许的提前量区间，默认 4 小时 ～ 7 天（CSDN） */
+  scheduleRange?: ScheduleRange
   /** 可选封面模式；默认 ['single']（CSDN 截图无模式切换），多于一项时显示单选 */
   coverModes?: readonly CoverMode[]
   /** 文章模板选项；默认 默认模板 / 简洁模板 / 墨衍模板（仅 Markdown 文档可选） */
