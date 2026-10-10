@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { box, near } from './helpers'
+import { box, near, scrollToBottom } from './helpers'
 import { fontTol } from './platform'
 
 test.skip(process.platform !== 'win32' && process.platform !== 'darwin', 'Windows/macOS-only geometry')
@@ -38,7 +38,8 @@ const MODAL_ROWS: Array<[field: string, top: number, height: number]> = [
   ['activity', 697, 74],
 ]
 
-const radio = (page: Page, field: string, index: number) => row(page, field).locator('.ex-radio').nth(index)
+const radioLabel = (page: Page, field: string, index: number) =>
+  row(page, field).locator('.ex-radio').nth(index).locator('.ex-radio__label')
 
 async function dotsX(page: Page, field: string) {
   const dots = row(page, field).locator('.ex-radio__dot')
@@ -57,10 +58,7 @@ test.describe('内联卡片（12-36-05，2554×1310，滚到底）', () => {
     if (process.platform === 'win32') expect(clientWidth, '常驻滚动条 15px').toBe(2539)
     // 卡片在内容区水平居中，左缘随滚动条宽度变化
     const L = (clientWidth - 816) / 2
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-    await expect
-      .poll(() => page.evaluate(() => Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight))
-      .toBe(true)
+    await scrollToBottom(page)
 
     near((await box(page.locator('.pg-pub__header'))).height, 105, 0.5, '页头高（下边框 y=104）')
     const paper = await box(page.locator('.pg-pub__paper'))
@@ -119,9 +117,9 @@ test.describe('内联卡片（12-36-05，2554×1310，滚到底）', () => {
     await expectDots('articleType', [128, 231, 313])
     await expectDots('visibility', [128, 238, 348, 458])
     await expectDots('multiPlatform', [128, 196])
-    await expect(radio(page, 'articleType', 0)).toHaveCSS('color', 'rgb(26, 26, 26)')
-    await expect(radio(page, 'articleType', 1)).toHaveCSS('color', 'rgb(96, 98, 102)')
-    await expect(radio(page, 'visibility', 3)).toHaveCSS('color', 'rgb(96, 98, 102)')
+    await expect(radioLabel(page, 'articleType', 0)).toHaveCSS('color', 'rgb(26, 26, 26)')
+    await expect(radioLabel(page, 'articleType', 1)).toHaveCSS('color', 'rgb(96, 98, 102)')
+    await expect(radioLabel(page, 'visibility', 3)).toHaveCSS('color', 'rgb(96, 98, 102)')
 
     const declaration = await box(row(page, 'declaration').locator('.ex-select'))
     near(declaration.x, L + 128, 1, '创作声明 x')
@@ -216,9 +214,9 @@ test.describe('发布弹窗（12-36-37，2554×1312）', () => {
     expect(multi).toHaveLength(2)
     near(multi[0]! - M, 124, 1, 'multiPlatform 单选0.x')
     near(multi[1]! - M, 231, 1, 'multiPlatform 单选1.x')
-    await expect(radio(page, 'articleType', 0)).toHaveCSS('color', 'rgb(64, 158, 255)')
-    await expect(radio(page, 'articleType', 1)).toHaveCSS('color', 'rgb(85, 86, 102)')
-    await expect(radio(page, 'visibility', 3)).toHaveCSS('color', 'rgb(85, 86, 102)')
+    await expect(radioLabel(page, 'articleType', 0)).toHaveCSS('color', 'rgb(64, 158, 255)')
+    await expect(radioLabel(page, 'articleType', 1)).toHaveCSS('color', 'rgb(85, 86, 102)')
+    await expect(radioLabel(page, 'visibility', 3)).toHaveCSS('color', 'rgb(85, 86, 102)')
 
     const declaration = await box(row(page, 'declaration').locator('.ex-select'))
     near(declaration.x, M + 110, 1, '创作声明 x')

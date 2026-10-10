@@ -1,7 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
-import { testPng } from './helpers'
+import { scrollToBottom, testPng } from './helpers'
 
 test.skip(process.platform !== 'win32' && process.platform !== 'darwin', 'Windows/macOS-only visual baselines')
+
+// 定时发布弹窗的日期时间输入按浏览器 locale 排版，基线按 en-US（10/09/2026, 11:00 AM）生成
+test.use({ locale: 'en-US' })
 
 type Scheme = 'light' | 'dark'
 
@@ -18,7 +21,7 @@ async function openInline(page: Page, scheme: Scheme) {
   await expect(page.locator('.ex-root').first()).toHaveAttribute('data-ex-theme', scheme)
   await expect(page.getByText('专栏已达到上限，暂不可创建新专栏，请选择已有专栏')).toBeVisible()
   await page.evaluate(() => document.fonts.ready)
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await scrollToBottom(page)
   await page.mouse.move(0, 0)
 }
 

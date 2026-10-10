@@ -10,6 +10,14 @@ export function near(actual: number, expected: number, tolerance: number, label:
   expect(Math.abs(actual - expected), `${label}: 实际 ${actual}，期望 ${expected}±${tolerance}`).toBeLessThanOrEqual(tolerance)
 }
 
+/** 滚到页面底部，并轮询直到视口确实贴底 */
+export async function scrollToBottom(page: Page) {
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await expect
+    .poll(() => page.evaluate(() => Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight))
+    .toBe(true)
+}
+
 /** 在页面里用 canvas 画一张 PNG（蓝底 + 居中半尺寸黄块），供文件选择器 setFiles 使用 */
 export async function testPng(page: Page, width = 800, height = 600): Promise<Buffer> {
   const base64 = await page.evaluate(
