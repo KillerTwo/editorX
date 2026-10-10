@@ -116,7 +116,7 @@
 .ex-mde[data-view='split'] .ex-mde-editor { flex: 0 0 calc(var(--ex-mde-split, 0.5) * 100% - 13px); }
 .ex-mde[data-view='split'] .ex-mde-preview-pane { background: var(--ex-color-mde-split-preview-bg); }
 
-/* CSDN 正文与状态栏统计西文先用 Arial，中文回落到苹方/雅黑（与参考截图字宽一致；-apple-system 只有 Safari 认） */
+/* CSDN 正文与状态栏统计西文先用 Arial，中文回落到苹方/雅黑（与参考截图字宽一致；Chromium 不认 -apple-system，参考图为 Chrome 截图） */
 .ex-mde { --ex-mde-font-family: -apple-system, 'SF UI Text', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
 
 /* 正文宽上限 1016px、两侧最多 20%（G03，下限 16px 为推断）；首行距工具栏 11px（G04） */
@@ -327,8 +327,8 @@
   line-height: 21px;
 }
 
-/* 统计西文是 Arial（「Markdown」墨迹 53.5px）；Arial 行框让整行比苹方高 1px，下移 1px 补回（不占布局，栏高仍为 64） */
-.ex-mde-status__stats { position: relative; top: 1px; flex: none; font-family: var(--ex-mde-font-family); white-space: nowrap; }
+/* 统计西文是 Arial（「Markdown」墨迹 53.5px）；Arial 行框让整行比参考高约 1.5px，相对定位下移补回（不占布局，栏高仍为 64） */
+.ex-mde-status__stats { position: relative; top: 1.5px; flex: none; font-family: var(--ex-mde-font-family); white-space: nowrap; }
 .ex-mde-status__md,
 .ex-mde-status__html { display: flex; gap: 9px; }
 .ex-mde-status__center { flex: 1; min-width: 0; }

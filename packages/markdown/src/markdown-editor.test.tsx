@@ -391,15 +391,18 @@ describe('自绘图标（G27/G29/G30）', () => {
       const svg = screen.getByRole('tab', { name }).querySelector('svg')!
       expect(svg).not.toHaveClass('lucide')
       expect(svg).toHaveAttribute('width', '16')
+      expect(svg).toHaveAttribute('focusable', 'false')
     }
   })
 
-  it('删除线为自绘图标；图片、链接描边 1.5', () => {
+  it('删除线、图片、链接为自绘细线图标', () => {
     renderEditor()
     const toolbar = screen.getByRole('toolbar', { name: '编辑工具栏' })
-    expect(within(toolbar).getByRole('button', { name: '删除线' }).querySelector('svg')).not.toHaveClass('lucide')
-    for (const name of ['图片', '链接']) {
-      expect(within(toolbar).getByRole('button', { name }).querySelector('svg')).toHaveAttribute('stroke-width', '1.5')
+    for (const name of ['删除线', '图片', '链接']) {
+      const svg = within(toolbar).getByRole('button', { name }).querySelector('svg')!
+      expect(svg, name).not.toHaveClass('lucide')
+      expect(svg, name).toHaveAttribute('focusable', 'false')
+      expect(Number(svg.getAttribute('stroke-width')), name).toBeLessThanOrEqual(1.2)
     }
   })
 })

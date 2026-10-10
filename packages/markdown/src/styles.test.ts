@@ -64,7 +64,7 @@ describe('markdown styles.css', () => {
       /\.ex-mde-status \{[^}]*gap: 24px;[^}]*box-sizing: border-box;[^}]*min-height: 64px;[^}]*padding: 9px 16px 12px 26\.5px;[^}]*font-size: 12px;[^}]*line-height: 21px;/,
     )
     expect(css).toMatch(
-      /\.ex-mde-status__stats \{ position: relative; top: 1px; flex: none; font-family: var\(--ex-mde-font-family\); white-space: nowrap; \}/,
+      /\.ex-mde-status__stats \{ position: relative; top: 1\.5px; flex: none; font-family: var\(--ex-mde-font-family\); white-space: nowrap; \}/,
     )
     expect(css).not.toMatch(/\.ex-mde-status \{[^}]*font-family/)
     expect(css).toMatch(/\.ex-mde-status__md,\n\.ex-mde-status__html \{ display: flex; gap: 9px; \}/)

@@ -1,5 +1,6 @@
 import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
-import { Image, Link, Sigma, Table, TableOfContents, Workflow } from 'lucide-react'
+import { Sigma, Table, TableOfContents, Workflow } from 'lucide-react'
+import { ImageIcon, LinkIcon } from '../icons'
 import { getMarkdownInternals } from '../internals'
 import { ImageDialog, LinkDialog, TableDialog } from './dialogs'
 import { ICON_SIZE, run } from './format'
@@ -18,7 +19,7 @@ export const imageExtension: EditorExtension = {
       type: 'modal',
       id: 'image',
       title: (m) => m.toolbar.image,
-      icon: <Image size={ICON_SIZE} strokeWidth={1.5} />,
+      icon: <ImageIcon />,
       width: 440,
       render: (ctx, close) => <ImageDialog ctx={ctx} close={close} />,
     },
@@ -34,7 +35,7 @@ export const linkExtension: EditorExtension = {
       type: 'modal',
       id: 'link',
       title: (m) => m.toolbar.link,
-      icon: <Link size={ICON_SIZE} strokeWidth={1.5} />,
+      icon: <LinkIcon />,
       width: 440,
       render: (ctx, close) => <LinkDialog ctx={ctx} close={close} />,
     },
