@@ -209,6 +209,9 @@ const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-pub-dialog-close', '#909399', '#8d9095'],
   ['--ex-color-pub-picker-border', '#e2e2e2', '#3a3b41'],
   ['--ex-color-pub-picker-title', '#404040', '#dcdde3'],
+  ['--ex-color-pub-picker-category', '#777888', '#a3a6ad'],
+  ['--ex-color-pub-picker-active', '#4e7a9a', '#8fb4cf'],
+  ['--ex-color-pub-picker-option-bg', '#eaf2f6', '#24303a'],
 ]
 
 describe('发布面板 token', () => {
