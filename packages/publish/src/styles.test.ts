@@ -83,6 +83,29 @@ describe('publish styles.css', () => {
     expect(css).not.toMatch(/\.ex-pub-schedule__(date|time)[^{]*\{[^}]*pub-picker-border/)
   })
 
+  it('标签面板与 chip 几何（B09–B11、B20–B24）', () => {
+    expect(css).toMatch(/\.ex-pub-tag-picker \{[^}]*top: calc\(100% \+ 5px\);[^}]*width: 580px;/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__search \{[^}]*width: 548px;[^}]*height: 36px;[^}]*margin-left: 15px;/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__categories \{[^}]*width: 164px;/)
+    expect(css).toMatch(/\.ex-pub-tag \{[^}]*height: 28px;[^}]*padding: 0 7\.5px 0 8px;/)
+    expect(css).toMatch(/\.ex-pub-tag-option \{[^}]*height: 24px;[^}]*padding: 0 8px;/)
+    expect(css).not.toContain('.ex-pub-tag-popover')
+  })
+
+  it('标签面板外框总高 333.5 与颜色（B20–B24、§3.2，R-0901 实测）', () => {
+    expect(css).toMatch(/\.ex-pub-tag-picker \{[^}]*padding: 0 0 31\.5px;[^}]*border-color: var\(--ex-color-pub-picker-border\);/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__header \{[^}]*height: 42px;[^}]*padding: 14px 0 0;[^}]*text-align: center;/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__body \{[^}]*height: 222px;[^}]*margin-top: 0;/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__close \{[^}]*color: var\(--ex-color-pub-close\);/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__category \{[^}]*color: var\(--ex-color-pub-picker-category\);/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__category\.is-active \{ color: var\(--ex-color-pub-picker-active\); \}/)
+    expect(css).toMatch(/\.ex-pub-tag-option \{[^}]*background: var\(--ex-color-pub-picker-option-bg\);[^}]*color: var\(--ex-color-pub-picker-active\);/)
+    expect(css).toMatch(/\.ex-pub-tag-picker__section \{[^}]*color: var\(--ex-color-pub-dialog-text\);[^}]*font-weight: 700;/)
+    expect(css).not.toMatch(/\.ex-pub-tag-picker__categories \{[^}]*border-right/)
+    expect(css).not.toContain('.ex-pub-tag-option:hover')
+    expect(css).toMatch(/\.ex-pub-tag-option\.is-selected \{ opacity: 0\.5; cursor: default; \}/)
+  })
+
   it('自建主题根与 .ex-mde-theme 一致，不占布局', () => {
     expect(css).toMatch(/\.ex-pub-theme \{\s*display: contents;\s*\}/)
   })
@@ -103,7 +126,6 @@ describe('publish styles.css', () => {
       'ex-pub-checkbox',
       'ex-pub-tags',
       'ex-pub-summary',
-      'ex-pub-tag-search__section',
       'ex-pub-schedule',
     ])
     expect(used.size).toBeGreaterThan(30)

@@ -127,12 +127,20 @@
 .ex-pub-link { color: var(--ex-pub-link); text-decoration: none; }
 a.ex-pub-link:hover { text-decoration: underline; }
 
-.ex-pub-tag { height: 28px; }
+.ex-pub-tags { position: relative; column-gap: 12px; row-gap: 8px; } /* row-gap：inferred default */
+/* B10：chip 右缘到 × 墨迹 8.5 = 边框 1 + padding 7.5 */
+.ex-pub-tag {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 7.5px 0 8px;
+  gap: 13px;
+  font-size: 14px;
+}
 .ex-pub-tag-add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   box-sizing: border-box;
   width: 120px;
   height: 28px;
@@ -146,26 +154,91 @@ a.ex-pub-link:hover { text-decoration: underline; }
   cursor: pointer;
 }
 .ex-pub-tag-add[aria-invalid='true'] { border-color: var(--ex-color-error); }
-.ex-pub-tag-popover { box-sizing: border-box; width: 420px; padding: 16px; }
-.ex-pub-tag-search { display: flex; flex-direction: column; gap: 8px; }
-.ex-pub-tag-search__input { width: 100%; }
-.ex-pub-tag-search__meta,
-.ex-pub-tag-search__empty { color: var(--ex-color-text-muted); font-size: 12px; }
-.ex-pub-tag-search__title { color: var(--ex-color-pub-label); font-size: 12px; }
-.ex-pub-tag-search__list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ex-pub-tag-add__plus { flex: none; }
+
+/* ---------- 标签面板（B20–B24、R-0901 实测；被定时发布弹窗遮住的部分与 hover 为 inferred default） ---------- */
+/* 外框 580×333.5（含边框）；标签行 32 高、chip 28 居中，面板顶 = chip 底 + 7 */
+.ex-pub-tag-picker {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 5px);
+  left: 0;
+  box-sizing: border-box;
+  width: 580px;
+  padding: 0 0 31.5px;
+  border-color: var(--ex-color-pub-picker-border);
+  border-radius: 0;
+  box-shadow: 0 2px 12px var(--ex-color-pub-dropdown-shadow);
+  font-family: var(--ex-font-family-helvetica);
+}
+.ex-pub-tag-picker__header { position: relative; box-sizing: border-box; height: 42px; padding: 14px 0 0; text-align: center; }
+.ex-pub-tag-picker__title { color: var(--ex-color-pub-picker-title); font-size: 16px; font-weight: 700; line-height: 24px; }
+.ex-pub-tag-picker__close {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-pub-close);
+  cursor: pointer;
+}
+.ex-pub-tag-picker__search { box-sizing: border-box; width: 548px; height: 36px; margin-left: 15px; }
+.ex-pub-tag-picker__body { display: flex; height: 222px; margin-top: 0; }
+.ex-pub-tag-picker__categories {
+  box-sizing: border-box;
+  flex: none;
+  width: 164px;
+  margin: 0;
+  padding: 12px 0 0;
+  overflow-y: auto;
+  list-style: none;
+}
+/* 滑块 8 宽、距栏右缘 2、顶距搜索框 13（参考图实测） */
+.ex-pub-tag-picker__categories::-webkit-scrollbar { width: 10px; }
+.ex-pub-tag-picker__categories::-webkit-scrollbar-track { margin-top: 13px; }
+.ex-pub-tag-picker__categories::-webkit-scrollbar-thumb {
+  border-right: 2px solid transparent;
+  border-radius: 4px 6px 6px 4px / 4px;
+  background: var(--ex-color-pub-scrollbar-thumb);
+  background-clip: padding-box;
+}
+.ex-pub-tag-picker__category {
+  box-sizing: border-box;
+  width: 100%;
+  height: 35px;
+  padding: 0 0 0 31px;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-pub-picker-category);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.ex-pub-tag-picker__category.is-active { color: var(--ex-color-pub-picker-active); }
+.ex-pub-tag-picker__main { flex: 1; min-width: 0; padding: 18px 17px 0 31.5px; overflow-y: auto; }
+.ex-pub-tag-picker__section { margin-bottom: 5px; color: var(--ex-color-pub-dialog-text); font-size: 14px; font-weight: 700; line-height: 22px; }
+.ex-pub-tag-picker__list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ex-pub-tag-picker__empty { color: var(--ex-color-text-muted); font-size: 12px; }
+.ex-pub-tag-picker__count { position: absolute; right: 15px; bottom: 18px; color: var(--ex-color-pub-hint); font-size: 12px; line-height: 15px; }
 .ex-pub-tag-option {
-  height: 28px;
-  padding: 0 12px;
-  border: 1px solid var(--ex-color-pub-tag-border);
-  border-radius: var(--ex-radius-md);
-  background: var(--ex-color-surface);
-  color: var(--ex-color-text-secondary);
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ex-radius-sm);
+  background: var(--ex-color-pub-picker-option-bg);
+  color: var(--ex-color-pub-picker-active);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
 }
-.ex-pub-tag-option:hover:not(:disabled) { border-color: var(--ex-color-primary); color: var(--ex-color-primary); }
-.ex-pub-tag-option.is-selected { border-color: var(--ex-color-primary); color: var(--ex-color-primary); cursor: default; }
+.ex-pub-tag-option.is-selected { opacity: 0.5; cursor: default; }
 
 .ex-pub-cover__modes { margin-bottom: 8px; }
 .ex-pub-cover__row { display: flex; gap: var(--ex-pub-cover-gap); }

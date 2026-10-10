@@ -1,4 +1,6 @@
 import {
+  errorMessage,
+  formatMessage,
   useMessages,
   type AdapterName,
   type Category,
@@ -76,6 +78,14 @@ export function PublishForm(props: PublishFormProps) {
     () => (adapters.searchTags ? (keyword: string) => adapters.searchTags!(keyword) : undefined),
     [adapters],
   )
+  const getTagCategories = useMemo(
+    () => (adapters.getTagCategories ? () => adapters.getTagCategories!() : undefined),
+    [adapters],
+  )
+  const getTagsByCategory = useMemo(
+    () => (adapters.getTagsByCategory ? (categoryId: string) => adapters.getTagsByCategory!(categoryId) : undefined),
+    [adapters],
+  )
   const uploadImage = useMemo(
     () => (adapters.uploadImage ? (file: File) => adapters.uploadImage!(file) : undefined),
     [adapters],
@@ -99,6 +109,11 @@ export function PublishForm(props: PublishFormProps) {
           tags={settings.tags}
           onChange={(tags) => update('tags', tags)}
           searchTags={searchTags}
+          getTagCategories={getTagCategories}
+          getTagsByCategory={getTagsByCategory}
+          onLoadError={(error) =>
+            notify(formatMessage(p.errors.load, { name: p.fields.tags, message: errorMessage(error) }), 'error')
+          }
           invalid={!!errors.tags}
         />
       </FormItem>

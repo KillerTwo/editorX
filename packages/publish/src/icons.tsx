@@ -36,10 +36,19 @@ export function WandIcon({ className }: { className?: string }) {
   )
 }
 
-/** 上传框中的细「+」 */
-export function PlusIcon({ size }: { size: number }) {
+/** 标签面板关闭「×」：svg 盒即墨迹盒（参考图 10×10，描边约 1.4） */
+export function CloseIcon({ className }: { className?: string }) {
   return (
-    <svg className="ex-pub-plus" width={size} height={size} viewBox="0 0 12 12" aria-hidden="true">
+    <svg className={className} width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M.7.7l8.6 8.6M9.3.7.7 9.3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/** 上传框中的细「+」 */
+export function PlusIcon({ size, className = 'ex-pub-plus' }: { size: number; className?: string }) {
+  return (
+    <svg className={className} width={size} height={size} viewBox="0 0 12 12" aria-hidden="true">
       <path d="M6 0v12M0 6h12" stroke="currentColor" strokeWidth="1" />
     </svg>
   )

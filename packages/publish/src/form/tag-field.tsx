@@ -1,23 +1,34 @@
-import { formatMessage, useMessages } from '@editorx/toolbar'
-import { Popover, Tag } from '@editorx/ui'
-import { Plus } from 'lucide-react'
-import { useEffect, useState, type KeyboardEvent } from 'react'
-import { cx } from '../cx'
+import { useMessages, type TagCategory } from '@editorx/toolbar'
+import { Tag } from '@editorx/ui'
+import { useRef, useState } from 'react'
+import { PlusIcon } from '../icons'
 import { MAX_TAGS } from '../validate'
 import { errorId } from './form-item'
+import { TagPicker } from './tag-picker'
 
 export interface TagFieldProps {
   id: string
   tags: readonly string[]
   onChange(tags: string[]): void
-  /** 缺失时（无论 hide 还是 disable 策略）弹层只有输入框，Enter 添加自定义标签 */
+  /** 缺失时（无论 hide 还是 disable 策略）推荐分类不出现；两个分类 adapter 也缺时面板只有输入框 */
   searchTags?: (keyword: string) => Promise<string[]>
+  getTagCategories?: () => Promise<TagCategory[]>
+  getTagsByCategory?: (categoryId: string) => Promise<string[]>
+  onLoadError?(error: unknown): void
   invalid: boolean
 }
 
-export function TagField({ id, tags, onChange, searchTags, invalid }: TagFieldProps) {
+export function TagField({ id, tags, onChange, searchTags, getTagCategories, getTagsByCategory, onLoadError, invalid }: TagFieldProps) {
   const p = useMessages().publish
   const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const addRef = useRef<HTMLButtonElement>(null)
+  const close = () => {
+    setOpen(false)
+    // 焦点在面板外的其他控件时（如弹窗内别的字段按 Esc）不抢走焦点
+    const active = rootRef.current?.ownerDocument.activeElement
+    if (!active || active === active.ownerDocument.body || rootRef.current?.contains(active)) addRef.current?.focus()
+  }
   const add = (raw: string) => {
     const tag = raw.trim()
     if (!tag || tags.includes(tag) || tags.length >= MAX_TAGS) return
@@ -25,115 +36,45 @@ export function TagField({ id, tags, onChange, searchTags, invalid }: TagFieldPr
     onChange(next)
     if (next.length >= MAX_TAGS) setOpen(false)
   }
+  const canAdd = tags.length < MAX_TAGS
   return (
-    <div className="ex-pub-line ex-pub-tags">
+    <div ref={rootRef} className="ex-pub-line ex-pub-tags">
       {tags.map((tag) => (
-        <Tag key={tag} className="ex-pub-tag" closable closeLabel={p.tags.remove} onClose={() => onChange(tags.filter((t) => t !== tag))}>
+        <Tag
+          key={tag}
+          variant="primary"
+          className="ex-pub-tag"
+          closable
+          closeLabel={p.tags.remove}
+          onClose={() => onChange(tags.filter((t) => t !== tag))}
+        >
           {tag}
         </Tag>
       ))}
-      {tags.length < MAX_TAGS && (
-        <Popover
-          open={open}
-          onOpenChange={setOpen}
-          className="ex-pub-tag-popover"
-          content={() => <TagSearch selected={tags} onAdd={add} searchTags={searchTags} />}
+      {canAdd && (
+        <button
+          ref={addRef}
+          type="button"
+          className="ex-pub-tag-add"
+          aria-expanded={open}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid ? errorId(id) : undefined}
+          onClick={() => setOpen((v) => !v)}
         >
-          <button
-            type="button"
-            className="ex-pub-tag-add"
-            aria-invalid={invalid || undefined}
-            aria-describedby={invalid ? errorId(id) : undefined}
-          >
-            <Plus size={12} aria-hidden="true" />
-            {p.tags.add}
-          </button>
-        </Popover>
+          <PlusIcon size={10} className="ex-pub-tag-add__plus" />
+          {p.tags.add}
+        </button>
       )}
-    </div>
-  )
-}
-
-interface TagSearchProps {
-  selected: readonly string[]
-  onAdd(tag: string): void
-  searchTags?: (keyword: string) => Promise<string[]>
-}
-
-function TagSearch({ selected, onAdd, searchTags }: TagSearchProps) {
-  const p = useMessages().publish
-  const [keyword, setKeyword] = useState('')
-  const [results, setResults] = useState<string[] | null>(null)
-
-  useEffect(() => {
-    if (!searchTags) return
-    let live = true
-    const query = keyword.trim()
-    const timer = window.setTimeout(
-      () => {
-        searchTags(query).then(
-          (list) => {
-            if (live) setResults(list)
-          },
-          () => {
-            if (live) setResults([])
-          },
-        )
-      },
-      query ? 300 : 0,
-    )
-    return () => {
-      live = false
-      window.clearTimeout(timer)
-    }
-  }, [keyword, searchTags])
-
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter' || e.nativeEvent.isComposing || e.keyCode === 229) return
-    e.preventDefault()
-    onAdd(keyword)
-    setKeyword('')
-  }
-
-  return (
-    <div className="ex-pub-tag-search">
-      <input
-        className="ex-pub-input ex-pub-tag-search__input"
-        type="search"
-        value={keyword}
-        placeholder={p.tags.searchPlaceholder}
-        aria-label={p.tags.search}
-        onChange={(e) => setKeyword(e.target.value)}
-        onKeyDown={onKeyDown}
-      />
-      <div className="ex-pub-tag-search__meta">{formatMessage(p.tags.count, { count: MAX_TAGS - selected.length })}</div>
-      {searchTags && (
-        <div className="ex-pub-tag-search__section">
-          <div className="ex-pub-tag-search__title">{p.tags.suggestions}</div>
-          {results !== null &&
-            (results.length === 0 ? (
-              <div className="ex-pub-tag-search__empty">{p.tags.empty}</div>
-            ) : (
-              <ul className="ex-pub-tag-search__list" aria-label={p.tags.suggestions}>
-                {results.map((tag) => {
-                  const on = selected.includes(tag)
-                  return (
-                    <li key={tag}>
-                      <button
-                        type="button"
-                        className={cx('ex-pub-tag-option', on && 'is-selected')}
-                        aria-pressed={on}
-                        disabled={on}
-                        onClick={() => onAdd(tag)}
-                      >
-                        {tag}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            ))}
-        </div>
+      {open && canAdd && (
+        <TagPicker
+          selected={tags}
+          onAdd={add}
+          onClose={close}
+          searchTags={searchTags}
+          getTagCategories={getTagCategories}
+          getTagsByCategory={getTagsByCategory}
+          onLoadError={onLoadError}
+        />
       )}
     </div>
   )

@@ -1,4 +1,5 @@
-import type { ArticleType, Category } from '@editorx/toolbar'
+import type { ArticleType, Category, TagCategory } from '@editorx/toolbar'
+import { Modal } from '@editorx/ui'
 import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -10,12 +11,20 @@ import { ActivityField, ArticleTypeField, BackupField } from './option-fields'
 import { SummaryField } from './summary-field'
 import { TagField } from './tag-field'
 
-function Tags({ initial = [], searchTags }: { initial?: string[]; searchTags?: (k: string) => Promise<string[]> }) {
+function Tags({
+  initial = [],
+  searchTags,
+  getTagCategories,
+}: {
+  initial?: string[]
+  searchTags?: (k: string) => Promise<string[]>
+  getTagCategories?: () => Promise<TagCategory[]>
+}) {
   const [tags, setTags] = useState(initial)
   return (
     <>
       <span id="t-label">文章标签</span>
-      <TagField id="t" tags={tags} onChange={setTags} searchTags={searchTags} invalid={false} />
+      <TagField id="t" tags={tags} onChange={setTags} searchTags={searchTags} getTagCategories={getTagCategories} invalid={false} />
       <output data-testid="tags">{tags.join(',')}</output>
     </>
   )
@@ -66,7 +75,11 @@ describe('TagField', () => {
     expect(screen.queryByRole('button', { name: '添加文章标签' })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: '删除标签 3' }))
     expect(screen.getByTestId('tags')).toHaveTextContent('1,2,4,5,6,7')
-    expect(screen.getByRole('button', { name: '添加文章标签' })).toBeInTheDocument()
+    const add = screen.getByRole('button', { name: '添加文章标签' })
+    await userEvent.click(add)
+    await userEvent.click(screen.getByRole('button', { name: '关闭标签面板' }))
+    expect(screen.getByRole('button', { name: '添加文章标签' })).toHaveFocus()
+    expect(add).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('无 searchTags（hide 与 disable 策略相同）：弹层只有可用的输入框，无推荐区与禁用控件', async () => {
@@ -75,8 +88,8 @@ describe('TagField', () => {
     const input = await screen.findByRole('searchbox', { name: '搜索标签' })
     expect(input).toBeEnabled()
     expect(screen.queryByText('推荐标签')).toBeNull()
-    expect(baseElement.querySelector('.ex-pub-tag-search__section')).toBeNull()
-    expect(baseElement.querySelector('.ex-pub-tag-search :disabled')).toBeNull()
+    expect(baseElement.querySelector('.ex-pub-tag-picker__body')).toBeNull()
+    expect(baseElement.querySelector('.ex-pub-tag-picker :disabled')).toBeNull()
     await userEvent.type(input, 'Rust{Enter}')
     expect(screen.getByTestId('tags')).toHaveTextContent(/^Rust$/)
   })
@@ -92,6 +105,51 @@ describe('TagField', () => {
     expect(input).toHaveValue('pinyin')
     fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 })
     expect(screen.getByTestId('tags')).toHaveTextContent(/^pinyin$/)
+  })
+
+  it('已选标签为 primary chip；添加按钮切换面板并带 aria-expanded（B09/B11）', async () => {
+    const { container } = renderWithProviders(<Tags initial={['jvm']} />)
+    expect(container.querySelector('.ex-pub-tag')).toHaveClass('ex-tag--primary')
+    const add = screen.getByRole('button', { name: '添加文章标签' })
+    expect(add).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('dialog', { name: '标签' }).closest('.ex-pub-tags')).not.toBeNull()
+    await userEvent.click(add)
+    expect(screen.queryByRole('dialog', { name: '标签' })).toBeNull()
+  })
+
+  it('弹窗内 Esc 只关闭标签面板，第二次 Esc 才关闭弹窗（浮层树子节点）', async () => {
+    const onModalClose = vi.fn()
+    renderWithProviders(
+      <Modal open onClose={onModalClose} title="发布文章">
+        <Tags />
+      </Modal>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '添加文章标签' }))
+    expect(screen.getByRole('dialog', { name: '标签' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: '标签' })).toBeNull()
+    expect(onModalClose).not.toHaveBeenCalled()
+    await userEvent.keyboard('{Escape}')
+    expect(onModalClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('焦点在弹窗其他控件时 Esc 只关闭面板，焦点留在原控件', async () => {
+    const onModalClose = vi.fn()
+    renderWithProviders(
+      <Modal open onClose={onModalClose} title="发布文章">
+        <Tags />
+        <button type="button">其他控件</button>
+      </Modal>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '添加文章标签' }))
+    const other = screen.getByRole('button', { name: '其他控件' })
+    other.focus()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: '标签' })).toBeNull()
+    expect(onModalClose).not.toHaveBeenCalled()
+    expect(other).toHaveFocus()
   })
 })
 
