@@ -153,6 +153,7 @@ function usePublishParts(
   )
   const scheduleDialog = schedule && (
     <ScheduleDialog
+      range={props.scheduleRange}
       error={schedule.showError ? ctl.errors.scheduledAt : undefined}
       busy={ctl.busy === 'publish'}
       onCancel={() => setSchedule(null)}

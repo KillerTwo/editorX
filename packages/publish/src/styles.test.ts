@@ -55,6 +55,34 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub \.ex-radio\.is-checked \{[^}]*color: var\(--ex-pub-option-checked\);/)
   })
 
+  it('定时发布弹窗几何（B25–B33）', () => {
+    expect(css).toMatch(/\.ex-pub-schedule \.ex-modal__header \{[^}]*padding: 20px 20px 0;/)
+    expect(css).toMatch(/\.ex-pub-schedule \.ex-modal__body \{[^}]*padding: 0 24px 0 20px;/)
+    expect(css).toMatch(/\.ex-pub-schedule__fields \{[^}]*gap: 12px;/)
+    expect(css).toMatch(/\.ex-pub-schedule__date,\n\.ex-pub-schedule__time \{[^}]*width: 155px;/)
+    expect(css).toMatch(
+      /\.ex-pub-schedule \.ex-picker-input\.ex-pub-schedule__date,\n\.ex-pub-schedule \.ex-picker-input\.ex-pub-schedule__time \{ padding-left: 10px; \}/,
+    )
+    expect(css).toMatch(/\.ex-pub-schedule__cancel \{[^}]*width: 74\.5px;[^}]*height: 32px;/)
+    expect(css).toMatch(/\.ex-pub-schedule__confirm \{[^}]*width: 96px;[^}]*height: 32px;/)
+    expect(css).toMatch(/\.ex-pub-schedule__hint,\n\.ex-pub-schedule__error \{[^}]*margin: 11px 0 11px;/)
+    expect(css).toMatch(/\.ex-pub-schedule \.ex-modal__close svg \{[^}]*width: 19px;[^}]*stroke-linecap: butt;/)
+    expect(css).toMatch(/\.ex-pub-schedule \.ex-modal__footer \{[^}]*padding: 40px 20px 20px;/)
+    expect(css).toMatch(/\.ex-pub-schedule-mask \{[^}]*background: var\(--ex-color-pub-schedule-mask\);/)
+  })
+
+  it('定时发布输入框与取消按钮颜色（B29、§3.3）', () => {
+    expect(css).toMatch(/\.ex-pub-schedule \.ex-picker-input \{ border-color: var\(--ex-color-pub-border\); \}/)
+    expect(css).toMatch(
+      /\.ex-pub-schedule \.ex-picker-input:disabled \{ background: var\(--ex-color-pub-disabled-bg\); border-color: var\(--ex-color-pub-disabled-border\); \}/,
+    )
+    expect(css).toMatch(
+      /\.ex-pub-schedule \.ex-picker-input__icon,\n\.ex-pub-schedule \.ex-picker-input\.is-placeholder \.ex-picker-input__value,\n\.ex-pub-schedule \.ex-picker-input\.is-placeholder \.ex-select__value \{ color: var\(--ex-color-pub-placeholder-modal\); \}/,
+    )
+    expect(css).toMatch(/\.ex-pub-schedule__cancel \{[^}]*color: var\(--ex-color-text-secondary\);/)
+    expect(css).not.toMatch(/\.ex-pub-schedule__(date|time)[^{]*\{[^}]*pub-picker-border/)
+  })
+
   it('自建主题根与 .ex-mde-theme 一致，不占布局', () => {
     expect(css).toMatch(/\.ex-pub-theme \{\s*display: contents;\s*\}/)
   })

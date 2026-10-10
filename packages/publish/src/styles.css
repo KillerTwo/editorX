@@ -410,8 +410,56 @@ a.ex-pub-link:hover { text-decoration: underline; }
 .ex-pub-modal .ex-pub-action[data-action='schedule'] { width: 98px; }
 .ex-pub-modal .ex-pub-action[data-action='publish'] { width: 96px; font-weight: 700; }
 
-.ex-pub-schedule__label { display: block; margin-bottom: 8px; color: var(--ex-color-pub-label); }
-.ex-pub-schedule__input { width: 100%; }
-.ex-pub-schedule__hint { margin: 8px 0 0; color: var(--ex-color-text-muted); font-size: 12px; }
-.ex-pub-schedule__error { margin: 8px 0 0; color: var(--ex-color-error); font-size: 12px; }
+/* ---------- 定时发布弹窗（B25–B33，366×218；日期面板外观 inferred default） ---------- */
+.ex-pub-schedule-mask { background: var(--ex-color-pub-schedule-mask); }
+.ex-pub-schedule.ex-modal {
+  border-radius: var(--ex-radius-sm);
+  color: var(--ex-color-pub-dialog-text);
+  font-family: var(--ex-font-family-helvetica);
+}
+.ex-pub-schedule .ex-modal__header { position: relative; padding: 20px 20px 0; }
+.ex-pub-schedule .ex-modal__title { color: var(--ex-color-pub-dialog-text); font-size: 18px; font-weight: 700; line-height: 24px; }
+.ex-pub-schedule .ex-modal__close {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--ex-color-pub-dialog-close);
+}
+.ex-pub-schedule .ex-modal__close svg { width: 19px; height: 19px; stroke-width: 1.25; stroke-linecap: butt; }
+.ex-pub-schedule .ex-modal__body { padding: 0 24px 0 20px; overflow: visible; }
+.ex-pub-schedule__hint,
+.ex-pub-schedule__error { margin: 11px 0 11px; font-size: 14px; line-height: 20px; }
+.ex-pub-schedule__hint { color: var(--ex-color-pub-dialog-text); }
+.ex-pub-schedule__error { color: var(--ex-color-error); }
+.ex-pub-schedule__fields { display: flex; gap: 12px; }
+.ex-pub-schedule__date,
+.ex-pub-schedule__time { width: 155px; }
+/* 输入框颜色按参考图 §3.3 覆盖 ui 的通用默认值；图标描边与占位文字墨迹起点为框内 +11.5 / +31.5 */
+.ex-pub-schedule .ex-picker-input { border-color: var(--ex-color-pub-border); }
+.ex-pub-schedule .ex-picker-input.ex-pub-schedule__date,
+.ex-pub-schedule .ex-picker-input.ex-pub-schedule__time { padding-left: 10px; }
+.ex-pub-schedule .ex-picker-input:disabled { background: var(--ex-color-pub-disabled-bg); border-color: var(--ex-color-pub-disabled-border); }
+.ex-pub-schedule .ex-picker-input__icon,
+.ex-pub-schedule .ex-picker-input.is-placeholder .ex-picker-input__value,
+.ex-pub-schedule .ex-picker-input.is-placeholder .ex-select__value { color: var(--ex-color-pub-placeholder-modal); }
+.ex-pub-schedule .ex-modal__footer { padding: 40px 20px 20px; gap: 20.5px; }
+.ex-pub-schedule__cancel { width: 74.5px; height: 32px; color: var(--ex-color-text-secondary); }
+.ex-pub-schedule__confirm { width: 96px; height: 32px; }
+
+/* ---------- 发布面板下拉列表（B16–B19；时间选择器与表单下拉共用，Task 13 接入表单） ---------- */
+.ex-pub-select-list {
+  border: 1px solid var(--ex-color-pub-dropdown-border);
+  border-radius: var(--ex-radius-md);
+  box-shadow: 0 2px 12px var(--ex-color-pub-dropdown-shadow);
+  font-family: var(--ex-font-family-helvetica);
+}
+.ex-pub-select-list .ex-select__option { color: var(--ex-color-pub-label); }
+.ex-pub-select-list .ex-select__option.is-selected { color: var(--ex-color-pub-option-selected); font-weight: 700; }
+.ex-pub-select-list .ex-select__option:disabled { color: var(--ex-color-pub-placeholder-modal); }
 .ex-pub-crop .ex-modal__body { padding-top: 8px; }

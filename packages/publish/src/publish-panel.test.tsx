@@ -1,10 +1,10 @@
 import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@editorx/toolbar'
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PublishModal, PublishPanel } from './publish-panel'
-import { fromLocalInputValue, toLocalInputValue } from './schedule'
+import type { ScheduleRange } from './schedule'
 import { renderWithProviders } from './test-utils'
 
 const doc: EditorDocument = {
@@ -45,6 +45,16 @@ async function collectUnhandledRejections(run: () => Promise<void>): Promise<unk
   }
   return caught
 }
+
+async function pickSchedule(dialog: HTMLElement, date: string, time: string) {
+  await userEvent.click(within(dialog).getByRole('button', { name: '发布日期' }))
+  const calendar = await screen.findByRole('dialog', { name: '发布日期' })
+  await userEvent.click(within(calendar).getByRole('button', { name: date }))
+  await userEvent.click(within(dialog).getByRole('combobox', { name: '发布时间' }))
+  await userEvent.click(await screen.findByRole('option', { name: time }))
+}
+
+const SCHEDULE_HINT = '请选择当前时间后 4小时 至 7天 进行定时发布'
 
 const LABELS = ['文章标签', '添加封面', '文章摘要', '分类专栏', '文章类型', '创作声明', '文章备份', '可见范围', '文章模板', '多平台发布', '参与活动']
 
@@ -205,90 +215,6 @@ describe('PublishPanel（内联）', () => {
     expect(await screen.findByText('草稿已保存')).toBeInTheDocument()
   })
 
-  it('定时发布：选择时间后发布，payload 带 scheduledAt', async () => {
-    const a = adapters()
-    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
-    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
-    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    const input = screen.getByLabelText('发布时间')
-    expect(input).toHaveAttribute('type', 'datetime-local')
-    const value = toLocalInputValue(new Date(Date.now() + 5 * 3_600_000))
-    fireEvent.change(input, { target: { value } })
-    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
-    await waitFor(() =>
-      expect(a.onPublish).toHaveBeenCalledWith(
-        expect.objectContaining({ scheduledAt: fromLocalInputValue(value) }),
-      ),
-    )
-    await waitFor(() => expect(dialog).not.toBeInTheDocument())
-  })
-
-  it('定时发布：scheduleRange 放宽下限后，1 小时后可以发布', async () => {
-    const a = adapters()
-    renderWithProviders(
-      <PublishPanel
-        document={doc}
-        adapters={a}
-        defaultValue={{ tags: ['React'] }}
-        scheduleRange={{ minOffsetMs: 0, maxOffsetMs: 86_400_000 }}
-      />,
-    )
-    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
-    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    const value = toLocalInputValue(new Date(Date.now() + 3_600_000))
-    fireEvent.change(within(dialog).getByLabelText('发布时间'), { target: { value } })
-    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
-    await waitFor(() =>
-      expect(a.onPublish).toHaveBeenCalledWith(expect.objectContaining({ scheduledAt: fromLocalInputValue(value) })),
-    )
-  })
-
-  it('定时发布：scheduleRange 上限 1 天时，25 小时后报错且不发布', async () => {
-    const a = adapters()
-    renderWithProviders(
-      <PublishPanel
-        document={doc}
-        adapters={a}
-        defaultValue={{ tags: ['React'] }}
-        scheduleRange={{ minOffsetMs: 0, maxOffsetMs: 86_400_000 }}
-      />,
-    )
-    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
-    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    const value = toLocalInputValue(new Date(Date.now() + 25 * 3_600_000))
-    fireEvent.change(within(dialog).getByLabelText('发布时间'), { target: { value } })
-    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
-    expect(await within(dialog).findByText('请选择当前时间后 0分钟 至 1天 进行定时发布')).toBeInTheDocument()
-    expect(a.onPublish).not.toHaveBeenCalled()
-  })
-
-  it('定时发布：时间早于当前时，弹窗保持打开并显示错误', async () => {
-    const a = adapters()
-    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
-    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
-    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    const input = within(dialog).getByLabelText('发布时间')
-    fireEvent.change(input, { target: { value: '2000-01-01T10:00' } })
-    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
-    expect(await within(dialog).findByText('发布时间需晚于当前时间')).toBeInTheDocument()
-    expect(input).toHaveAttribute('aria-invalid', 'true')
-    expect(dialog).toBeInTheDocument()
-    expect(a.onPublish).not.toHaveBeenCalled()
-  })
-
-  it('定时发布：其他字段校验失败时关闭弹窗并聚焦首个错误字段', async () => {
-    const a = adapters()
-    renderWithProviders(<PublishPanel document={doc} adapters={a} />)
-    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
-    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
-    await waitFor(() => expect(dialog).not.toBeInTheDocument())
-    const add = screen.getByRole('button', { name: '添加文章标签' })
-    await waitFor(() => expect(add).toHaveFocus())
-    expect(add).toHaveAttribute('aria-invalid', 'true')
-    expect(a.onPublish).not.toHaveBeenCalled()
-  })
-
   it('缺失 adapter：hide 隐藏、disable 禁用', () => {
     const { container, unmount } = renderWithProviders(<PublishPanel document={doc} adapters={{}} />)
     expect(screen.queryByRole('button', { name: '保存草稿' })).toBeNull()
@@ -347,8 +273,132 @@ describe('PublishPanel（内联）', () => {
     expect(container.querySelector('.ex-pub-theme')).toBeNull()
     expect(container.querySelector('.ex-root')).toContainElement(screen.getByRole('region', { name: '发布设置' }))
   })
+})
 
-  it('定时发布请求进行中：确认按钮显示加载态，完成后关闭弹窗', async () => {
+describe('定时发布', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 9, 9, 12, 0))
+  })
+  afterEach(() => vi.useRealTimers())
+
+  async function openSchedule() {
+    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
+    return screen.findByRole('dialog', { name: '定时发布' })
+  }
+
+  it('选择日期与时间后发布，payload 带 scheduledAt，弹窗关闭', async () => {
+    const a = adapters()
+    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
+    const dialog = await openSchedule()
+    expect(within(dialog).getByText(SCHEDULE_HINT)).toBeInTheDocument()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    await waitFor(() =>
+      expect(a.onPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ scheduledAt: new Date(2026, 9, 10, 10, 0).toISOString() }),
+      ),
+    )
+    await waitFor(() => expect(dialog).not.toBeInTheDocument())
+  })
+
+  it('未选日期直接确认：提示行变为错误，弹窗保持打开，不发布', async () => {
+    const a = adapters()
+    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
+    const dialog = await openSchedule()
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(SCHEDULE_HINT)
+    await tick()
+    expect(dialog).toBeInTheDocument()
+    expect(a.onPublish).not.toHaveBeenCalled()
+  })
+
+  it('所选时刻在点击时已越界：弹窗本地拦截并显示错误，不发布', async () => {
+    const a = adapters()
+    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-09', '16:00')
+    vi.setSystemTime(new Date(2026, 9, 9, 12, 1))
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(SCHEDULE_HINT)
+    await tick()
+    expect(dialog).toBeInTheDocument()
+    expect(a.onPublish).not.toHaveBeenCalled()
+  })
+
+  it('scheduleRange 放宽下限：1 小时后的时间档可选并发布', async () => {
+    const a = adapters()
+    renderWithProviders(
+      <PublishPanel
+        document={doc}
+        adapters={a}
+        defaultValue={{ tags: ['React'] }}
+        scheduleRange={{ minOffsetMs: 0, maxOffsetMs: 86_400_000 }}
+      />,
+    )
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-09', '13:00')
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    await waitFor(() =>
+      expect(a.onPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ scheduledAt: new Date(2026, 9, 9, 13, 0).toISOString() }),
+      ),
+    )
+  })
+
+  it('scheduleRange 上限 1 天：提示随区间变化，超过 24 小时的日期与时间档禁用', async () => {
+    renderWithProviders(
+      <PublishPanel
+        document={doc}
+        adapters={adapters()}
+        defaultValue={{ tags: ['React'] }}
+        scheduleRange={{ minOffsetMs: 0, maxOffsetMs: 86_400_000 }}
+      />,
+    )
+    const dialog = await openSchedule()
+    expect(within(dialog).getByText('请选择当前时间后 0分钟 至 1天 进行定时发布')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: '发布日期' }))
+    const calendar = await screen.findByRole('dialog', { name: '发布日期' })
+    expect(within(calendar).getByRole('button', { name: '2026-10-11' })).toBeDisabled()
+    await userEvent.click(within(calendar).getByRole('button', { name: '2026-10-10' }))
+    await userEvent.click(within(dialog).getByRole('combobox', { name: '发布时间' }))
+    expect(await screen.findByRole('option', { name: '12:00' })).toBeEnabled()
+    expect(screen.getByRole('option', { name: '12:30' })).toBeDisabled()
+  })
+
+  it('发布时间被宿主规则拒绝：错误显示在弹窗提示行，弹窗保持打开', async () => {
+    const a = adapters()
+    renderWithProviders(
+      <PublishPanel
+        document={doc}
+        adapters={a}
+        defaultValue={{ tags: ['React'] }}
+        rules={{ scheduledAt: () => '该时段不可发布' }}
+      />,
+    )
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('该时段不可发布')
+    expect(dialog.querySelector('.ex-pub-schedule__hint')).toBeNull()
+    expect(dialog).toBeInTheDocument()
+    expect(a.onPublish).not.toHaveBeenCalled()
+  })
+
+  it('其他字段校验失败时关闭弹窗并聚焦首个错误字段', async () => {
+    const a = adapters()
+    renderWithProviders(<PublishPanel document={doc} adapters={a} />)
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    await waitFor(() => expect(dialog).not.toBeInTheDocument())
+    const add = screen.getByRole('button', { name: '添加文章标签' })
+    await waitFor(() => expect(add).toHaveFocus())
+    expect(add).toHaveAttribute('aria-invalid', 'true')
+    expect(a.onPublish).not.toHaveBeenCalled()
+  })
+
+  it('请求进行中：确认按钮显示加载态，完成后关闭弹窗', async () => {
     let finish!: () => void
     const a = adapters({
       onPublish: vi.fn(
@@ -359,8 +409,8 @@ describe('PublishPanel（内联）', () => {
       ),
     })
     renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
-    await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
-    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
     const confirm = within(dialog).getByRole('button', { name: '定时发布' })
     expect(confirm).not.toHaveAttribute('aria-busy')
     await userEvent.click(confirm)
@@ -377,10 +427,12 @@ describe('PublishModal', () => {
     a,
     onPublished,
     defaultValue,
+    scheduleRange,
   }: {
     a: EditorAdapters
     onPublished?: () => void
     defaultValue?: Partial<PublishSettings>
+    scheduleRange?: ScheduleRange
   }) {
     const [open, setOpen] = useState(false)
     return (
@@ -393,10 +445,20 @@ describe('PublishModal', () => {
           adapters={a}
           defaultValue={defaultValue}
           onPublished={onPublished}
+          scheduleRange={scheduleRange}
         />
       </>
     )
   }
+
+  it('定时发布弹窗按 scheduleRange 显示区间提示', async () => {
+    renderWithProviders(<Host a={adapters()} scheduleRange={{ minOffsetMs: 0, maxOffsetMs: 86_400_000 }} />)
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    const modal = await screen.findByRole('dialog', { name: '发布文章' })
+    await userEvent.click(within(modal).getByRole('button', { name: '定时发布' }))
+    const dialog = await screen.findByRole('dialog', { name: '定时发布' })
+    expect(within(dialog).getByText('请选择当前时间后 0分钟 至 1天 进行定时发布')).toHaveClass('ex-pub-schedule__hint')
+  })
 
   it('模态呈现：标题、模态文案与按钮；取消关闭；重新打开保留设置', async () => {
     renderWithProviders(<Host a={adapters()} />)
