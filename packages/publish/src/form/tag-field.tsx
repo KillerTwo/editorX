@@ -1,28 +1,35 @@
-import { useMessages, type TagCategory } from '@editorx/toolbar'
+import { useMessages } from '@editorx/toolbar'
 import { Tag } from '@editorx/ui'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PlusIcon } from '../icons'
 import { MAX_TAGS } from '../validate'
 import { errorId } from './form-item'
-import { TagPicker } from './tag-picker'
+import { hasTag, TagPicker } from './tag-picker'
+import { useTagCatalog, type TagSources } from './use-tag-catalog'
 
-export interface TagFieldProps {
+export interface TagFieldProps extends TagSources {
   id: string
   tags: readonly string[]
   onChange(tags: string[]): void
-  /** 缺失时（无论 hide 还是 disable 策略）推荐分类不出现；两个分类 adapter 也缺时面板只有输入框 */
-  searchTags?: (keyword: string) => Promise<string[]>
-  getTagCategories?: () => Promise<TagCategory[]>
-  getTagsByCategory?: (categoryId: string) => Promise<string[]>
-  onLoadError?(error: unknown): void
   invalid: boolean
 }
 
-export function TagField({ id, tags, onChange, searchTags, getTagCategories, getTagsByCategory, onLoadError, invalid }: TagFieldProps) {
+/** 缺 searchTags 时（无论 hide 还是 disable 策略）推荐分类不出现；两个分类 adapter 也缺时面板只有输入框 */
+export function TagField({ id, tags, onChange, invalid, ...sources }: TagFieldProps) {
   const p = useMessages().publish
   const [open, setOpen] = useState(false)
+  const catalog = useTagCatalog(sources)
   const rootRef = useRef<HTMLDivElement>(null)
   const addRef = useRef<HTMLButtonElement>(null)
+  /** 提交后要聚焦的标签 × 下标：不存在则退到上一个，再退到添加按钮或标签行 */
+  const pendingFocus = useRef<number | null>(null)
+  useEffect(() => {
+    const index = pendingFocus.current
+    if (index === null) return
+    pendingFocus.current = null
+    const closes = rootRef.current?.querySelectorAll<HTMLElement>('.ex-tag__close')
+    ;(closes?.[index] ?? closes?.[index - 1] ?? addRef.current ?? rootRef.current)?.focus()
+  })
   const close = () => {
     setOpen(false)
     // 焦点在面板外的其他控件时（如弹窗内别的字段按 Esc）不抢走焦点
@@ -31,22 +38,31 @@ export function TagField({ id, tags, onChange, searchTags, getTagCategories, get
   }
   const add = (raw: string) => {
     const tag = raw.trim()
-    if (!tag || tags.includes(tag) || tags.length >= MAX_TAGS) return
+    if (!tag || hasTag(tags, tag) || tags.length >= MAX_TAGS) return false
     const next = [...tags, tag]
     onChange(next)
-    if (next.length >= MAX_TAGS) setOpen(false)
+    if (next.length >= MAX_TAGS) {
+      // 添加按钮随面板一起卸载，焦点交给最后一个标签的 ×
+      setOpen(false)
+      pendingFocus.current = next.length - 1
+    }
+    return true
+  }
+  const remove = (index: number) => {
+    pendingFocus.current = index
+    onChange(tags.filter((_, i) => i !== index))
   }
   const canAdd = tags.length < MAX_TAGS
   return (
-    <div ref={rootRef} className="ex-pub-line ex-pub-tags">
-      {tags.map((tag) => (
+    <div ref={rootRef} className="ex-pub-line ex-pub-tags" tabIndex={-1}>
+      {tags.map((tag, index) => (
         <Tag
           key={tag}
           variant="primary"
           className="ex-pub-tag"
           closable
           closeLabel={p.tags.remove}
-          onClose={() => onChange(tags.filter((t) => t !== tag))}
+          onClose={() => remove(index)}
         >
           {tag}
         </Tag>
@@ -65,17 +81,7 @@ export function TagField({ id, tags, onChange, searchTags, getTagCategories, get
           {p.tags.add}
         </button>
       )}
-      {open && canAdd && (
-        <TagPicker
-          selected={tags}
-          onAdd={add}
-          onClose={close}
-          searchTags={searchTags}
-          getTagCategories={getTagCategories}
-          getTagsByCategory={getTagsByCategory}
-          onLoadError={onLoadError}
-        />
-      )}
+      {open && canAdd && <TagPicker selected={tags} onAdd={add} onClose={close} catalog={catalog} />}
     </div>
   )
 }

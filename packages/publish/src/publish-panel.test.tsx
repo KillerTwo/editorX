@@ -242,6 +242,17 @@ describe('PublishPanel（内联）', () => {
     expect(screen.queryByText('推荐标签')).toBeNull()
   })
 
+  it('getTagCategories 失败：提示「文章标签加载失败」一次，面板回退「推荐」', async () => {
+    const a = adapters({ getTagCategories: vi.fn(() => Promise.reject(new Error('网络错误'))) })
+    renderWithProviders(<PublishPanel document={doc} adapters={a} />)
+    await userEvent.click(screen.getByRole('button', { name: '添加文章标签' }))
+    expect(await screen.findByText('文章标签加载失败：网络错误')).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: '推荐' })).toHaveAttribute('aria-selected', 'true')
+    await tick()
+    expect(screen.getAllByText('文章标签加载失败：网络错误')).toHaveLength(1)
+    expect(a.getTagCategories).toHaveBeenCalledTimes(1)
+  })
+
   it('参与活动/话题：只缺 getTopics 时只渲染「活动」子行', () => {
     const { container } = renderWithProviders(
       <PublishPanel document={doc} adapters={{ getActivities: vi.fn(async () => []) }} />,

@@ -1,6 +1,6 @@
 import type { ArticleType, Category, TagCategory } from '@editorx/toolbar'
 import { Modal } from '@editorx/ui'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -11,24 +11,41 @@ import { ActivityField, ArticleTypeField, BackupField } from './option-fields'
 import { SummaryField } from './summary-field'
 import { TagField } from './tag-field'
 
+/** adapter 每次渲染都包一层新函数，模拟调用方内联传入 adapters={{…}} */
 function Tags({
   initial = [],
   searchTags,
   getTagCategories,
+  getTagsByCategory,
+  onLoadError,
 }: {
   initial?: string[]
   searchTags?: (k: string) => Promise<string[]>
   getTagCategories?: () => Promise<TagCategory[]>
+  getTagsByCategory?: (id: string) => Promise<string[]>
+  onLoadError?: (error: unknown) => void
 }) {
   const [tags, setTags] = useState(initial)
   return (
     <>
       <span id="t-label">文章标签</span>
-      <TagField id="t" tags={tags} onChange={setTags} searchTags={searchTags} getTagCategories={getTagCategories} invalid={false} />
+      <TagField
+        id="t"
+        tags={tags}
+        onChange={setTags}
+        searchTags={searchTags && ((k) => searchTags(k))}
+        getTagCategories={getTagCategories && (() => getTagCategories())}
+        getTagsByCategory={getTagsByCategory && ((id) => getTagsByCategory(id))}
+        onLoadError={onLoadError && ((error) => onLoadError(error))}
+        invalid={false}
+      />
       <output data-testid="tags">{tags.join(',')}</output>
     </>
   )
 }
+
+const addButton = () => screen.getByRole('button', { name: '添加文章标签' })
+const closeTagPanel = () => userEvent.click(screen.getByRole('button', { name: '关闭标签面板' }))
 
 describe('FormItem', () => {
   it('标签、必填星号、帮助图标、错误信息与 data-field', () => {
@@ -64,6 +81,77 @@ describe('TagField', () => {
     expect(input).toHaveValue('')
     await userEvent.type(input, 'React{Enter}')
     expect(screen.getByTestId('tags')).toHaveTextContent(/^React,ts$/)
+    expect(input).toHaveValue('React')
+  })
+
+  it('重复判断忽略大小写与首尾空白；未添加时 Enter 保留输入', async () => {
+    renderWithProviders(<Tags initial={['React']} />)
+    await userEvent.click(addButton())
+    const input = await screen.findByRole('searchbox', { name: '搜索标签' })
+    await userEvent.type(input, ' react {Enter}')
+    expect(screen.getByTestId('tags')).toHaveTextContent(/^React$/)
+    expect(input).toHaveValue(' react ')
+  })
+
+  it('添加第 7 个标签后面板关闭，焦点落到最后一个标签的 ×', async () => {
+    renderWithProviders(<Tags initial={['1', '2', '3', '4', '5', '6']} />)
+    await userEvent.click(addButton())
+    await userEvent.type(await screen.findByRole('searchbox', { name: '搜索标签' }), '7{Enter}')
+    expect(screen.queryByRole('dialog', { name: '标签' })).toBeNull()
+    expect(screen.getByRole('button', { name: '删除标签 7' })).toHaveFocus()
+  })
+
+  it('点 × 删除标签：焦点移到下一个标签的 ×，没有则上一个，都没有则添加按钮', async () => {
+    renderWithProviders(<Tags initial={['a', 'b', 'c']} />)
+    await userEvent.click(screen.getByRole('button', { name: '删除标签 b' }))
+    expect(screen.getByRole('button', { name: '删除标签 c' })).toHaveFocus()
+    await userEvent.click(screen.getByRole('button', { name: '删除标签 c' }))
+    expect(screen.getByRole('button', { name: '删除标签 a' })).toHaveFocus()
+    await userEvent.click(screen.getByRole('button', { name: '删除标签 a' }))
+    expect(screen.getByTestId('tags')).toHaveTextContent(/^$/)
+    expect(addButton()).toHaveFocus()
+  })
+
+  it('分类与分类标签每次挂载只加载一次：重渲染与关闭再打开都不重新加载', async () => {
+    const getTagCategories = vi.fn(async (): Promise<TagCategory[]> => [
+      { id: 'a', name: 'A' },
+      { id: 'b', name: 'B' },
+    ])
+    const getTagsByCategory = vi.fn(async (id: string) => [`${id}1`, `${id}2`])
+    renderWithProviders(<Tags getTagCategories={getTagCategories} getTagsByCategory={getTagsByCategory} />)
+    await userEvent.click(addButton())
+    await userEvent.click(await screen.findByRole('button', { name: 'a1' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'B' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'b1' }))
+    expect(screen.getByTestId('tags')).toHaveTextContent(/^a1,b1$/)
+    await closeTagPanel()
+    await userEvent.click(addButton())
+    expect(screen.getByRole('button', { name: 'a2' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('tab', { name: 'B' }))
+    expect(screen.getByRole('button', { name: 'b2' })).toBeInTheDocument()
+    expect(getTagCategories).toHaveBeenCalledTimes(1)
+    expect(getTagsByCategory.mock.calls).toEqual([['a'], ['b']])
+  })
+
+  it('分类加载失败不缓存：每次失败提示一次，下次打开重试，成功后不再加载', async () => {
+    const onLoadError = vi.fn()
+    const getTagCategories = vi
+      .fn<() => Promise<TagCategory[]>>()
+      .mockRejectedValueOnce(new Error('网络错误'))
+      .mockResolvedValue([{ id: 'a', name: 'A', tags: ['a1'] }])
+    renderWithProviders(<Tags getTagCategories={getTagCategories} searchTags={async () => ['Vite']} onLoadError={onLoadError} />)
+    await userEvent.click(addButton())
+    expect(await screen.findByRole('button', { name: 'Vite' })).toBeInTheDocument()
+    await waitFor(() => expect(onLoadError).toHaveBeenCalledTimes(1))
+    await closeTagPanel()
+    await userEvent.click(addButton())
+    expect(await screen.findByRole('button', { name: 'a1' })).toBeInTheDocument()
+    expect(getTagCategories).toHaveBeenCalledTimes(2)
+    await closeTagPanel()
+    await userEvent.click(addButton())
+    expect(screen.getByRole('button', { name: 'a1' })).toBeInTheDocument()
+    expect(getTagCategories).toHaveBeenCalledTimes(2)
+    expect(onLoadError).toHaveBeenCalledTimes(1)
   })
 
   it('删除标签；满 7 个隐藏添加按钮；无 searchTags 只有输入框', async () => {
