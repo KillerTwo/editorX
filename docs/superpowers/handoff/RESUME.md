@@ -47,6 +47,10 @@
 - 按阶段推进：逐任务派子代理实现 → 任务审查 → 修复轮 → 复审；全部任务完成后做整分支终审 + 一轮修复；
   每个阶段完成后用浏览器（2558×1308，与参考截图比对）验证，通过后再进入下一阶段。用户不参与，只有需要用户操作或决策时才停下确认。
 - 每个阶段结束向用户汇报「我做出的裁定」（裁定记录格式：做了什么 — 为什么 — 代价），台账在 `.superpowers/sdd/<plan>/progress.md`。
+- 依赖：直接使用已安装的 node_modules，任务中不要 `pnpm install` / `playwright install`。只有 package.json 依赖确实变化时才装，
+  且用 `pnpm install --offline`（只用本地 store）；本地 store 没有的新依赖（如阶段 5 的 CKEditor 5）由控制方一次性联网安装后再派任务。
+- 参考截图：`apps/playground/public/reference/`（Windows 1× 的 `screenshot_*` 与 macOS 2× 的 `mac_*`），索引见 `reference-index.md`；
+  必须严格还原截图中的样式与布局，没有截图的状态才允许推断并记为裁定。
 - 分支 `develop`；不经询问不 push / merge。
 - 提交：中文 Conventional Commits + 正文；只 `git add <明确路径>`，不用 `git add .` / `-A`。
 - 技术决定：pnpm monorepo 发布 `@editorx/*`；React 19 + Next.js 16 App Router；不耦合后端（全部经 adapters 回调）；
