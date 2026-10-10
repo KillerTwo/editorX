@@ -25,6 +25,8 @@
    Copy-Item docs\superpowers\handoff\*.md, docs\superpowers\handoff\*.ps1 .superpowers\ -Exclude RESUME.md
    Add-Content .git\info\exclude ".superpowers/`n.playwright-mcp/"
    ```
+   macOS：`mkdir -p .superpowers && cp docs/superpowers/handoff/*.md docs/superpowers/handoff/*.sh .superpowers/ && rm .superpowers/RESUME.md`，
+   再把 `.superpowers/` 与 `.playwright-mcp/` 两行追加到 `.git/info/exclude`。
 4. 验证：`pnpm build --force; pnpm test; pnpm typecheck; pnpm lint`（PowerShell 中 `;` 失败也会继续，逐条看 `$LASTEXITCODE`），
    然后 `pnpm --filter playground exec playwright test --project=chromium`，性能 `--project=chromium-perf --no-deps`。
    macOS：杀端口用 `lsof -ti tcp:3100 | xargs kill -9 2>/dev/null`，每条命令检查退出码。
