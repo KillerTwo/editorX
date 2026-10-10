@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent, type SyntheticEvent } from 'react'
-import { initialCrop, MAX_ZOOM, moveCrop, zoomCrop, type CropArea, type Size } from './crop'
+import { CROP_MAX_ZOOM, initialCrop, moveCrop, zoomCrop, type CropArea, type CropSize } from './crop'
 import { cx } from './cx'
 
 export interface ImageCropperProps {
@@ -26,7 +26,7 @@ export function ImageCropper({
   className,
 }: ImageCropperProps) {
   const height = Math.round(width / aspect)
-  const [natural, setNatural] = useState<Size | null>(null)
+  const [natural, setNatural] = useState<CropSize | null>(null)
   const [area, setArea] = useState<CropArea | null>(null)
   const [zoom, setZoom] = useState(1)
   const drag = useRef<{ x: number; y: number; area: CropArea } | null>(null)
@@ -111,7 +111,7 @@ export function ImageCropper({
         className="ex-cropper__zoom"
         type="range"
         min={1}
-        max={MAX_ZOOM}
+        max={CROP_MAX_ZOOM}
         step={0.01}
         value={zoom}
         aria-label={zoomLabel}

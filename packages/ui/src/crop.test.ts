@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clampCrop, cropImage, initialCrop, MAX_ZOOM, moveCrop, zoomCrop, type CropArea } from './crop'
+import { clampCrop, CROP_MAX_ZOOM, cropImage, initialCrop, moveCrop, zoomCrop, type CropArea } from './crop'
 
 const ASPECT = 16 / 9
 
@@ -32,12 +32,12 @@ describe('裁剪几何', () => {
     expect(moveCrop(area, 5000, 5000, image)).toEqual({ x: 800, y: 450, width: 800, height: 450 })
   })
 
-  it('zoomCrop：绕当前中心缩放，倍数夹在 [1, MAX_ZOOM]', () => {
+  it('zoomCrop：绕当前中心缩放，倍数夹在 [1, CROP_MAX_ZOOM]', () => {
     const image = { width: 1600, height: 900 }
     const full = initialCrop(image, ASPECT)
     expectArea(zoomCrop(full, 2, image, ASPECT), { x: 400, y: 225, width: 800, height: 450 })
     const max = zoomCrop(full, 10, image, ASPECT)
-    expect(max.width).toBeCloseTo(1600 / MAX_ZOOM)
+    expect(max.width).toBeCloseTo(1600 / CROP_MAX_ZOOM)
     expectArea(zoomCrop(max, 0.5, image, ASPECT), full)
   })
 })
