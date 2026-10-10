@@ -1,6 +1,7 @@
 import type { EditorExtension, ExtensionContext, Messages } from '@editorx/toolbar'
-import { Bold, Heading, Italic, Strikethrough } from 'lucide-react'
+import { Bold, Heading, Italic } from 'lucide-react'
 import { detectFormats } from '../formats'
+import { StrikeIcon } from '../icons'
 import { getMarkdownInternals } from '../internals'
 
 export const ICON_SIZE = 16
@@ -58,7 +59,7 @@ export const formatExtension: EditorExtension = {
       type: 'button',
       id: 'strikethrough',
       title: (m) => m.toolbar.strikethrough,
-      icon: <Strikethrough size={ICON_SIZE} />,
+      icon: <StrikeIcon />,
       active: 'strikethrough',
       run: run('strikethrough'),
     },

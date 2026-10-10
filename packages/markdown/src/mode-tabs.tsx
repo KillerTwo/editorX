@@ -1,13 +1,13 @@
 import { useMessages } from '@editorx/toolbar'
-import { Columns2, Monitor, SquareCode, type LucideIcon } from 'lucide-react'
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, type ComponentType, type KeyboardEvent } from 'react'
 import { cx } from './cx'
+import { MarkdownModeIcon, PreviewModeIcon, SplitModeIcon } from './icons'
 import type { ViewMode } from './types'
 
-const MODES: ReadonlyArray<{ mode: ViewMode; Icon: LucideIcon }> = [
-  { mode: 'edit', Icon: SquareCode },
-  { mode: 'split', Icon: Columns2 },
-  { mode: 'preview', Icon: Monitor },
+const MODES: ReadonlyArray<{ mode: ViewMode; Icon: ComponentType }> = [
+  { mode: 'edit', Icon: MarkdownModeIcon },
+  { mode: 'split', Icon: SplitModeIcon },
+  { mode: 'preview', Icon: PreviewModeIcon },
 ]
 
 export function ModeTabs({ value, onChange }: { value: ViewMode; onChange(mode: ViewMode): void }) {
@@ -39,7 +39,7 @@ export function ModeTabs({ value, onChange }: { value: ViewMode; onChange(mode: 
           className={cx('ex-mde-mode', mode === value && 'is-active')}
           onClick={() => onChange(mode)}
         >
-          <Icon size={16} aria-hidden="true" />
+          <Icon />
           <span>{m.modes[mode]}</span>
         </button>
       ))}

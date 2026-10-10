@@ -38,23 +38,22 @@
   gap: 12px;
 }
 
-/* 参考页签宽 119/74/74：Arial 粗体的「Markdown」比参考窄约 4px，用 0.5px 字距补齐；右 padding 少 0.5px 抵消末字字距 */
+/* 参考页签宽 115.5/74/74（mac，G05）：左右 12px，字重 500（G16）；页签西文是苹方（「Markdown」墨迹 67.5px），不用编辑区的 Arial 栈 */
 .ex-mde-mode {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   height: 32px;
-  padding: 0 11.5px 0 12px;
+  padding: 0 12px;
   border: 0;
   border-radius: var(--ex-radius-lg);
   background: var(--ex-color-mde-tab-bg);
   color: var(--ex-color-mde-chrome-text);
   font: inherit;
-  font-family: var(--ex-mde-font-family);
+  font-family: var(--ex-font-family);
   font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -71,8 +70,8 @@
   border-bottom: 1px solid var(--ex-color-mde-divider);
 }
 
-/* CSDN：分隔线左右 16px；带文字按钮左右 10px、图标/文字/下拉箭头间距 6px；纯文字按钮文字前多留 6px（空图标位） */
-.ex-mde-toolbar .ex-toolbar__divider { margin: 0 16px; }
+/* CSDN：分隔线 1×17 #d9d9d9（G13），左右 16px；带文字按钮左右 10px、图标/文字/下拉箭头间距 6px；纯文字按钮文字前多留 6px（空图标位） */
+.ex-mde-toolbar .ex-toolbar__divider { height: 17px; margin: 0 16px; background: var(--ex-color-mde-toolbar-divider); }
 .ex-mde-toolbar .ex-toolbar__item { color: var(--ex-color-mde-chrome-text); font-size: 12px; }
 .ex-mde-toolbar .ex-toolbar__item.has-label { gap: 6px; padding: 0 10px; }
 .ex-mde-toolbar .ex-toolbar__label:first-child { margin-left: 6px; }
@@ -117,18 +116,19 @@
 .ex-mde[data-view='split'] .ex-mde-editor { flex: 0 0 calc(var(--ex-mde-split, 0.5) * 100% - 13px); }
 .ex-mde[data-view='split'] .ex-mde-preview-pane { background: var(--ex-color-mde-split-preview-bg); }
 
-/* CSDN 正文西文先用 Arial，中文回落到苹方/雅黑（与参考截图字宽一致） */
+/* CSDN 正文与状态栏统计西文先用 Arial，中文回落到苹方/雅黑（与参考截图字宽一致；-apple-system 只有 Safari 认） */
 .ex-mde { --ex-mde-font-family: -apple-system, 'SF UI Text', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
 
+/* 正文宽上限 1016px、两侧最多 20%（G03，下限 16px 为推断）；首行距工具栏 11px（G04） */
 .ex-mde .ex-editor-content {
-  padding: 16px 20cqi;
+  padding: 11px max(16px, min(20cqi, calc((100cqi - 1016px) / 2))) 16px;
   font-family: var(--ex-mde-font-family);
   font-size: 16px;
   line-height: 26px;
   color: var(--ex-color-mde-body-text);
 }
 
-.ex-mde[data-view='split'] .ex-editor-content { padding: 16px; }
+.ex-mde[data-view='split'] .ex-editor-content { padding: 11px 16px 16px; }
 
 .ex-mde .ex-md-heading { color: var(--ex-color-mde-body-text); }
 .ex-mde .ex-md-h1,
@@ -177,11 +177,11 @@
 
 .ex-mde-preview {
   box-sizing: border-box;
-  padding: 16px 20cqi;
+  padding: 11px max(16px, min(20cqi, calc((100cqi - 1016px) / 2))) 16px;
 }
 
-/* 参考截图实测：正文起点距预览区左缘 42px、顶 19px，右侧换行位置对应 24px */
-.ex-mde[data-view='split'] .ex-mde-preview { padding: 19px 24px 16px 42px; }
+/* 参考截图实测：正文起点距预览区左缘 42px，右侧换行位置对应 24px；首行与编辑区同高（G04） */
+.ex-mde[data-view='split'] .ex-mde-preview { padding: 11px 24px 16px 42px; }
 
 /* ---------- 预览排版（CSDN 实测：正文 16/26px，标题 22/20/18px） ---------- */
 .ex-mde .ex-preview {
@@ -327,7 +327,8 @@
   line-height: 21px;
 }
 
-.ex-mde-status__stats { flex: none; white-space: nowrap; }
+/* 统计西文是 Arial（「Markdown」墨迹 53.5px）；Arial 行框让整行比苹方高 1px，下移 1px 补回（不占布局，栏高仍为 64） */
+.ex-mde-status__stats { position: relative; top: 1px; flex: none; font-family: var(--ex-mde-font-family); white-space: nowrap; }
 .ex-mde-status__md,
 .ex-mde-status__html { display: flex; gap: 9px; }
 .ex-mde-status__center { flex: 1; min-width: 0; }

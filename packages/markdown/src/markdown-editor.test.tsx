@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ClEditEngine, type EditorEngine } from '@editorx/markdown-core'
 import { ThemeProvider } from '@editorx/theme'
@@ -381,5 +381,25 @@ describe('MarkdownEditor', () => {
     await waitFor(() => expect(previewEl().querySelector('h1')).not.toBeNull())
     unmount()
     expect(document.querySelector('.ex-editor-content')).toBeNull()
+  })
+})
+
+describe('自绘图标（G27/G29/G30）', () => {
+  it('页签图标为自绘 16px SVG，不是 lucide', () => {
+    renderEditor()
+    for (const name of ['Markdown', '比对', '预览']) {
+      const svg = screen.getByRole('tab', { name }).querySelector('svg')!
+      expect(svg).not.toHaveClass('lucide')
+      expect(svg).toHaveAttribute('width', '16')
+    }
+  })
+
+  it('删除线为自绘图标；图片、链接描边 1.5', () => {
+    renderEditor()
+    const toolbar = screen.getByRole('toolbar', { name: '编辑工具栏' })
+    expect(within(toolbar).getByRole('button', { name: '删除线' }).querySelector('svg')).not.toHaveClass('lucide')
+    for (const name of ['图片', '链接']) {
+      expect(within(toolbar).getByRole('button', { name }).querySelector('svg')).toHaveAttribute('stroke-width', '1.5')
+    }
   })
 })

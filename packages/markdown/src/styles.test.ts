@@ -48,13 +48,25 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-header \{[^}]*padding: 12px 12px 0;/)
     expect(css).toMatch(/\.ex-mde-modes \{[^}]*gap: 12px;/)
     expect(css).toMatch(
-      /\.ex-mde-mode \{[^}]*gap: 6px;[^}]*height: 32px;[^}]*padding: 0 11\.5px 0 12px;[^}]*border-radius: var\(--ex-radius-lg\);[^}]*font-family: var\(--ex-mde-font-family\);[^}]*font-weight: 600;[^}]*letter-spacing: 0\.5px;/,
+      /\.ex-mde-mode \{[^}]*gap: 6px;[^}]*height: 32px;[^}]*padding: 0 12px;[^}]*border-radius: var\(--ex-radius-lg\);[^}]*font-family: var\(--ex-font-family\);[^}]*font-weight: 500;/,
+    )
+    expect(css).not.toMatch(/\.ex-mde-mode \{[^}]*letter-spacing/)
+    const inset = 'max(16px, min(20cqi, calc((100cqi - 1016px) / 2)))'
+    expect(css).toContain(`.ex-mde .ex-editor-content {\n  padding: 11px ${inset} 16px;`)
+    expect(css).toContain(`.ex-mde-preview {\n  box-sizing: border-box;\n  padding: 11px ${inset} 16px;\n}`)
+    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-editor-content \{ padding: 11px 16px 16px; \}/)
+    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-mde-preview \{ padding: 11px 24px 16px 42px; \}/)
+    expect(css).toMatch(
+      /\.ex-mde-toolbar \.ex-toolbar__divider \{ height: 17px; margin: 0 16px; background: var\(--ex-color-mde-toolbar-divider\); \}/,
     )
     expect(css).toMatch(/\.ex-mde-toolbar \{[^}]*height: 39px;[^}]*margin-top: 17px;[^}]*padding: 0 10px;/)
     expect(css).toMatch(
       /\.ex-mde-status \{[^}]*gap: 24px;[^}]*box-sizing: border-box;[^}]*min-height: 64px;[^}]*padding: 9px 16px 12px 26\.5px;[^}]*font-size: 12px;[^}]*line-height: 21px;/,
     )
-    expect(css).toMatch(/\.ex-mde-status__stats \{ flex: none; white-space: nowrap; \}/)
+    expect(css).toMatch(
+      /\.ex-mde-status__stats \{ position: relative; top: 1px; flex: none; font-family: var\(--ex-mde-font-family\); white-space: nowrap; \}/,
+    )
+    expect(css).not.toMatch(/\.ex-mde-status \{[^}]*font-family/)
     expect(css).toMatch(/\.ex-mde-status__md,\n\.ex-mde-status__html \{ display: flex; gap: 9px; \}/)
     expect(css).toMatch(/\.ex-mde\[data-view='preview'\] \.ex-mde-status__stats \{ margin-top: 4px; \}/)
     expect(css).toMatch(/\.ex-mde-status__end \{[^}]*gap: 16px;/)
@@ -62,11 +74,8 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)
     expect(css).toMatch(/\.ex-mde-rail \{[^}]*width: 56px;/)
     expect(css).toContain('calc(var(--ex-mde-split, 0.5) * 100% - 13px)')
-    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-editor-content \{ padding: 16px; \}/)
-    expect(css).toMatch(/\.ex-mde \.ex-editor-content \{[^}]*padding: 16px 20cqi;[^}]*font-size: 16px;[^}]*line-height: 26px;/)
+    expect(css).toMatch(/\.ex-mde \.ex-editor-content \{[^}]*font-size: 16px;[^}]*line-height: 26px;/)
     expect(css).toMatch(/\.ex-mde-body \{[^}]*container-type: inline-size;/)
-    expect(css).toMatch(/\.ex-mde\[data-view='split'\] \.ex-mde-preview \{[^}]*padding: 19px 24px 16px 42px;/)
-    expect(css).toMatch(/\.ex-mde-toolbar \.ex-toolbar__divider \{ margin: 0 16px; \}/)
     expect(css).toMatch(/\.ex-mde-toolbar \.ex-toolbar__item\.has-label \{ gap: 6px; padding: 0 10px; \}/)
     expect(css).toMatch(/\.ex-mde-toc__list \{[^}]*padding: 3px 0 8px;/)
     expect(css).toMatch(/::-webkit-scrollbar \{[^}]*width: 8px;/)
