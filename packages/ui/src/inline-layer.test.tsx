@@ -133,6 +133,28 @@ describe('InlineLayer', () => {
     expect(onDismiss).not.toHaveBeenCalled()
   })
 
+  it('没有外层浮层时：层外输入框自己的 Esc 处理先收到按键，层随后关闭', async () => {
+    const onDismiss = vi.fn()
+    const onKey = vi.fn()
+    renderWithTheme(
+      <StrictMode>
+        <input
+          aria-label="外部输入"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') onKey()
+          }}
+        />
+        <InlineLayer aria-label="内层" onDismiss={onDismiss}>
+          内容
+        </InlineLayer>
+      </StrictMode>,
+    )
+    await userEvent.click(screen.getByRole('textbox', { name: '外部输入' }))
+    await userEvent.keyboard('{Escape}')
+    expect(onKey).toHaveBeenCalledTimes(1)
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
   it('没有外层浮层时自建浮层树；StrictMode 下 Esc 只调用一次 onDismiss', async () => {
     const onDismiss = vi.fn()
     renderWithTheme(

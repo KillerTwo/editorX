@@ -38,7 +38,8 @@ function InlineLayerInner({ onDismiss, children, ...rest }: InlineLayerProps) {
 
   // 焦点不在层内时 useDismiss 收不到 Esc：外层 Modal 看到打开的子节点就放弃关闭，
   // 而焦点在 body 时浏览器会在两个 document 监听之间刷新 React，导致两层一起关。
-  // 因此在捕获阶段先处理，除非焦点在其他（非祖先）浮层里——那由该浮层自己处理。
+  // 因此有祖先浮层时在捕获阶段先处理，除非焦点在其他（非祖先）浮层里——那由该浮层自己处理。
+  // 没有祖先时不拦截：层外控件自己的 Esc 处理（如全屏退出）照常收到，useDismiss 的 document 监听随后关闭本层。
   useEffect(() => {
     const layer = elements.floating
     if (!layer) return
@@ -55,7 +56,7 @@ function InlineLayerInner({ onDismiss, children, ...rest }: InlineLayerProps) {
       const inOtherLayer = nodes.some(
         (n) => n.id !== nodeId && !ancestors.has(n.id) && n.context?.open && n.context.elements.floating?.contains(target),
       )
-      if (inOtherLayer) return
+      if (inOtherLayer || ancestors.size === 0) return
       event.stopPropagation()
       dismissRef.current()
     }
