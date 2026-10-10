@@ -212,7 +212,7 @@ describe('PublishPanel（内联）', () => {
     const input = screen.getByLabelText('发布时间')
     expect(input).toHaveAttribute('type', 'datetime-local')
     fireEvent.change(input, { target: { value: '2099-01-01T10:00' } })
-    await userEvent.click(screen.getByRole('button', { name: '确定' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
     await waitFor(() =>
       expect(a.onPublish).toHaveBeenCalledWith(
         expect.objectContaining({ scheduledAt: new Date(2099, 0, 1, 10, 0).toISOString() }),
@@ -228,7 +228,7 @@ describe('PublishPanel（内联）', () => {
     const dialog = await screen.findByRole('dialog', { name: '定时发布' })
     const input = within(dialog).getByLabelText('发布时间')
     fireEvent.change(input, { target: { value: '2000-01-01T10:00' } })
-    await userEvent.click(within(dialog).getByRole('button', { name: '确定' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
     expect(await within(dialog).findByText('发布时间需晚于当前时间')).toBeInTheDocument()
     expect(input).toHaveAttribute('aria-invalid', 'true')
     expect(dialog).toBeInTheDocument()
@@ -240,7 +240,7 @@ describe('PublishPanel（内联）', () => {
     renderWithProviders(<PublishPanel document={doc} adapters={a} />)
     await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
     const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    await userEvent.click(within(dialog).getByRole('button', { name: '确定' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
     await waitFor(() => expect(dialog).not.toBeInTheDocument())
     const add = screen.getByRole('button', { name: '添加文章标签' })
     await waitFor(() => expect(add).toHaveFocus())
@@ -307,7 +307,7 @@ describe('PublishPanel（内联）', () => {
     expect(container.querySelector('.ex-root')).toContainElement(screen.getByRole('region', { name: '发布设置' }))
   })
 
-  it('定时发布请求进行中：「确定」显示加载态，完成后关闭弹窗', async () => {
+  it('定时发布请求进行中：确认按钮显示加载态，完成后关闭弹窗', async () => {
     let finish!: () => void
     const a = adapters({
       onPublish: vi.fn(
@@ -320,7 +320,7 @@ describe('PublishPanel（内联）', () => {
     renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
     await userEvent.click(screen.getByRole('button', { name: '定时发布' }))
     const dialog = await screen.findByRole('dialog', { name: '定时发布' })
-    const confirm = within(dialog).getByRole('button', { name: '确定' })
+    const confirm = within(dialog).getByRole('button', { name: '定时发布' })
     expect(confirm).not.toHaveAttribute('aria-busy')
     await userEvent.click(confirm)
     await waitFor(() => expect(a.onPublish).toHaveBeenCalledTimes(1))

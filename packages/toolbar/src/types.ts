@@ -82,6 +82,13 @@ export interface PublishSettings {
 
 export type PublishPayload = EditorDocument & PublishSettings
 
+export interface TagCategory {
+  id: string
+  name: string
+  /** 已知时直接给出；缺省时按需调用 getTagsByCategory(id) */
+  tags?: string[]
+}
+
 export interface EditorAdapters {
   uploadImage?(file: File, onProgress?: (p: number) => void): Promise<{ url: string }>
   /**
@@ -93,6 +100,10 @@ export interface EditorAdapters {
   onSaveDraft?(doc: EditorDocument, settings?: PublishSettings): Promise<void>
   onPublish?(payload: PublishPayload): Promise<void>
   searchTags?(keyword: string): Promise<string[]>
+  /** 标签面板左栏分类；缺省、返回空数组或抛错时回退为单个「推荐」分类（searchTags('')） */
+  getTagCategories?: () => Promise<TagCategory[]>
+  /** 分类未内联 tags 时按需加载 */
+  getTagsByCategory?: (categoryId: string) => Promise<string[]>
   getCategories?(): Promise<Category[]>
   /** 发布面板「参与活动」下拉选项 */
   getActivities?(): Promise<PublishOption[]>

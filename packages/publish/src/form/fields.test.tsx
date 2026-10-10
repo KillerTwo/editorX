@@ -42,7 +42,7 @@ describe('TagField', () => {
     renderWithProviders(<Tags searchTags={searchTags} />)
     await userEvent.click(screen.getByRole('button', { name: '添加文章标签' }))
     const input = await screen.findByRole('searchbox', { name: '搜索标签' })
-    expect(screen.getByText('还可添加 7 个标签')).toBeInTheDocument()
+    expect(screen.getByText('还可添加7个标签')).toBeInTheDocument()
     await userEvent.click(await screen.findByRole('button', { name: 'React' }))
     expect(screen.getByTestId('tags')).toHaveTextContent('React')
     expect(screen.getByRole('button', { name: 'React' })).toHaveAttribute('aria-pressed', 'true')

@@ -96,3 +96,29 @@ describe('Messages', () => {
     expect(merged.publish.actions.cancel).toBe('取消')
   })
 })
+
+describe('参考图对齐文案', () => {
+  it('标签面板文案无多余空格（B22/B23/B24）', () => {
+    expect(zhCN.publish.tags.searchPlaceholder).toBe('请输入文字搜索，Enter键入可添加自定义标签')
+    expect(zhCN.publish.tags.count).toBe('还可添加{count}个标签')
+    expect(zhCN.publish.tags.title).toBe('标签')
+    expect(zhCN.publish.tags.section).toBe('添加标签')
+    expect(zhCN.publish.tags.recommended).toBe('推荐')
+  })
+
+  it('定时发布文案（B27/B28）', () => {
+    expect(zhCN.publish.schedule.hint).toBe('请选择当前时间后 {min} 至 {max} 进行定时发布')
+    expect(zhCN.publish.schedule.cancel).toBe('取 消')
+    expect(zhCN.publish.schedule.confirm).toBe('定时发布')
+    expect(zhCN.publish.schedule.units.hours).toBe('{count}小时')
+    expect(zhCN.publish.schedule.calendar.weekdays.split(',')).toHaveLength(7)
+  })
+
+  it('目录空状态与比对按钮文案（G19/G24）', () => {
+    expect(zhCN.panels.tocEmptyTitle).toBe('暂无目录')
+    expect(`${zhCN.panels.tocEmptyBefore}${zhCN.panels.tocEmptyAction}${zhCN.panels.tocEmptyAfter}`).toBe(
+      '文章内添加@[TOC]自动根据文章标题生成目录',
+    )
+    expect(zhCN.editor.syncScroll).toBe('同步滚动')
+  })
+})

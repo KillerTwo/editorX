@@ -12,6 +12,7 @@ export type {
   PublishPayload,
   PublishSettings,
   Resource,
+  TagCategory,
   Template,
   Visibility,
   VoteInput,

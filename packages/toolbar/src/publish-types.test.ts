@@ -9,6 +9,7 @@ import type {
   PublishOption,
   PublishPayload,
   PublishSettings,
+  TagCategory,
   Visibility,
 } from './index'
 
@@ -42,5 +43,14 @@ describe('发布相关共享类型（typecheck 期断言）', () => {
       [doc: EditorDocument, settings?: PublishSettings]
     >()
     expectTypeOf<NonNullable<EditorAdapters['onPublish']>>().parameters.toEqualTypeOf<[payload: PublishPayload]>()
+  })
+
+  it('标签分类 adapter 可选', () => {
+    const category: TagCategory = { id: 'py', name: 'Python', tags: ['Django'] }
+    const adapters: EditorAdapters = {
+      getTagCategories: async () => [category],
+      getTagsByCategory: async () => ['Flask'],
+    }
+    expectTypeOf(adapters.getTagCategories).toEqualTypeOf<(() => Promise<TagCategory[]>) | undefined>()
   })
 })
