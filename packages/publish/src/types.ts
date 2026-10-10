@@ -31,9 +31,15 @@ export interface PublishBaseProps {
   adapters?: EditorAdapters
   /** 缺失 adapter 时隐藏还是禁用对应功能，默认 'hide' */
   missingAdapter?: MissingAdapterPolicy
-  /** 覆盖内置校验规则：函数替换，false 关闭 */
+  /**
+   * 覆盖内置校验规则：函数替换，false 关闭。
+   * 定时发布弹窗按 scheduleRange 限制可选日期与时间，放宽 scheduledAt 规则时应同时传入相应的 scheduleRange。
+   */
   rules?: PublishRules
-  /** 定时发布允许的提前量区间，默认 4 小时 ～ 7 天（CSDN） */
+  /**
+   * 定时发布允许的提前量区间，默认 4 小时 ～ 7 天（CSDN）；两端为整分钟且 0 ≤ min ≤ max，否则回退默认值。
+   * 同时约束内置校验与定时发布弹窗的可选日期 / 时间。
+   */
   scheduleRange?: ScheduleRange
   /** 可选封面模式；默认 ['single']（CSDN 截图无模式切换），多于一项时显示单选 */
   coverModes?: readonly CoverMode[]

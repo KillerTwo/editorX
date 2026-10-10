@@ -15,3 +15,13 @@ function Providers({ children }: { children: ReactNode }) {
 export function renderWithProviders(ui: ReactElement): RenderResult {
   return render(ui, { wrapper: Providers })
 }
+
+/** 切换 process.env.TZ，返回恢复函数（原值为空时删除，避免写入字符串 'undefined'） */
+export function setTimeZone(tz: string): () => void {
+  const previous = process.env.TZ
+  process.env.TZ = tz
+  return () => {
+    if (previous === undefined) delete process.env.TZ
+    else process.env.TZ = previous
+  }
+}

@@ -8,6 +8,7 @@ const DAY = 24 * HOUR
 export const SCHEDULE_MIN_OFFSET_MS = 4 * HOUR
 export const SCHEDULE_MAX_OFFSET_MS = 7 * DAY
 
+/** 两端均为整分钟且 0 ≤ minOffsetMs ≤ maxOffsetMs；不满足时（含 NaN / Infinity）按 DEFAULT_SCHEDULE_RANGE 处理 */
 export interface ScheduleRange {
   /** 距当前时间的最小提前量（ms），闭区间 */
   minOffsetMs: number
@@ -18,6 +19,15 @@ export interface ScheduleRange {
 export const DEFAULT_SCHEDULE_RANGE: ScheduleRange = {
   minOffsetMs: SCHEDULE_MIN_OFFSET_MS,
   maxOffsetMs: SCHEDULE_MAX_OFFSET_MS,
+}
+
+// NaN 与 -Infinity 不满足 >= 0；Infinity 与小数取模不为 0
+const wholeMinutes = (ms: number) => ms >= 0 && ms % MINUTE === 0
+
+export function normalizeScheduleRange(range?: ScheduleRange): ScheduleRange {
+  return range && wholeMinutes(range.minOffsetMs) && wholeMinutes(range.maxOffsetMs) && range.minOffsetMs <= range.maxOffsetMs
+    ? range
+    : DEFAULT_SCHEDULE_RANGE
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -38,8 +48,9 @@ export function formatScheduleTime(iso: string): string {
   return toLocalInputValue(new Date(iso)).replace('T', ' ')
 }
 
-export function scheduleBounds(now: number, range: ScheduleRange = DEFAULT_SCHEDULE_RANGE) {
-  return { min: now + range.minOffsetMs, max: now + range.maxOffsetMs }
+export function scheduleBounds(now: number, range?: ScheduleRange) {
+  const { minOffsetMs, maxOffsetMs } = normalizeScheduleRange(range)
+  return { min: now + minOffsetMs, max: now + maxOffsetMs }
 }
 
 /** 本地日期 + 'HH:mm' → 时间戳；格式无效或该本地时刻不存在（夏令时跳过的时段）时为 undefined */
@@ -85,6 +96,7 @@ export function scheduleDateLimits(
   let last = toDateKey(new Date(max))
   if (!usable(first)) first = addDays(first, 1)
   if (!usable(last)) last = addDays(last, -1)
+  // 后移一天后首日仍无可用档只在连续两天 00:00 都不存在时可能出现，按无可选日期处理
   return first <= last && usable(first) ? { min: first, max: last } : undefined
 }
 

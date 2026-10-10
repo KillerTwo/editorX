@@ -1,15 +1,17 @@
-process.env.TZ = 'Asia/Shanghai'
-
 import { zhCN } from '@editorx/toolbar'
-import { describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
 import {
   combineLocal,
   DEFAULT_SCHEDULE_RANGE,
   formatOffset,
+  normalizeScheduleRange,
   scheduleBounds,
   scheduleDateLimits,
   scheduleTimeSlots,
 } from './schedule'
+import { setTimeZone } from './test-utils'
+
+afterAll(setTimeZone('Asia/Shanghai'))
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR
@@ -20,6 +22,28 @@ describe('定时发布区间（B34：now+4h … now+7d，闭区间）', () => {
   it('默认区间与边界', () => {
     expect(DEFAULT_SCHEDULE_RANGE).toEqual({ minOffsetMs: 4 * HOUR, maxOffsetMs: 7 * DAY })
     expect(scheduleBounds(NOW)).toEqual({ min: NOW + 4 * HOUR, max: NOW + 7 * DAY })
+  })
+
+  it('无效区间（非有限数、负数、非整分钟、min > max）回退默认区间', () => {
+    const fallback = { min: NOW + 4 * HOUR, max: NOW + 7 * DAY }
+    const invalid = [
+      { minOffsetMs: Number.NaN, maxOffsetMs: DAY },
+      { minOffsetMs: 0, maxOffsetMs: Number.POSITIVE_INFINITY },
+      { minOffsetMs: -HOUR, maxOffsetMs: DAY },
+      { minOffsetMs: 0, maxOffsetMs: DAY + 1 },
+      { minOffsetMs: 2 * DAY, maxOffsetMs: DAY },
+    ]
+    for (const range of invalid) {
+      expect(normalizeScheduleRange(range)).toBe(DEFAULT_SCHEDULE_RANGE)
+      expect(scheduleBounds(NOW, range)).toEqual(fallback)
+    }
+    expect(normalizeScheduleRange(undefined)).toBe(DEFAULT_SCHEDULE_RANGE)
+    const zero = { minOffsetMs: 0, maxOffsetMs: 0 }
+    expect(normalizeScheduleRange(zero)).toBe(zero)
+    expect(scheduleBounds(NOW, zero)).toEqual({ min: NOW, max: NOW })
+    const reversed = { minOffsetMs: 2 * DAY, maxOffsetMs: DAY }
+    expect(scheduleTimeSlots('2026-10-09', NOW, reversed)).toEqual(scheduleTimeSlots('2026-10-09', NOW))
+    expect(scheduleDateLimits(NOW, reversed)).toEqual({ min: '2026-10-09', max: '2026-10-16' })
   })
 
   it('combineLocal：本地日期 + HH:mm；格式无效为 undefined', () => {

@@ -116,6 +116,20 @@ describe('validatePublish', () => {
     expect(validatePublish(at(NOW + 30 * 60_000), ctx({ scheduleRange: range })).scheduledAt).toBeUndefined()
   })
 
+  it('无效 scheduleRange（NaN、负数、min > max）按默认区间校验与提示', () => {
+    const at = (ms: number) => valid({ scheduledAt: new Date(ms).toISOString() })
+    const hint = '请选择当前时间后 4小时 至 7天 进行定时发布'
+    for (const scheduleRange of [
+      { minOffsetMs: Number.NaN, maxOffsetMs: DAY },
+      { minOffsetMs: -HOUR, maxOffsetMs: DAY },
+      { minOffsetMs: 2 * DAY, maxOffsetMs: DAY },
+    ]) {
+      expect(validatePublish(at(NOW + 60_000), ctx({ scheduleRange })).scheduledAt).toBe(hint)
+      expect(validatePublish(at(NOW + 4 * HOUR), ctx({ scheduleRange })).scheduledAt).toBeUndefined()
+      expect(validatePublish(at(NOW + 7 * DAY + 1), ctx({ scheduleRange })).scheduledAt).toBe(hint)
+    }
+  })
+
   it('标题 5–100 字，仅在提供标题时校验', () => {
     expect(validatePublish(valid(), ctx()).title).toBeUndefined()
     expect(validatePublish(valid(), ctx({ title: '短标题' })).title).toBe('文章标题需为 5～100 个字')

@@ -1,5 +1,5 @@
 import { formatMessage, type Messages, type PublishSettings } from '@editorx/toolbar'
-import { DEFAULT_SCHEDULE_RANGE, formatOffset, scheduleBounds, type ScheduleRange } from './schedule'
+import { formatOffset, normalizeScheduleRange, scheduleBounds, type ScheduleRange } from './schedule'
 import { COVER_CAPACITY } from './settings'
 
 export const MAX_TAGS = 7
@@ -16,7 +16,7 @@ export interface RuleContext {
   now: number
   /** 文章标题；未传文档时为 undefined，标题规则跳过 */
   title?: string
-  /** 定时发布允许区间，默认 DEFAULT_SCHEDULE_RANGE */
+  /** 定时发布允许区间，默认 DEFAULT_SCHEDULE_RANGE；无效区间同样回退为默认值 */
   scheduleRange?: ScheduleRange
 }
 
@@ -48,15 +48,16 @@ export const builtinRules: Record<PublishField, PublishRule> = {
     if (!url) return messages.errors.sourceUrlRequired
     return /^https?:\/\/\S+$/i.test(url) ? undefined : messages.errors.sourceUrlInvalid
   },
-  scheduledAt: ({ scheduledAt }, { messages, now, scheduleRange = DEFAULT_SCHEDULE_RANGE }) => {
+  scheduledAt: ({ scheduledAt }, { messages, now, scheduleRange }) => {
     if (scheduledAt === undefined) return undefined
     const time = Date.parse(scheduledAt)
     if (Number.isNaN(time)) return messages.errors.scheduledAtInvalid
     if (time <= now) return messages.errors.scheduledAtPast
-    const { min, max } = scheduleBounds(now, scheduleRange)
+    const range = normalizeScheduleRange(scheduleRange)
+    const { min, max } = scheduleBounds(now, range)
     const vars = {
-      min: formatOffset(scheduleRange.minOffsetMs, messages.schedule.units),
-      max: formatOffset(scheduleRange.maxOffsetMs, messages.schedule.units),
+      min: formatOffset(range.minOffsetMs, messages.schedule.units),
+      max: formatOffset(range.maxOffsetMs, messages.schedule.units),
     }
     if (time < min) return formatMessage(messages.errors.scheduledAtTooSoon, vars)
     if (time > max) return formatMessage(messages.errors.scheduledAtTooLate, vars)
