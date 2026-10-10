@@ -50,6 +50,21 @@ async function select(page: Page, combobox: string, option: string) {
   await expect(page.getByRole('combobox', { name: combobox })).toContainText(option)
 }
 
+let errors: string[] = []
+
+test.beforeEach(async ({ page }) => {
+  errors = []
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text())
+  })
+  page.on('pageerror', (err) => errors.push(err.message))
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+})
+
+test.afterEach(() => {
+  expect(errors).toEqual([])
+})
+
 test.describe('/publish 内联', () => {
   test('标签、摘要、转载校验、下拉与单选，发布 payload 正确', async ({ page }) => {
     await open(page)
@@ -274,7 +289,10 @@ test.describe('/publish 缺失 adapter', () => {
     await open(page, '?missing=hide')
     // 操作栏左侧 barStart 有演示页自己的「回到顶部」按钮，只统计发布操作组内的按钮
     await expect(bar(page).getByRole('button', { name: '回到顶部' })).toBeVisible()
-    await expect(bar(page).getByRole('group', { name: '发布操作' }).getByRole('button')).toHaveCount(0)
+    const actions = bar(page).getByRole('group', { name: '发布操作' })
+    await expect(actions).toBeAttached()
+    await expect(actions.getByRole('button')).toHaveCount(0)
+    await expect(bar(page).getByRole('button')).toHaveText(['回到顶部'])
     await expect(page.locator('[data-action]')).toHaveCount(0)
     await expect(page.getByRole('button', { name: '从本地上传' })).toHaveCount(0)
     await expect(page.locator('[data-field="categories"]')).toHaveCount(0)
