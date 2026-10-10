@@ -1,6 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { editorRoot, renderEditor } from '../test-utils'
 import { clampPanelWidth } from './panel-grip'
 
@@ -64,6 +64,40 @@ describe('面板宽度拖柄（G23）', () => {
     fireEvent.pointerMove(grip(), { pointerId: 3, clientX: 1100 })
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(width()).toBe('600px')
+  })
+
+  it('拖动中面板关闭：取消拖动并移除监听，宽度回到 390', () => {
+    renderEditor({ defaultPanel: 'toc' })
+    const handle = grip()
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientX: 1000 })
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 950 })
+    expect(width()).toBe('440px')
+    const removed = vi.spyOn(document, 'removeEventListener')
+    const rail = screen.getByRole('navigation', { name: '侧边栏' })
+    fireEvent.click(within(rail).getByRole('button', { name: '收起' }))
+    expect(screen.queryByRole('separator', { name: '调整面板宽度' })).toBeNull()
+    expect(width()).toBe('390px')
+    expect(removed).toHaveBeenCalledWith('keydown', expect.any(Function), true)
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 800 })
+    expect(width()).toBe('390px')
+    fireEvent.click(within(rail).getByRole('button', { name: '展开' }))
+    expect(grip()).toHaveAttribute('aria-valuenow', '390')
+  })
+
+  it('全屏中拖动时 Esc 只取消拖动，不退出全屏', async () => {
+    renderEditor({ defaultPanel: 'toc' })
+    await userEvent.click(screen.getByRole('button', { name: '更多操作' }))
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '全屏' }))
+    const root = editorRoot()
+    expect(root).toHaveAttribute('data-fullscreen')
+    fireEvent.pointerDown(grip(), { button: 0, pointerId: 1, clientX: 1000 })
+    fireEvent.pointerMove(grip(), { pointerId: 1, clientX: 950 })
+    fireEvent.keyDown(grip(), { key: 'Escape' })
+    expect(root).toHaveAttribute('data-fullscreen')
+    expect(width()).toBe('390px')
+    expect(grip()).toHaveAttribute('aria-valuenow', '390')
+    fireEvent.keyDown(grip(), { key: 'Escape' })
+    expect(root).not.toHaveAttribute('data-fullscreen')
   })
 
   it('非主键按下不开始拖动', () => {

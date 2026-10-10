@@ -24,6 +24,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -138,7 +139,7 @@ function EditorShell({
   const { resolved, ready } = useTheme()
   const { notify } = useToast()
   const [engine] = useState(() => (engineFactory ?? createDefaultEngine)())
-  const [store] = useState(() => createEditorStore({ panel: defaultPanel }))
+  const [store] = useState(() => createEditorStore({ panel: defaultPanel, readOnly }))
   const [viewMode, setViewMode] = useControllableState(viewModeProp, defaultViewMode, onViewModeChange)
   const [split, setSplit] = useState(() => clampSplit(defaultSplit))
   const editorId = useId()
@@ -150,6 +151,8 @@ function EditorShell({
   const previewScrollRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const live = useLatest({ adapters, messages, notify, title, readOnly, theme: resolved, viewMode })
+  // 声明在 useLatest 之后：订阅者重渲染时 ctx.readOnly 已是新值
+  useLayoutEffect(() => store.set({ readOnly }), [store, readOnly])
   const [headingJumper] = useState(() =>
     createHeadingJumper(() => ({
       viewMode: live.current.viewMode,

@@ -360,7 +360,7 @@
   border-radius: 0;
 }
 
-/* 面板宽度拖柄：零宽 flex 项，负外边距使其位于卡片与面板的 16px 间隙正中；胶囊 4×24 顶 438px（G23） */
+/* 面板宽度拖柄：零宽 flex 项，负外边距使其位于卡片与面板的 16px 间隙正中；胶囊 4×24 顶 438px（G23），编辑器较矮时距底 12px */
 .ex-mde-panel-grip {
   position: relative;
   flex: none;
@@ -374,7 +374,7 @@
 .ex-mde-panel-grip::after {
   content: '';
   position: absolute;
-  top: 438px;
+  top: min(438px, calc(100% - 36px));
   left: -2px;
   width: 4px;
   height: 24px;
@@ -481,6 +481,7 @@
 }
 
 .ex-mde-rail__toggle { gap: 4px; }
+.ex-mde-rail__item:not(:has(.ex-mde-rail__icon)) { justify-content: center; padding-top: 0; }
 
 .ex-mde-rail__item.is-active { background: var(--ex-color-mde-rail-active-bg); }
 .ex-mde-rail__item:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: -2px; }

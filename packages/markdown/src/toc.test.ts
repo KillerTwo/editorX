@@ -1,6 +1,6 @@
 import { createRenderer } from '@editorx/markdown-core'
 import { describe, expect, it, vi } from 'vitest'
-import { extractTocTitle } from './toc'
+import { extractTocTitle, tocMarkerSelection } from './toc'
 
 const unescape = (html: string) =>
   html.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
@@ -79,5 +79,22 @@ describe('extractTocTitle', () => {
 
   it.each(CASES)('与渲染器的目录识别一致：%j', (markdown) => {
     expect(extractTocTitle(markdown)).toBe(renderedTitle(markdown))
+  })
+})
+
+describe('tocMarkerSelection', () => {
+  it('首个独立成段的目录标记：有标题时选中标题文本（去两侧空白），否则选中整个标记', () => {
+    expect(tocMarkerSelection('前言\n\n@[TOC](我的目录)\n# A')).toEqual({ start: 11, end: 15 })
+    expect(tocMarkerSelection('  @[TOC](  两侧空白  ) \n')).toEqual({ start: 11, end: 15 })
+    expect(tocMarkerSelection('正文\n\n[TOC]')).toEqual({ start: 4, end: 9 })
+    expect(tocMarkerSelection('@[toc]')).toEqual({ start: 0, end: 6 })
+    expect(tocMarkerSelection('@[TOC]()\n\n# A')).toEqual({ start: 0, end: 8 })
+    expect(tocMarkerSelection('```\n@[TOC](围栏内)\n```\n\n[TOC]')).toEqual({ start: 21, end: 26 })
+    expect(tocMarkerSelection('正文 @[TOC](x)')).toBeNull()
+    expect(tocMarkerSelection('只有正文')).toBeNull()
+  })
+
+  it.each(CASES)('与渲染器是否输出目录一致：%j', (markdown) => {
+    expect(tocMarkerSelection(markdown) !== null).toBe(createRenderer().render(markdown).html.includes('class="ex-toc"'))
   })
 })

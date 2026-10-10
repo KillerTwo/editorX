@@ -28,6 +28,7 @@ export interface EditorSnapshot {
   tocTitle: string | null
   panel: string | null
   fullscreen: boolean
+  readOnly: boolean
   uploads: readonly FailedUpload[]
   save: SaveState
 }
@@ -50,6 +51,7 @@ export function createEditorStore(initial: Partial<EditorSnapshot> = {}): Editor
     tocTitle: null,
     panel: null,
     fullscreen: false,
+    readOnly: false,
     uploads: [],
     save: { status: 'idle', savedAt: null },
     ...initial,

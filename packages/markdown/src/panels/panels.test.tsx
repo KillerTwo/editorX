@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { resolvePanels, type EditorExtension } from '@editorx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { markdownCoreExtensions } from '../core-extensions'
-import { renderEditor } from '../test-utils'
+import { MarkdownEditor } from '../markdown-editor'
+import { editorContent, renderEditor } from '../test-utils'
+import type { MarkdownEditorProps } from '../types'
 
 const rail = () => screen.getByRole('navigation', { name: '侧边栏' })
 const railButtons = () => within(rail()).getAllByRole('button').map((b) => b.textContent)
@@ -51,6 +53,49 @@ describe('面板', () => {
     renderEditor({ defaultValue: '正文', defaultPanel: 'toc', readOnly: true })
     const panel = screen.getByRole('complementary', { name: '目录' })
     expect(within(panel).getByRole('button', { name: '添加' })).toBeDisabled()
+  })
+
+  it('目录空态：运行中切换只读，「添加」随之禁用 / 启用；只读时点击不改文档', async () => {
+    const props: MarkdownEditorProps = { defaultValue: '正文', defaultPanel: 'toc' }
+    const { rerender, ref, handle } = renderEditor(props)
+    const editor = (readOnly: boolean) => (
+      <MarkdownEditor ref={ref} defaultTheme="light" themeStorageKey={false} {...props} readOnly={readOnly} />
+    )
+    const add = () => within(screen.getByRole('complementary', { name: '目录' })).getByRole('button', { name: '添加' })
+    const before = handle().getValue()
+    expect(add()).toBeEnabled()
+    rerender(editor(true))
+    expect(add()).toBeDisabled()
+    await userEvent.click(add())
+    expect(handle().getValue()).toBe(before)
+    rerender(editor(false))
+    expect(add()).toBeEnabled()
+    rerender(editor(true))
+    expect(add()).toBeDisabled()
+  })
+
+  it('目录空态：「添加」在光标处插入目录标记', async () => {
+    const { handle } = renderEditor({ defaultValue: '第一段\n\n第二段', defaultPanel: 'toc' })
+    act(() => handle().getEngine().setSelection(3, 3))
+    const panel = screen.getByRole('complementary', { name: '目录' })
+    await userEvent.click(within(panel).getByRole('button', { name: '添加' }))
+    const value = handle().getValue()
+    expect(value.indexOf('第一段')).toBeLessThan(value.indexOf('@[TOC]'))
+    expect(value.indexOf('@[TOC]')).toBeLessThan(value.indexOf('第二段'))
+  })
+
+  it.each([
+    ['@[TOC](我的目录)\n\n正文', { start: 7, end: 11 }],
+    ['正文\n\n[TOC]', { start: 4, end: 9 }],
+  ])('目录空态：文档已有目录标记 %j 时「添加」不重复插入，改为聚焦并选中标记', async (value, selection) => {
+    const { handle } = renderEditor({ defaultValue: value, defaultPanel: 'toc' })
+    const panel = screen.getByRole('complementary', { name: '目录' })
+    await waitFor(() => expect(within(panel).getByText('暂无目录')).toBeInTheDocument())
+    const before = handle().getValue()
+    await userEvent.click(within(panel).getByRole('button', { name: '添加' }))
+    expect(handle().getValue()).toBe(before)
+    expect(handle().getEngine().getSelection()).toMatchObject(selection)
+    expect(editorContent()).toHaveFocus()
   })
 
   it('图标栏：第一个按钮为收起/展开开关；激活项 is-active', async () => {
@@ -113,6 +158,7 @@ describe('面板', () => {
     }
     renderEditor({ extensions: [demo, boom], defaultPanel: 'boom' })
     expect(railButtons()).toEqual(['收起', '演示', '目录', '语法', '炸'])
+    expect(within(rail()).getByRole('button', { name: '演示' }).querySelector('.ex-mde-rail__icon')).toBeNull()
     expect(await screen.findByRole('alert')).toHaveTextContent('扩展 demo:boom 出错：boom')
     await userEvent.click(within(rail()).getByRole('button', { name: '演示' }))
     expect(screen.getByRole('complementary', { name: '演示' })).toHaveTextContent('演示内容')

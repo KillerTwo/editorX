@@ -89,7 +89,8 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-rail__divider \{[^}]*margin: 0 0 4px;/)
     expect(css).toMatch(/\.ex-mde-toc--empty \{ padding: 40px 20px 0; font-family: var\(--ex-mde-font-family\); text-align: center; \}/)
     expect(css).toMatch(/\.ex-mde-toc__add \{[^}]*color: var\(--ex-color-mde-toc-empty-link\);/)
-    expect(css).toMatch(/\.ex-mde-panel-grip::after \{[^}]*top: 438px;[^}]*width: 4px;[^}]*height: 24px;[^}]*background: var\(--ex-color-mde-grip\);/)
+    expect(css).toMatch(/\.ex-mde-rail__item:not\(:has\(\.ex-mde-rail__icon\)\) \{ justify-content: center; padding-top: 0; \}/)
+    expect(css).toMatch(/\.ex-mde-panel-grip::after \{[^}]*top: min\(438px, calc\(100% - 36px\)\);[^}]*width: 4px;[^}]*height: 24px;[^}]*background: var\(--ex-color-mde-grip\);/)
   })
 
   it('编辑区排版按 CSDN 实测：西文 Arial 优先，标题逐级递减且行高统一', () => {
