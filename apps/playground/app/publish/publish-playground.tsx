@@ -2,7 +2,7 @@
 
 import { PublishModal, PublishPanel } from '@editorx/publish'
 import { ThemeProvider } from '@editorx/theme'
-import { zhCN, type EditorAdapters, type MissingAdapterPolicy, type PublishOption } from '@editorx/toolbar'
+import type { EditorAdapters, MissingAdapterPolicy } from '@editorx/toolbar'
 import { Button, ThemeToggle } from '@editorx/ui'
 import { useMemo, useState } from 'react'
 import { INLINE_DOC, MODAL_DOC, WORD_COUNT } from './fixture'
@@ -14,13 +14,6 @@ export interface PublishPlaygroundProps {
   missing: MissingAdapterPolicy | null
   categories: boolean
 }
-
-// 参考图 12-36-37 的弹窗中「墨衍模板」可选；内联卡片（12-36-05）沿用包默认值（禁用）
-const MODAL_TEMPLATES: readonly PublishOption[] = [
-  { id: 'default', name: zhCN.publish.template.default },
-  { id: 'simple', name: zhCN.publish.template.simple },
-  { id: 'moyan', name: zhCN.publish.template.moyan },
-]
 
 interface LogEntry {
   kind: PublishLogKind
@@ -78,7 +71,6 @@ function Playground({ mode, missing, categories }: PublishPlaygroundProps) {
           document={doc}
           adapters={adapters}
           missingAdapter={policy}
-          templates={MODAL_TEMPLATES}
         />
       )}
       <ol data-testid="publish-log" hidden>

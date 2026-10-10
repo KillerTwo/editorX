@@ -95,7 +95,7 @@ test.describe('/publish 内联', () => {
     await expect(page.getByText('发布成功')).toBeVisible()
     const payload = await logged(page, 'publish')
     expect(payload).toMatchObject({
-      editorType: 'markdown',
+      editorType: 'richtext',
       title: CSDN_TITLE,
       tags: ['React', '自定义标签'],
       summary: extracted,

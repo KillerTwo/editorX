@@ -11,8 +11,8 @@ export const PARAGRAPHS = [
 const markdown = PARAGRAPHS.join('\n\n')
 const html = PARAGRAPHS.map((p) => `<p>${p}</p>`).join('')
 
-/** 内联模式：正文无图片（参考截图 12-36-05 显示「暂无内容图片」） */
-export const INLINE_DOC: EditorDocument = { editorType: 'markdown', title: CSDN_TITLE, markdown, html }
+/** 内联模式：富文本文档且正文无图片（参考截图 12-36-05 出自 CSDN 富文本编辑器，显示「暂无内容图片」） */
+export const INLINE_DOC: EditorDocument = { editorType: 'richtext', title: CSDN_TITLE, html }
 
 /** 模态模式：正文两张图片（参考截图 12-36-37 封面行右侧有缩略图） */
 export const MODAL_DOC: EditorDocument = {
