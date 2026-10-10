@@ -460,6 +460,35 @@ describe('PublishModal', () => {
     expect(a.onPublish).not.toHaveBeenCalled()
   })
 
+  it('选项列表：首次打开才加载；关闭再打开不重新加载、不闪加载中/占位、不重复失败提示', async () => {
+    const a = adapters({ getCategories: vi.fn(() => Promise.reject(new Error('网络错误'))) })
+    const loaders = [a.getCategories!, a.getActivities!, a.getTopics!] as ReturnType<typeof vi.fn>[]
+    const failure = '分类专栏加载失败：网络错误'
+    renderWithProviders(<Host a={a} defaultValue={{ activityId: 'a1', topicId: 't1' }} />)
+    await tick()
+    for (const load of loaders) expect(load).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    const first = await screen.findByRole('dialog', { name: '发布文章' })
+    expect(await screen.findByText(failure)).toBeInTheDocument()
+    await waitFor(() => expect(within(first).getByRole('combobox', { name: '活动' })).toHaveTextContent('征文'))
+    await waitFor(() => expect(within(first).getByRole('combobox', { name: '话题' })).toHaveTextContent('话题一'))
+    const calls = loaders.map((load) => load.mock.calls.length)
+    for (const count of calls) expect(count).toBeGreaterThan(0)
+    // 若重新加载，列表会停在加载中，已选的活动/话题只显示占位
+    for (const load of loaders.slice(1)) load.mockImplementation(() => new Promise(() => {}))
+
+    await userEvent.click(within(first).getByRole('button', { name: '取消' }))
+    await userEvent.click(screen.getByRole('button', { name: '打开' }))
+    const dialog = await screen.findByRole('dialog', { name: '发布文章' })
+    expect(within(dialog).getByRole('combobox', { name: '活动' })).toHaveTextContent('征文')
+    expect(within(dialog).getByRole('combobox', { name: '话题' })).toHaveTextContent('话题一')
+    expect(within(dialog).queryByText('加载中…')).toBeNull()
+    await tick()
+    expect(loaders.map((load) => load.mock.calls.length)).toEqual(calls)
+    expect(screen.getAllByText(failure)).toHaveLength(1)
+  })
+
   it('onPublished 抛错：弹窗仍自动关闭，不提示发布失败，异常交给调用方', async () => {
     const a = adapters()
     const onPublished = vi.fn(() => {

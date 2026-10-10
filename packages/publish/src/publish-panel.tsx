@@ -1,13 +1,21 @@
 import { ThemeProvider, useOptionalTheme } from '@editorx/theme'
-import { MessagesProvider, useMessages, type CoverMode, type EditorAdapters } from '@editorx/toolbar'
+import {
+  errorMessage,
+  formatMessage,
+  MessagesProvider,
+  useMessages,
+  type CoverMode,
+  type EditorAdapters,
+} from '@editorx/toolbar'
 import { Modal, ToastProvider, useToast, type ToastType } from '@editorx/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { PublishActions } from './actions'
 import { adapterState } from './adapter-state'
 import { cx } from './cx'
-import { PublishForm } from './form/publish-form'
+import { PublishForm, type PublishLists } from './form/publish-form'
 import { ScheduleDialog } from './schedule-dialog'
 import type { PublishBaseProps, PublishModalProps, PublishPanelProps, PublishVariant } from './types'
+import { useAsyncList } from './use-async-list'
 import { usePublishController } from './use-publish-controller'
 
 const EMPTY_ADAPTERS: EditorAdapters = {}
@@ -87,6 +95,27 @@ function usePublishParts(
     autoClose.current = true
     void ctl.publish(scheduledAt)
   }
+  // 选项列表与设置同在常驻层：首次显示表单才加载，弹窗关闭再打开沿用已加载的列表
+  const [shown, setShown] = useState(open)
+  if (open && !shown) setShown(true)
+  const loadError = (name: string) => (error: unknown) =>
+    notify(formatMessage(m.publish.errors.load, { name, message: errorMessage(error) }), 'error')
+  const loader = <T,>(name: 'getCategories' | 'getActivities' | 'getTopics', load: () => Promise<T[]>) =>
+    shown && adapterState(adapters, name, missing) === 'enabled' ? load : undefined
+  const lists: PublishLists = {
+    categories: useAsyncList(
+      loader('getCategories', () => adapters.getCategories!()),
+      loadError(m.publish.fields.categories),
+    ),
+    activities: useAsyncList(
+      loader('getActivities', () => adapters.getActivities!()),
+      loadError(m.publish.fields.activitySub),
+    ),
+    topics: useAsyncList(
+      loader('getTopics', () => adapters.getTopics!()),
+      loadError(m.publish.fields.topicSub),
+    ),
+  }
   if (!open && focusedFailures !== ctl.failedAttempts) setFocusedFailures(ctl.failedAttempts)
   if (schedule && (!open || ctl.failedAttempts !== schedule.attempts)) {
     // 只有发布时间无效时留在定时弹窗里；其他字段无效则关闭弹窗，由表单聚焦首个错误字段
@@ -103,6 +132,7 @@ function usePublishParts(
       coverModes={props.coverModes ?? DEFAULT_COVER_MODES}
       templates={props.templates}
       agreementLinks={props.agreementLinks}
+      lists={lists}
       notify={notify}
       focusedFailures={focusedFailures}
       onFailuresFocused={setFocusedFailures}

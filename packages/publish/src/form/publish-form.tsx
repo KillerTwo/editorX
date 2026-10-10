@@ -1,8 +1,7 @@
 import {
-  errorMessage,
-  formatMessage,
   useMessages,
   type AdapterName,
+  type Category,
   type CoverMode,
   type EditorAdapters,
   type EditorDocument,
@@ -14,7 +13,6 @@ import { useEffect, useId, useMemo, useRef } from 'react'
 import { adapterState } from '../adapter-state'
 import { extractImages, extractSummary } from '../extract'
 import type { AgreementLinks, PublishVariant } from '../types'
-import { useAsyncList } from '../use-async-list'
 import type { PublishController } from '../use-publish-controller'
 import { CategoryField } from './category-field'
 import { CoverField } from './cover-field'
@@ -22,6 +20,13 @@ import { FormItem, labelId } from './form-item'
 import { ActivityField, ArticleTypeField, BackupField } from './option-fields'
 import { SummaryField } from './summary-field'
 import { TagField } from './tag-field'
+
+/** 选项列表由常驻的父组件加载（弹窗重开不重新加载）；null 为加载中，未启用为 [] */
+export interface PublishLists {
+  categories: Category[] | null
+  activities: PublishOption[] | null
+  topics: PublishOption[] | null
+}
 
 export interface PublishFormProps {
   ctl: PublishController
@@ -32,6 +37,7 @@ export interface PublishFormProps {
   coverModes: readonly CoverMode[]
   templates?: readonly PublishOption[]
   agreementLinks?: AgreementLinks
+  lists: PublishLists
   notify(message: string, type?: ToastType): void
   /** 已聚焦过的失败次数；由常驻的父组件保存，表单重新挂载（弹窗重开）时不会为旧的失败抢焦点 */
   focusedFailures: number
@@ -42,7 +48,7 @@ const VISIBILITIES = ['public', 'private', 'fans', 'vip'] as const
 const DECLARATIONS = ['none', 'ai', 'network', 'personal'] as const
 
 export function PublishForm(props: PublishFormProps) {
-  const { ctl, variant, document: doc, adapters, missingAdapter, coverModes, templates, agreementLinks, notify } = props
+  const { ctl, variant, document: doc, adapters, missingAdapter, coverModes, templates, agreementLinks, lists, notify } = props
   const { focusedFailures, onFailuresFocused } = props
   const p = useMessages().publish
   const { settings, errors, update, failedAttempts } = ctl
@@ -65,17 +71,7 @@ export function PublishForm(props: PublishFormProps) {
   const activityState = state('getActivities')
   const topicState = state('getTopics')
   const uploadState = state('uploadImage')
-  const loadError = (name: string) => (error: unknown) =>
-    notify(formatMessage(p.errors.load, { name, message: errorMessage(error) }), 'error')
-  const categories = useAsyncList(
-    categoriesState === 'enabled' ? () => adapters.getCategories!() : undefined,
-    loadError(p.fields.categories),
-  )
-  const activities = useAsyncList(
-    activityState === 'enabled' ? () => adapters.getActivities!() : undefined,
-    loadError(p.fields.activitySub),
-  )
-  const topics = useAsyncList(topicState === 'enabled' ? () => adapters.getTopics!() : undefined, loadError(p.fields.topicSub))
+  const { categories, activities, topics } = lists
   const searchTags = useMemo(
     () => (adapters.searchTags ? (keyword: string) => adapters.searchTags!(keyword) : undefined),
     [adapters],
