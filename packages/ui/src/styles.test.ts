@@ -22,6 +22,12 @@ describe('ui styles.css', () => {
     }
   })
 
+  it('primary 标签的 ×：墨迹 7.5、描边约 0.7、平头，占位仍为 7.5（B10）', () => {
+    expect(css).toMatch(
+      /\.ex-tag--primary \.ex-tag__close svg \{ width: 14px; height: 14px; margin: -3\.25px; stroke-width: 1\.2; stroke-linecap: butt; \}/,
+    )
+  })
+
   it('Modal 内的弹出层（is-in-modal）层级高于遮罩、低于 toast', () => {
     const rule = /([^{}]*)\{[^}]*z-index:\s*calc\(var\(--ex-z-modal\)\s*\+\s*1\)/.exec(css)
     expect(rule).not.toBeNull()
