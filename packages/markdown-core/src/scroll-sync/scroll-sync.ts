@@ -9,10 +9,14 @@ export interface ScrollSyncOptions {
 }
 
 export interface ScrollSync {
-  /** Removes all listeners and observers; later calls to either method are no-ops. */
+  /** Removes all listeners and observers; later calls to any method are no-ops. */
   destroy(): void
-  /** Re-measures both panes and re-aligns from the last scrolled side. Call after each preview render. */
+  /** Re-measures both panes and re-aligns from the last scrolled side. Call after each preview render. Paused: re-measures only. */
   refresh(): void
+  /** 立即以 source 为基准对齐另一侧（暂停时也生效）；destroy 后为空操作 */
+  syncFrom(source: ScrollSide): void
+  /** 暂停 / 恢复同步滚动；恢复时从最后滚动的一侧重新对齐；destroy 后为空操作 */
+  setPaused(paused: boolean): void
 }
 
 /**
@@ -30,6 +34,8 @@ export interface ScrollSync {
  * Neither pane may use `scroll-behavior: smooth`: animated writes outlive the source lock and can ping-pong.
  * The ResizeObserver's initial observation schedules an editor → preview sync right after mount, which
  * overrides any preview scroll position restored before that.
+ *
+ * `setPaused(true)` 期间 scroll / resize / visibility 事件只更新 `lastSource` 与缓存失效，不写 scrollTop。
  */
 export function createScrollSync(
   engine: EditorEngine,
@@ -45,6 +51,7 @@ export function createScrollSync(
   let writtenTop = 0
   let droppedDuringLock = false
   let destroyed = false
+  let paused = false
 
   const elementOf = (side: ScrollSide) => (side === 'editor' ? editorScrollEl : previewEl)
   const other = (side: ScrollSide): ScrollSide => (side === 'editor' ? 'preview' : 'editor')
@@ -54,7 +61,7 @@ export function createScrollSync(
     return pairs
   }
 
-  const doSync = (source: ScrollSide) => {
+  const align = (source: ScrollSide) => {
     if (destroyed) return
     const current = pairs ?? measure()
     if (current.length === 0) return
@@ -81,6 +88,10 @@ export function createScrollSync(
       droppedDuringLock = false
     }, lockMs)
     dst.scrollTop = next
+  }
+
+  const doSync = (source: ScrollSide) => {
+    if (!paused) align(source)
   }
 
   const scheduleSync = debounce(doSync, opts.debounceMs ?? 16)
@@ -125,6 +136,21 @@ export function createScrollSync(
       scheduleSync.cancel()
       measure()
       doSync(lastSource)
+    },
+    syncFrom(source) {
+      if (destroyed) return
+      scheduleSync.cancel()
+      lastSource = source
+      measure()
+      align(source)
+    },
+    setPaused(next) {
+      if (destroyed || next === paused) return
+      paused = next
+      scheduleSync.cancel()
+      if (paused) return
+      measure()
+      align(lastSource)
     },
     destroy() {
       if (destroyed) return

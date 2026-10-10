@@ -32,7 +32,7 @@ describe('@editorx/markdown-core public API', () => {
     expect(result.html).toContain('<h1 id="标题">标题</h1>')
     expect(api.commands.bold({ text: 'a', selection: { start: 0, end: 1 } }).text).toBe('**a**')
     expect(api.countWords('# 标题')).toEqual({ words: 2, chars: 3, lines: 1 })
-    expect(api.countHtml(result.html)).toEqual({ words: 4, paragraphs: 2 })
+    expect(api.countHtml(result.html)).toEqual({ words: 4, chars: 4, paragraphs: 2 })
     expect(api.isFlowchartJs('st=>start: 开始\ne=>end: 结束\nst->e')).toBe(true)
     expect(api.htmlToMarkdown(result.html)).toBe('# 标题\n\n**粗体**')
   })

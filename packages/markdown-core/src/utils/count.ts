@@ -22,6 +22,8 @@ export function countWords(md: string): WordCount {
 
 export interface HtmlCount {
   words: number
+  /** 渲染文本中的非空白字符数（码点） */
+  chars: number
   paragraphs: number
 }
 
@@ -44,5 +46,10 @@ export function countHtml(html: string): HtmlCount {
     el.before(' ')
     el.after(' ')
   })
-  return { words: doc.body.textContent.match(WORD)?.length ?? 0, paragraphs }
+  const text = doc.body.textContent
+  return {
+    words: text.match(WORD)?.length ?? 0,
+    chars: Array.from(text.replace(WHITESPACE, '')).length,
+    paragraphs,
+  }
 }

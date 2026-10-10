@@ -6,24 +6,24 @@ import { exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF } from './io'
 
 describe('countHtml', () => {
   it.each([
-    ['', { words: 0, paragraphs: 0 }],
-    ['<h1>标题</h1><p>你好 world</p><p> </p><ul><li>a</li><li></li></ul>', { words: 6, paragraphs: 3 }],
-    ['<p>abc</p><p>def</p>', { words: 2, paragraphs: 2 }],
-    ['<blockquote><p>引用</p></blockquote><pre><code>x = 1</code></pre>', { words: 4, paragraphs: 3 }],
-    ['<table><tr><td>1</td><td>2</td></tr><tr><td> </td></tr></table>', { words: 2, paragraphs: 1 }],
-    ['<div>只有 div</div><script>var a</script><style>p{}</style>', { words: 3, paragraphs: 0 }],
+    ['', { words: 0, chars: 0, paragraphs: 0 }],
+    ['<h1>标题</h1><p>你好 world</p><p> </p><ul><li>a</li><li></li></ul>', { words: 6, chars: 10, paragraphs: 3 }],
+    ['<p>abc</p><p>def</p>', { words: 2, chars: 6, paragraphs: 2 }],
+    ['<blockquote><p>引用</p></blockquote><pre><code>x = 1</code></pre>', { words: 4, chars: 5, paragraphs: 3 }],
+    ['<table><tr><td>1</td><td>2</td></tr><tr><td> </td></tr></table>', { words: 2, chars: 2, paragraphs: 1 }],
+    ['<div>只有 div</div><script>var a</script><style>p{}</style>', { words: 3, chars: 5, paragraphs: 0 }],
   ])('counts %j', (html, expected) => {
     expect(countHtml(html)).toEqual(expected)
   })
 
   it('does not double-count KaTeX MathML text', () => {
     const html = createRenderer().render('$x$').html
-    expect(countHtml(html)).toEqual({ words: 1, paragraphs: 1 })
+    expect(countHtml(html)).toMatchObject({ words: 1, paragraphs: 1 })
   })
 
   it('counts a rendered document', () => {
     const html = createRenderer().render('# 标题\n\n第一段 text\n\n- 项一\n- 项二').html
-    expect(countHtml(html)).toEqual({ words: 10, paragraphs: 4 })
+    expect(countHtml(html)).toEqual({ words: 10, chars: 13, paragraphs: 4 })
   })
 
   it('ignores the TOC and footnote markers', () => {
@@ -31,13 +31,19 @@ describe('countHtml', () => {
     const without = countHtml(createRenderer().render(doc).html)
     expect(countHtml(createRenderer().render(`[TOC]\n\n${doc}`).html)).toEqual(without)
     expect(countHtml(createRenderer().render(`@[TOC](目录)\n\n${doc}`).html)).toEqual(without)
-    expect(without).toEqual({ words: 9, paragraphs: 5 })
+    expect(without).toEqual({ words: 9, chars: 12, paragraphs: 5 })
   })
 
   it('separates words only at block boundaries and line breaks', () => {
-    expect(countHtml('<p>foo<em>bar</em></p>')).toEqual({ words: 1, paragraphs: 1 })
-    expect(countHtml('<p>H<sub>2</sub>O</p>')).toEqual({ words: 1, paragraphs: 1 })
-    expect(countHtml('<p>a<br>b</p><div>c</div><div>d</div>')).toEqual({ words: 4, paragraphs: 1 })
+    expect(countHtml('<p>foo<em>bar</em></p>')).toEqual({ words: 1, chars: 6, paragraphs: 1 })
+    expect(countHtml('<p>H<sub>2</sub>O</p>')).toEqual({ words: 1, chars: 3, paragraphs: 1 })
+    expect(countHtml('<p>a<br>b</p><div>c</div><div>d</div>')).toEqual({ words: 4, chars: 4, paragraphs: 1 })
+  })
+
+  it('chars：渲染文本的非空白字符数，忽略脚注引用与目录', () => {
+    expect(countHtml('<p>test</p>').chars).toBe(4)
+    expect(countHtml('<p>中文 ab</p><ul><li>c d</li></ul>').chars).toBe(6)
+    expect(countHtml('<p>a<sup class="footnote-ref">1</sup></p><div class="ex-toc"><a>目录</a></div>').chars).toBe(1)
   })
 })
 

@@ -332,4 +332,61 @@ describe('createScrollSync', () => {
     vi.advanceTimersByTime(10)
     expect(preview.scrollTop).toBe(0)
   })
+
+  it('setPaused(true)：滚动不再同步；syncFrom 立即对齐；恢复时从最后滚动的一侧对齐', () => {
+    const { editor, preview, sync } = setup()
+    sync.setPaused(true)
+    scrollTo(editor, 50)
+    vi.advanceTimersByTime(20)
+    expect(preview.scrollTop).toBe(0)
+    sync.syncFrom('editor')
+    expect(preview.scrollTop).toBe(150)
+    vi.advanceTimersByTime(60)
+    scrollTo(editor, 20)
+    vi.advanceTimersByTime(20)
+    expect(preview.scrollTop).toBe(150)
+    sync.setPaused(false)
+    expect(preview.scrollTop).toBe(60)
+  })
+
+  it('暂停时 refresh 只重新测量，不移动任一侧', () => {
+    const { editor, preview, engine, sync } = setup()
+    scrollTo(editor, 50)
+    vi.advanceTimersByTime(60)
+    expect(preview.scrollTop).toBe(150)
+    sync.setPaused(true)
+    editor.scrollTop = 0
+    const calls = vi.mocked(engine.getSectionOffsets).mock.calls.length
+    sync.refresh()
+    expect(vi.mocked(engine.getSectionOffsets).mock.calls.length).toBe(calls + 1)
+    expect(preview.scrollTop).toBe(150)
+    expect(editor.scrollTop).toBe(0)
+  })
+
+  it('暂停时 ResizeObserver 回调不对齐', () => {
+    const observers = stubResizeObserver()
+    const { editor, preview, sync } = setup()
+    sync.setPaused(true)
+    editor.scrollTop = 50
+    observers[0]!.cb()
+    vi.advanceTimersByTime(20)
+    expect(preview.scrollTop).toBe(0)
+  })
+
+  it('destroy 后 syncFrom / setPaused 为空操作', () => {
+    const { editor, preview, sync } = setup()
+    sync.destroy()
+    editor.scrollTop = 50
+    sync.syncFrom('editor')
+    sync.setPaused(true)
+    sync.setPaused(false)
+    expect(preview.scrollTop).toBe(0)
+  })
+
+  it('setPaused 重复传入相同值不触发对齐', () => {
+    const { editor, preview, sync } = setup()
+    editor.scrollTop = 50
+    sync.setPaused(false)
+    expect(preview.scrollTop).toBe(0)
+  })
 })
