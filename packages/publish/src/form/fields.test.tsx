@@ -1,5 +1,5 @@
 import type { ArticleType, Category } from '@editorx/toolbar'
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -79,6 +79,19 @@ describe('TagField', () => {
     expect(baseElement.querySelector('.ex-pub-tag-search :disabled')).toBeNull()
     await userEvent.type(input, 'Rust{Enter}')
     expect(screen.getByTestId('tags')).toHaveTextContent(/^Rust$/)
+  })
+
+  it('输入法组合中的 Enter（isComposing 或 Safari 的 keyCode 229）不添加标签', async () => {
+    renderWithProviders(<Tags />)
+    await userEvent.click(screen.getByRole('button', { name: '添加文章标签' }))
+    const input = await screen.findByRole('searchbox', { name: '搜索标签' })
+    fireEvent.change(input, { target: { value: 'pinyin' } })
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true })
+    expect(screen.getByTestId('tags')).toHaveTextContent(/^$/)
+    expect(input).toHaveValue('pinyin')
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 })
+    expect(screen.getByTestId('tags')).toHaveTextContent(/^pinyin$/)
   })
 })
 

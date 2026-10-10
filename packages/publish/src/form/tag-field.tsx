@@ -89,7 +89,7 @@ function TagSearch({ selected, onAdd, searchTags }: TagSearchProps) {
   }, [keyword, searchTags])
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter' || e.nativeEvent.isComposing) return
+    if (e.key !== 'Enter' || e.nativeEvent.isComposing || e.keyCode === 229) return
     e.preventDefault()
     onAdd(keyword)
     setKeyword('')
