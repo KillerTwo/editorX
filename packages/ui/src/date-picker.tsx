@@ -234,12 +234,31 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
   )
 }
 
-/** 12×12.5 日历图标（§3.3） */
+const CALENDAR_DOTS = [3.875, 6.5, 9.125].flatMap((x) => [6.1875, 8.8125].map((y) => [x, y] as const))
+
+/**
+ * 日历图标（参考图 19-09-01 按 10× 描摹）：墨迹 12.25×12.125，越出 12×12 布局盒的部分可见；
+ * 布局盒宽保持 12 以免占位文字移动，高 12 使垂直居中落在整像素上
+ */
 function CalendarIcon() {
   return (
-    <svg className="ex-picker-input__icon" width="12" height="13" viewBox="0 0 12 13" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
-      <rect x="0.5" y="1.5" width="11" height="11" rx="1" />
-      <path d="M0.5 4.5h11M3.5 0v3M8.5 0v3" />
+    <svg
+      className="ex-picker-input__icon"
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      overflow="visible"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.875"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="0.8125" y="0.9375" width="11.375" height="10.5" />
+      <path d="M0.8125 3.5625H12.1875M3.4375 -0.25V2.125M9.5625 -0.25V2.125" />
+      {CALENDAR_DOTS.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x - 0.8125} y={y - 0.4375} width="1.625" height="0.875" fill="currentColor" stroke="none" />
+      ))}
     </svg>
   )
 }

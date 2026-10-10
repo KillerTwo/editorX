@@ -36,7 +36,15 @@ describe('TimePicker', () => {
     )
     const trigger = screen.getByRole('combobox', { name: '发布时间' })
     expect(trigger).toHaveClass('ex-select', 'ex-picker-input', 'ex-time-picker')
-    expect(trigger.querySelector('.ex-select__prefix svg')).not.toBeNull()
+    const icon = trigger.querySelector('.ex-select__prefix svg')!
+    expect(icon).toHaveAttribute('aria-hidden', 'true')
+    expect(icon).toHaveAttribute('focusable', 'false')
+    expect(icon).toHaveAttribute('width', '12')
+    expect(icon).toHaveAttribute('height', '12')
+    expect(icon).toHaveAttribute('overflow', 'visible')
+    expect(icon).toHaveAttribute('stroke', 'currentColor')
+    // 参考图 19-09-01：时针竖直向上、分针水平向右，构成「L」
+    expect(icon.querySelector('path')).toHaveAttribute('d', 'M5.9375 2.3125V6.1875H9.8125')
     expect(trigger.querySelector('.ex-select__arrow')).toBeNull()
     expect(trigger).toHaveTextContent('选择时间')
     await userEvent.click(trigger)

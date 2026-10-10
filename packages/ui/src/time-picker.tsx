@@ -41,11 +41,23 @@ export function TimePicker({ options, className, ...rest }: TimePickerProps): Re
   )
 }
 
+/** 时钟图标（参考图 19-09-01 按 10× 描摹）：墨迹 12.2×12.2，越出 12px 布局盒的部分可见 */
 function ClockIcon() {
   return (
-    <svg className="ex-picker-input__icon" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" aria-hidden="true">
-      <circle cx="6" cy="6" r="5.5" />
-      <path d="M6 3v3l2 1.5" />
+    <svg
+      className="ex-picker-input__icon"
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      overflow="visible"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.875"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="6.375" cy="5.75" r="5.625" />
+      <path d="M5.9375 2.3125V6.1875H9.8125" />
     </svg>
   )
 }

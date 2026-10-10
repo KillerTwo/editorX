@@ -31,6 +31,21 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('DatePicker', () => {
+  it('日历图标：12×12 布局盒、装饰性、带 3×2 点阵（参考图 19-09-01）', () => {
+    renderWithTheme(
+      <StrictMode>
+        <Harness />
+      </StrictMode>,
+    )
+    const icon = screen.getByRole('button', { name: '发布日期' }).querySelector('svg.ex-picker-input__icon')!
+    expect(icon).toHaveAttribute('aria-hidden', 'true')
+    expect(icon).toHaveAttribute('focusable', 'false')
+    expect(icon).toHaveAttribute('width', '12')
+    expect(icon).toHaveAttribute('height', '12')
+    expect(icon).toHaveAttribute('overflow', 'visible')
+    expect(icon.querySelectorAll('rect[fill="currentColor"]')).toHaveLength(6)
+  })
+
   it('打开：焦点在今天，今天 aria-current，区间外日期禁用', async () => {
     renderWithTheme(
       <StrictMode>
