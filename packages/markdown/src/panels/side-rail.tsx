@@ -1,7 +1,7 @@
 import { safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
-import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { cx } from '../cx'
+import { PanelToggleIcon } from '../icons'
 import { useEditorState, type EditorStore } from '../store'
 
 export function SideRail({
@@ -33,9 +33,9 @@ export function SideRail({
 
   return (
     <nav className="ex-mde-rail" aria-label={m.panels.rail}>
-      <button type="button" className="ex-mde-rail__item" aria-expanded={open} onClick={toggleAll}>
+      <button type="button" className="ex-mde-rail__item ex-mde-rail__toggle" aria-expanded={open} onClick={toggleAll}>
         <span className="ex-mde-rail__icon" aria-hidden="true">
-          {open ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
+          <PanelToggleIcon />
         </span>
         <span className="ex-mde-rail__label">{open ? m.panels.collapse : m.panels.expand}</span>
       </button>
@@ -47,6 +47,7 @@ export function SideRail({
             key={panel.id}
             type="button"
             aria-pressed={pressed}
+            data-panel={panel.id}
             className={cx('ex-mde-rail__item', pressed && 'is-active')}
             onClick={() => store.set({ panel: pressed ? null : panel.id })}
           >

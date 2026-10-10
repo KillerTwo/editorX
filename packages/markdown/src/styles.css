@@ -345,7 +345,7 @@
 .ex-mde-panel {
   box-sizing: border-box;
   flex: none;
-  width: 390px;
+  width: var(--ex-mde-panel-width, 390px);
   min-height: 0;
   padding: 10px 0;
   overflow: auto;
@@ -359,6 +359,29 @@
   border-top: 1px solid var(--ex-color-mde-divider);
   border-radius: 0;
 }
+
+/* 面板宽度拖柄：零宽 flex 项，负外边距使其位于卡片与面板的 16px 间隙正中；胶囊 4×24 顶 438px（G23） */
+.ex-mde-panel-grip {
+  position: relative;
+  flex: none;
+  width: 0;
+  margin: 0 -8px;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.ex-mde-panel-grip::before { content: ''; position: absolute; top: 0; bottom: 0; left: -8px; width: 16px; }
+.ex-mde-panel-grip::after {
+  content: '';
+  position: absolute;
+  top: 438px;
+  left: -2px;
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--ex-color-mde-grip);
+}
+.ex-mde-panel-grip:focus-visible::after { background: var(--ex-color-primary); }
 
 .ex-mde-panel__title {
   height: 30px;
@@ -394,7 +417,21 @@
 .ex-mde-toc__item[data-depth='0'] .ex-mde-toc__link { font-size: 18px; line-height: 35px; }
 .ex-mde-toc__item[data-depth='1'] .ex-mde-toc__link { padding-left: 28px; font-size: 16px; line-height: 35px; }
 .ex-mde-toc__item[data-depth='2'] .ex-mde-toc__link { padding-left: 36px; font-size: 13px; line-height: 26px; }
-.ex-mde-toc__empty { margin: 0; padding: 24px 20px; color: var(--ex-color-text-muted); font-size: 13px; text-align: center; }
+/* 目录空态：无标题条，两行 14px 居中（G19/G26；行高 22 为推断）；「@[TOC]」在参考图中是 Arial，与编辑区同一字体栈 */
+.ex-mde-toc--empty { padding: 40px 20px 0; font-family: var(--ex-mde-font-family); text-align: center; }
+.ex-mde-toc__empty-title,
+.ex-mde-toc__empty { margin: 0; color: var(--ex-color-mde-toc-empty); font-size: 14px; line-height: 22px; }
+.ex-mde-toc__empty { margin-top: 15px; }
+.ex-mde-toc__add {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-mde-toc-empty-link);
+  font: inherit;
+  cursor: pointer;
+}
+.ex-mde-toc__add:disabled { color: inherit; cursor: default; }
+.ex-mde-toc__add:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: 2px; }
 
 .ex-mde-syntax__list { margin: 0; padding: 8px 20px; }
 .ex-mde-syntax__item { padding: 8px 0; border-bottom: 1px solid var(--ex-color-mde-divider); }
@@ -409,6 +446,7 @@
   white-space: pre-wrap;
 }
 
+/* 项高 51、间距 4、分隔线下 4px → 分隔线 y 63、首项 72、项距 55（G10）；标签 11px（G11，墨迹宽高与 mac 参考一致），颜色（G14） */
 .ex-mde-rail {
   display: flex;
   flex: none;
@@ -422,31 +460,36 @@
   background: var(--ex-color-surface);
 }
 
+/* 20px 图标框顶在项内 6px，标签行顶 31.5（开关项 30）；宿主的大图标会把标签往下推，与 CSDN 一致 */
 .ex-mde-rail__item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
+  gap: 5.5px;
+  box-sizing: border-box;
   width: 48px;
-  height: 50px;
-  padding: 0;
+  height: 51px;
+  padding: 6px 0 0;
   border: 0;
   border-radius: var(--ex-radius-lg);
   background: transparent;
   color: var(--ex-color-mde-chrome-text);
   font: inherit;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 11px;
+  line-height: 14px;
   cursor: pointer;
 }
+
+.ex-mde-rail__toggle { gap: 4px; }
 
 .ex-mde-rail__item.is-active { background: var(--ex-color-mde-rail-active-bg); }
 .ex-mde-rail__item:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: -2px; }
 .ex-mde-rail__icon { display: inline-flex; }
-.ex-mde-rail__label { color: var(--ex-color-mde-status-text); }
-.ex-mde-rail__item.is-active .ex-mde-rail__label { color: var(--ex-color-mde-chrome-text); }
-.ex-mde-rail__divider { width: 32px; height: 1px; margin: 4px 0; background: var(--ex-color-mde-panel-title-bg); }
+.ex-mde-rail__label { color: var(--ex-color-mde-rail-label); }
+.ex-mde-rail__item.is-active .ex-mde-rail__label { color: var(--ex-color-mde-chrome-text); font-weight: 700; }
+.ex-mde-rail__toggle[aria-expanded='false'] { color: var(--ex-color-mde-rail-label); }
+.ex-mde-rail__toggle[aria-expanded='true'] .ex-mde-rail__label { color: var(--ex-color-mde-chrome-text); }
+.ex-mde-rail__divider { width: 32px; height: 1px; margin: 0 0 4px; background: var(--ex-color-mde-panel-title-bg); }
 
 /* ---------- 全屏（层级低于弹出层，菜单与对话框仍在其上） ---------- */
 .ex-mde[data-fullscreen] {

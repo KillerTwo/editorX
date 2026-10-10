@@ -38,6 +38,7 @@ import { cx } from './cx'
 import { drawDiagramsForExport } from './export-html'
 import { isolateFullscreen } from './fullscreen'
 import { ModeTabs } from './mode-tabs'
+import { PANEL_DEFAULT_WIDTH, PANEL_WIDTH_VAR, PanelGrip } from './panels/panel-grip'
 import { PanelHost } from './panels/panel-host'
 import { createHeadingJumper } from './panels/scroll-to-heading'
 import { SideRail } from './panels/side-rail'
@@ -281,6 +282,9 @@ function EditorShell({
 
   const formatsKey = useEditorState(store, (s) => s.formatsKey)
   const panel = useEditorState(store, (s) => s.panel)
+  const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT_WIDTH)
+  const rightPanelId = `${editorId}-panel`
+  const rightOpen = rightPanels.some((p) => p.panel.id === panel)
   const fullscreen = useEditorState(store, (s) => s.fullscreen)
 
   useEffect(() => {
@@ -351,7 +355,10 @@ function EditorShell({
     handleShortcut(e.nativeEvent, shortcuts, ctx, mac, reportError)
   }
 
-  const style = { '--ex-mde-height': typeof height === 'number' ? `${height}px` : height } as CSSProperties
+  const style = {
+    '--ex-mde-height': typeof height === 'number' ? `${height}px` : height,
+    [PANEL_WIDTH_VAR]: `${panelWidth}px`,
+  } as CSSProperties
   const bodyStyle = { [SPLIT_VAR]: String(split) } as CSSProperties
 
   return (
@@ -395,7 +402,8 @@ function EditorShell({
         />
         <StatusBar store={store} viewMode={viewMode} center={slots?.statusCenter} end={slots?.statusEnd} />
       </div>
-      <PanelHost position="right" panels={rightPanels} ctx={ctx} store={store} onError={reportError} />
+      {rightOpen && <PanelGrip width={panelWidth} onChange={setPanelWidth} rootRef={rootRef} controls={rightPanelId} />}
+      <PanelHost id={rightPanelId} position="right" panels={rightPanels} ctx={ctx} store={store} onError={reportError} />
       {showRail && rightPanels.length > 0 && <SideRail panels={rightPanels} store={store} ctx={ctx} />}
     </div>
   )

@@ -71,7 +71,7 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde\[data-view='preview'\] \.ex-mde-status__stats \{ margin-top: 4px; \}/)
     expect(css).toMatch(/\.ex-mde-status__end \{[^}]*gap: 16px;/)
     expect(css).toMatch(/\.ex-mde-status__center,\n\.ex-mde-status__end \{ margin-top: 2px; \}/)
-    expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)
+    expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: var\(--ex-mde-panel-width, 390px\);[^}]*padding: 10px 0;/)
     expect(css).toMatch(/\.ex-mde-rail \{[^}]*width: 56px;/)
     expect(css).toContain('calc(var(--ex-mde-split, 0.5) * 100% - 13px)')
     expect(css).toMatch(/\.ex-mde \.ex-editor-content \{[^}]*font-size: 16px;[^}]*line-height: 26px;/)
@@ -79,6 +79,17 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-toolbar \.ex-toolbar__item\.has-label \{ gap: 6px; padding: 0 10px; \}/)
     expect(css).toMatch(/\.ex-mde-toc__list \{[^}]*padding: 3px 0 8px;/)
     expect(css).toMatch(/::-webkit-scrollbar \{[^}]*width: 8px;/)
+    expect(css).toMatch(
+      /\.ex-mde-rail__item \{[^}]*gap: 5\.5px;[^}]*height: 51px;[^}]*padding: 6px 0 0;[^}]*font-size: 11px;[^}]*line-height: 14px;/,
+    )
+    expect(css).toMatch(/\.ex-mde-rail__toggle \{ gap: 4px; \}/)
+    expect(css).toMatch(/\.ex-mde-rail__label \{ color: var\(--ex-color-mde-rail-label\); \}/)
+    expect(css).toMatch(/\.ex-mde-rail__item\.is-active \.ex-mde-rail__label \{ color: var\(--ex-color-mde-chrome-text\); font-weight: 700; \}/)
+    expect(css).toMatch(/\.ex-mde-rail__toggle\[aria-expanded='false'\] \{ color: var\(--ex-color-mde-rail-label\); \}/)
+    expect(css).toMatch(/\.ex-mde-rail__divider \{[^}]*margin: 0 0 4px;/)
+    expect(css).toMatch(/\.ex-mde-toc--empty \{ padding: 40px 20px 0; font-family: var\(--ex-mde-font-family\); text-align: center; \}/)
+    expect(css).toMatch(/\.ex-mde-toc__add \{[^}]*color: var\(--ex-color-mde-toc-empty-link\);/)
+    expect(css).toMatch(/\.ex-mde-panel-grip::after \{[^}]*top: 438px;[^}]*width: 4px;[^}]*height: 24px;[^}]*background: var\(--ex-color-mde-grip\);/)
   })
 
   it('编辑区排版按 CSDN 实测：西文 Arial 优先，标题逐级递减且行高统一', () => {

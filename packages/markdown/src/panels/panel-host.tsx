@@ -3,12 +3,14 @@ import { cx } from '../cx'
 import { useEditorState, type EditorStore } from '../store'
 
 export function PanelHost({
+  id,
   position,
   panels,
   ctx,
   store,
   onError,
 }: {
+  id?: string
   position: 'right' | 'bottom'
   panels: readonly ResolvedPanel[]
   ctx: ExtensionContext
@@ -21,6 +23,7 @@ export function PanelHost({
   if (!current) return null
   return (
     <aside
+      id={id}
       className={cx('ex-mde-panel', `ex-mde-panel--${position}`)}
       aria-label={safeResolveText(current.panel.title, m, ctx, current.extension, current.panel.id)}
       data-panel={current.panel.id}

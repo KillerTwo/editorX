@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { resolvePanels, type EditorExtension } from '@editorx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
@@ -35,12 +35,36 @@ describe('面板', () => {
     expect(screen.queryByRole('complementary')).toBeNull()
   })
 
-  it('目录：显示 @[TOC] 自定义标题；无标题时显示空态', async () => {
+  it('目录：显示 @[TOC] 自定义标题；无标题时显示空态（无标题条，「添加」插入目录标记）', async () => {
     const { handle } = renderEditor({ defaultValue: '@[TOC](自定义目录)\n\n# 一', defaultPanel: 'toc' })
     const panel = screen.getByRole('complementary', { name: '目录' })
     await waitFor(() => expect(within(panel).getByText('自定义目录')).toBeInTheDocument())
-    handle().setValue('只有正文')
-    await waitFor(() => expect(within(panel).getByText('为文内增加标题，这里将生成目录')).toBeInTheDocument())
+    act(() => handle().setValue('只有正文'))
+    await waitFor(() => expect(within(panel).getByText('暂无目录')).toBeInTheDocument())
+    expect(within(panel).queryByRole('heading')).toBeNull()
+    expect(panel.querySelector('.ex-mde-toc__empty')).toHaveTextContent('文章内添加@[TOC]自动根据文章标题生成目录')
+    await userEvent.click(within(panel).getByRole('button', { name: '添加' }))
+    expect(handle().getValue()).toContain('@[TOC]')
+  })
+
+  it('目录空态：只读时「添加」禁用', () => {
+    renderEditor({ defaultValue: '正文', defaultPanel: 'toc', readOnly: true })
+    const panel = screen.getByRole('complementary', { name: '目录' })
+    expect(within(panel).getByRole('button', { name: '添加' })).toBeDisabled()
+  })
+
+  it('图标栏：第一个按钮为收起/展开开关；激活项 is-active', async () => {
+    renderEditor({ defaultValue: '# 一' })
+    const toggle = within(rail()).getByRole('button', { name: '展开' })
+    expect(toggle).toHaveClass('ex-mde-rail__item', 'ex-mde-rail__toggle')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle.querySelector('svg')).not.toHaveClass('lucide')
+    await userEvent.click(within(rail()).getByRole('button', { name: '目录' }))
+    expect(within(rail()).getByRole('button', { name: '收起' })).toHaveAttribute('aria-expanded', 'true')
+    expect(within(rail()).getByRole('button', { name: '目录' })).toHaveClass('is-active')
+    expect(within(rail()).getByRole('button', { name: '目录' }).querySelector('svg')).not.toHaveClass('lucide')
+    expect(within(rail()).getByRole('button', { name: '目录' })).toHaveAttribute('data-panel', 'toc')
+    expect(toggle).not.toHaveAttribute('data-panel')
   })
 
   it('目录项点击不抛错（跳转逻辑见 scroll-to-heading.test）', async () => {

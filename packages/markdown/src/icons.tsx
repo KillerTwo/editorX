@@ -61,12 +61,15 @@ export function LinkIcon() {
   )
 }
 
+/** 图标栏开关：墨迹 18×15（框线 2px），收起 / 展开共用 */
 export function PanelToggleIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true" focusable="false">
-      <rect x="1.6" y="1.6" width="16.8" height="16.8" rx="2" />
-      <path d="M13 1.6v16.8" />
-      <path d="M15 6.5h1.4M15 10h1.4M15 13.5h1.4" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+      <path
+        fillRule="evenodd"
+        d="M2 2.5h16a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1ZM3 4.5v11h8v-11ZM13 4.5v11h4v-11Z"
+      />
+      <path d="M14 6.5h2v1h-2ZM14 8.5h2v1h-2ZM14 10.5h2v1h-2Z" />
     </svg>
   )
 }
@@ -74,21 +77,30 @@ export function PanelToggleIcon() {
 export function TocIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
-      <rect x="2" y="3.5" width="3" height="2.5" rx="0.5" />
-      <rect x="7" y="3.5" width="11" height="2.5" rx="0.5" />
-      <rect x="2" y="8.75" width="3" height="2.5" rx="0.5" />
-      <rect x="7" y="8.75" width="11" height="2.5" rx="0.5" />
-      <rect x="2" y="14" width="3" height="2.5" rx="0.5" />
-      <rect x="7" y="14" width="11" height="2.5" rx="0.5" />
+      <rect x="2" y="2" width="2" height="16" rx="1" />
+      <rect x="2" y="3" width="4" height="2" rx="1" />
+      <rect x="2" y="9" width="4" height="2" rx="1" />
+      <rect x="2" y="15" width="4" height="2" rx="1" />
+      <rect x="7" y="3" width="11" height="2" rx="1" />
+      <rect x="7" y="9" width="11" height="2" rx="1" />
+      <rect x="7" y="15" width="11" height="2" rx="1" />
     </svg>
   )
 }
 
 export function SyntaxIcon() {
+  const arrow = (
+    <>
+      <rect x="10" y="5" width="5" height="2" rx="1" />
+      <rect x="13" y="5" width="2" height="5" rx="1" />
+      <path d="m11 9 3-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </>
+  )
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <rect x="2" y="2" width="16" height="16" rx="2" />
-      <path d="M8.5 11.5l-3 3M5.5 11.5v3h3M11.5 8.5l3-3M11.5 5.5h3v3" />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+      <path fillRule="evenodd" d="M3 2h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1ZM4 4v12h12V4Z" />
+      {arrow}
+      <g transform="rotate(180 10 10)">{arrow}</g>
     </svg>
   )
 }

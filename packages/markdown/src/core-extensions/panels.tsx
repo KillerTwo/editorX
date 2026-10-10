@@ -1,5 +1,5 @@
 import type { EditorExtension } from '@editorx/toolbar'
-import { BookOpen, ListTree } from 'lucide-react'
+import { SyntaxIcon, TocIcon } from '../icons'
 import { SyntaxPanel } from '../panels/syntax-panel'
 import { TocPanel } from '../panels/toc-panel'
 
@@ -10,7 +10,7 @@ export const tocPanelExtension: EditorExtension = {
     {
       id: 'toc',
       title: (m) => m.panels.toc,
-      icon: <ListTree size={20} />,
+      icon: <TocIcon />,
       position: 'right',
       order: 20,
       render: (ctx) => <TocPanel ctx={ctx} />,
@@ -25,7 +25,7 @@ export const syntaxPanelExtension: EditorExtension = {
     {
       id: 'syntax',
       title: (m) => m.panels.syntax,
-      icon: <BookOpen size={20} />,
+      icon: <SyntaxIcon />,
       position: 'right',
       order: 30,
       render: () => <SyntaxPanel />,
