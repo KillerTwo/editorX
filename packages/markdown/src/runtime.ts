@@ -43,6 +43,10 @@ export interface EditorRuntime {
   flush(): Promise<void>
   /** 编辑区/预览区尺寸变化后重新对齐同步滚动（非比对模式为空操作） */
   refreshLayout(): void
+  /** 比对模式：以编辑区为基准立即对齐预览（同步关闭时也生效） */
+  locate(): void
+  /** 比对模式同步滚动开关；切换视图重建同步实例后保持 */
+  setSyncEnabled(enabled: boolean): void
 }
 
 /** 与引擎写入时的规范化一致（CRLF/CR → LF，去掉 NUL） */
@@ -74,6 +78,7 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
   const rendererRef = useRef<Renderer | null>(null)
   const pipelineRef = useRef<PreviewPipeline | null>(null)
   const syncRef = useRef<ScrollSync | null>(null)
+  const syncPaused = useRef(false)
   const mounted = useRef(false)
   /** 最后一次发出（onChange）或写入（setValue/受控 value）的值 */
   const lastEmitted = useRef<string | null>(null)
@@ -94,6 +99,11 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
       },
       flush: () => pipelineRef.current?.flush() ?? Promise.resolve(),
       refreshLayout: () => syncRef.current?.refresh(),
+      locate: () => syncRef.current?.syncFrom('editor'),
+      setSyncEnabled(enabled) {
+        syncPaused.current = !enabled
+        syncRef.current?.setPaused(!enabled)
+      },
     }),
     [engine, store, live],
   )
@@ -201,6 +211,7 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
     if (!host || !scroller) return
     const sync = createScrollSync(engine, host, scroller)
     syncRef.current = sync
+    if (syncPaused.current) sync.setPaused(true)
     sync.refresh()
     return () => {
       sync.destroy()

@@ -105,21 +105,30 @@ export function SyntaxIcon() {
   )
 }
 
+/** 比对模式「定位」：参考图为两层半透明墨迹，准星与圆环交叠处才是满色，其余为 56% */
 export function LocateIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" aria-hidden="true" focusable="false">
-      <circle cx="8" cy="8" r="5" />
-      <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
-      <path d="M8 0.6V3M8 13v2.4M0.6 8H3M13 8h2.4" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+      <g opacity="0.56">
+        <circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle cx="8" cy="8" r="2" />
+        <path d="M8 1v3M8 12v3M1 8h3M12 8h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </g>
+      <path d="M7 2.084a6 6 0 0 1 2 0v2.043a4 4 0 0 0-2 0ZM7 13.916a6 6 0 0 0 2 0v-2.043a4 4 0 0 1-2 0ZM2.084 7a6 6 0 0 0 0 2h2.043a4 4 0 0 1 0-2ZM13.916 7a6 6 0 0 1 0 2h-2.043a4 4 0 0 0 0-2Z" />
     </svg>
   )
 }
 
+/** 比对模式「同步滚动」：上下各两枚箭头夹一条横杠，墨迹 13×15 */
 export function SyncScrollIcon() {
+  const arrow = <path d="M3.5.5h1l2 2v.75a.75.75 0 0 1-.75.75H5v1a1 1 0 0 1-2 0V4h-.75a.75.75 0 0 1-.75-.75V2.5Z" />
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M2 1.1h12M2 14.9h12" />
-      <path d="M8 3.5v9M5.5 6 8 3.5 10.5 6M5.5 10 8 12.5 10.5 10" />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+      {arrow}
+      <g transform="translate(8 0)">{arrow}</g>
+      <g transform="matrix(1 0 0 -1 0 16)">{arrow}</g>
+      <g transform="matrix(1 0 0 -1 8 16)">{arrow}</g>
+      <rect x="2" y="7" width="12" height="2" rx="1" />
     </svg>
   )
 }

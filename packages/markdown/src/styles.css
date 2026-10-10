@@ -285,6 +285,33 @@
 .ex-mde-splitter:hover::before,
 .ex-mde-splitter:focus-visible::before { background: var(--ex-color-primary); }
 
+/* 比对模式「定位 / 同步滚动」：预览区左缘 + 5px、距底 6px，纵向间距 13（G24） */
+.ex-mde-sync {
+  position: absolute;
+  bottom: 6px;
+  left: calc(var(--ex-mde-split, 0.5) * 100% - 8px);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.ex-mde-sync button {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ex-mde-sync button:focus-visible { outline: 2px solid var(--ex-color-primary); outline-offset: 2px; }
+.ex-mde-sync__locate { color: var(--ex-color-mde-sync-locate); }
+.ex-mde-sync__scroll { color: var(--ex-color-mde-sync-scroll); }
+/* 关闭态与定位同色（推断，参考图只有开启态） */
+.ex-mde-sync__scroll[aria-pressed='false'] { color: var(--ex-color-mde-sync-locate); }
+
 /* ---------- 上传失败条 ---------- */
 .ex-mde-uploads {
   display: flex;

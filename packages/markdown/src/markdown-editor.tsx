@@ -47,6 +47,7 @@ import { useEditorRuntime } from './runtime'
 import { clampSplit, SPLIT_VAR, Splitter } from './splitter'
 import { StatusBar } from './status-bar'
 import { createEditorStore, useEditorState } from './store'
+import { SyncControls } from './sync-controls'
 import type { MarkdownEditorProps } from './types'
 import { observeFailedPlaceholders } from './uploads/failed-marker'
 import { UploadFailures } from './uploads/upload-failures'
@@ -142,6 +143,7 @@ function EditorShell({
   const [store] = useState(() => createEditorStore({ panel: defaultPanel, readOnly }))
   const [viewMode, setViewMode] = useControllableState(viewModeProp, defaultViewMode, onViewModeChange)
   const [split, setSplit] = useState(() => clampSplit(defaultSplit))
+  const [syncEnabled, setSyncEnabled] = useState(true)
   const editorId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -391,6 +393,17 @@ function EditorShell({
         <div ref={bodyRef} className="ex-mde-body" style={bodyStyle}>
           <div ref={hostRef} id={editorId} className="ex-mde-editor" hidden={viewMode === 'preview'} />
           {viewMode === 'split' && <Splitter value={split} onChange={setSplit} bodyRef={bodyRef} controls={editorId} />}
+          {viewMode === 'split' && (
+            <SyncControls
+              enabled={syncEnabled}
+              onLocate={() => runtime.locate()}
+              onToggle={() => {
+                const next = !syncEnabled
+                setSyncEnabled(next)
+                runtime.setSyncEnabled(next)
+              }}
+            />
+          )}
           <div ref={previewScrollRef} className="ex-mde-preview-pane" hidden={viewMode === 'edit'}>
             <div ref={previewRef} className="ex-preview ex-mde-preview" aria-label={messages.editor.previewLabel} />
           </div>

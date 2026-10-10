@@ -130,6 +130,14 @@ describe('markdown styles.css', () => {
     expect(css).toMatch(/\.ex-mde-splitter:focus-visible::before \{[^}]*background: var\(--ex-color-primary\);/)
   })
 
+  it('比对模式同步按钮位于预览区左下（G24）', () => {
+    expect(css).toMatch(
+      /\.ex-mde-sync \{[^}]*position: absolute;[^}]*bottom: 6px;[^}]*left: calc\(var\(--ex-mde-split, 0\.5\) \* 100% - 8px\);[^}]*gap: 13px;/,
+    )
+    expect(css).toMatch(/\.ex-mde-sync__locate \{ color: var\(--ex-color-mde-sync-locate\); \}/)
+    expect(css).toMatch(/\.ex-mde-sync__scroll \{ color: var\(--ex-color-mde-sync-scroll\); \}/)
+  })
+
   it('预览中上传失败的图片以错误色标出', () => {
     expect(css).toMatch(/\.ex-mde-preview \.ex-mde-upload-failed \{[^}]*color: var\(--ex-color-error\);/)
   })
