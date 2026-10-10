@@ -35,7 +35,3 @@ export type {
   PublishVariant,
 } from './types'
 export { PublishModal, PublishPanel } from './publish-panel'
-export { PublishForm } from './form/publish-form'
-export type { PublishFormProps } from './form/publish-form'
-export { PublishActions } from './actions'
-export type { PublishActionsProps } from './actions'
