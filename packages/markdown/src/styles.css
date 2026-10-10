@@ -312,14 +312,14 @@
 }
 
 /* ---------- 状态栏 ---------- */
-/* CSDN：状态栏总高 64（含上边框），左内边距 26.5、右 16；组距约 8px（两个空格），组内为普通空格（G06/G07/G09） */
+/* CSDN：状态栏总高 64（含上边框），左内边距 26.5、右 16；组距 9px（实测两个空格），组内为普通空格（G06/G07/G09） */
 .ex-mde-status {
   display: flex;
   flex: none;
   align-items: center;
   gap: 24px;
   box-sizing: border-box;
-  height: 64px;
+  min-height: 64px;
   padding: 9px 16px 12px 26.5px;
   border-top: 1px solid var(--ex-color-mde-status-border);
   color: var(--ex-color-mde-status-text);
@@ -329,12 +329,14 @@
 
 .ex-mde-status__stats { flex: none; white-space: nowrap; }
 .ex-mde-status__md,
-.ex-mde-status__html { display: flex; gap: 8px; }
+.ex-mde-status__html { display: flex; gap: 9px; }
 .ex-mde-status__center { flex: 1; min-width: 0; }
 .ex-mde-status__end { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 /* 额度提示与按钮中心在卡片底 −32（G06/G07/G08）；统计文字仍按 9/12 内边距居中，所以只把这两组下移 1px */
 .ex-mde-status__center,
 .ex-mde-status__end { margin-top: 2px; }
+/* 预览模式只剩 HTML 一行，参考图中其中心比栏内居中低 2px */
+.ex-mde[data-view='preview'] .ex-mde-status__stats { margin-top: 4px; }
 /* 实时区域须始终渲染（display:none 时首条状态常不被读屏播报）；空时脱离 flex 流，不占 gap */
 .ex-mde-status__save:empty { position: absolute; }
 

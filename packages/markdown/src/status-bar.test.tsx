@@ -39,6 +39,7 @@ describe('StatusBar', () => {
     await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown 0 字数 2 行数/))
     expect(statusHtml()).toHaveTextContent(/^HTML 0 字数 0 段落$/)
     act(() => handle().setValue('第一行\r\n第二行\r\n'))
+    expect(handle().getValue()).toBe('第一行\n第二行\n')
     await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown 6 字数 3 行数/))
     expect(statusHtml()).toHaveTextContent(/^HTML 6 字数 1 段落$/)
   })

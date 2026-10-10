@@ -52,10 +52,11 @@ describe('markdown styles.css', () => {
     )
     expect(css).toMatch(/\.ex-mde-toolbar \{[^}]*height: 39px;[^}]*margin-top: 17px;[^}]*padding: 0 10px;/)
     expect(css).toMatch(
-      /\.ex-mde-status \{[^}]*gap: 24px;[^}]*box-sizing: border-box;[^}]*height: 64px;[^}]*padding: 9px 16px 12px 26\.5px;[^}]*font-size: 12px;[^}]*line-height: 21px;/,
+      /\.ex-mde-status \{[^}]*gap: 24px;[^}]*box-sizing: border-box;[^}]*min-height: 64px;[^}]*padding: 9px 16px 12px 26\.5px;[^}]*font-size: 12px;[^}]*line-height: 21px;/,
     )
     expect(css).toMatch(/\.ex-mde-status__stats \{ flex: none; white-space: nowrap; \}/)
-    expect(css).toMatch(/\.ex-mde-status__md,\n\.ex-mde-status__html \{ display: flex; gap: 8px; \}/)
+    expect(css).toMatch(/\.ex-mde-status__md,\n\.ex-mde-status__html \{ display: flex; gap: 9px; \}/)
+    expect(css).toMatch(/\.ex-mde\[data-view='preview'\] \.ex-mde-status__stats \{ margin-top: 4px; \}/)
     expect(css).toMatch(/\.ex-mde-status__end \{[^}]*gap: 16px;/)
     expect(css).toMatch(/\.ex-mde-status__center,\n\.ex-mde-status__end \{ margin-top: 2px; \}/)
     expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)
