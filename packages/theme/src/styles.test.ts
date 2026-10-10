@@ -116,6 +116,18 @@ const MDE_TOKENS = [
   '--ex-color-mde-preview-link',
   '--ex-color-mde-preview-rule',
   '--ex-color-mde-disabled-text',
+  '--ex-color-mde-toolbar-divider',
+  '--ex-color-mde-rail-label',
+  '--ex-color-mde-rail-ai-label',
+  '--ex-color-mde-badge',
+  '--ex-color-mde-toc-empty',
+  '--ex-color-mde-toc-empty-link',
+  '--ex-color-mde-grip',
+  '--ex-color-mde-sync-locate',
+  '--ex-color-mde-sync-scroll',
+  '--ex-color-mde-draft-bg',
+  '--ex-color-mde-ai-from',
+  '--ex-color-mde-ai-to',
 ]
 
 describe('CSDN 外壳 token', () => {
@@ -175,8 +187,8 @@ const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-pub-disabled-bg', '#f5f7fa', '#26272b'],
   ['--ex-color-pub-disabled-border', '#e4e7ed', '#363637'],
   ['--ex-color-pub-select-text-modal', '#808080', '#a3a6ad'],
-  ['--ex-color-pub-select-arrow', '#bec0c5', '#6c6e72'],
-  ['--ex-color-pub-select-arrow-modal', '#cdd0d7', '#6c6e72'],
+  ['--ex-color-pub-select-arrow', '#a9abb3', '#6c6e72'],
+  ['--ex-color-pub-select-arrow-modal', '#c0c4cc', '#6c6e72'],
   ['--ex-color-pub-sublabel', '#666666', '#a3a6ad'],
   ['--ex-color-pub-bar-border', '#e8e8e8', '#2e2f34'],
   ['--ex-color-pub-button-border', '#e5e5e5', '#3a3b41'],
@@ -187,10 +199,54 @@ const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-pub-thumb-border', '#e5e5e5', '#3a3b41'],
   ['--ex-color-pub-mask', 'rgba(0, 0, 0, 0.19)', 'rgba(0, 0, 0, 0.6)'],
   ['--ex-color-pub-footer-shadow', 'rgba(0, 0, 0, 0.04)', 'rgba(0, 0, 0, 0.4)'],
+  ['--ex-color-pub-select-border-modal', '#e0e0e0', '#4c4d4f'],
+  ['--ex-color-pub-option-selected', '#409eff', '#409eff'],
+  ['--ex-color-pub-dropdown-border', '#e4e7ed', '#363637'],
+  ['--ex-color-pub-dropdown-shadow', 'rgba(0, 0, 0, 0.1)', 'rgba(0, 0, 0, 0.5)'],
+  ['--ex-color-pub-scrollbar-thumb', '#cfcfcf', '#4a4b52'],
+  ['--ex-color-pub-schedule-mask', 'rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.7)'],
+  ['--ex-color-pub-dialog-text', '#222226', '#e8e8ed'],
+  ['--ex-color-pub-dialog-close', '#909399', '#8d9095'],
+  ['--ex-color-pub-picker-border', '#e2e2e2', '#3a3b41'],
+  ['--ex-color-pub-picker-title', '#404040', '#dcdde3'],
 ]
 
 describe('发布面板 token', () => {
   it.each(PUB_TOKENS)('%s 亮色 %s / 暗色 %s（亮色为参考截图实测值）', (name, light, dark) => {
     expect(expected.get(name)).toEqual([light, dark])
+  })
+})
+
+const MDE_NEW: Array<[name: string, light: string, dark: string]> = [
+  ['--ex-color-mde-toolbar-divider', '#d9d9d9', '#3a3b41'],
+  ['--ex-color-mde-rail-label', '#999999', '#7d7e8a'],
+  ['--ex-color-mde-rail-ai-label', '#9a9a9a', '#7d7e8a'],
+  ['--ex-color-mde-badge', '#d9011c', '#e5323f'],
+  ['--ex-color-mde-toc-empty', '#616266', '#9a9ba6'],
+  ['--ex-color-mde-toc-empty-link', '#277dcc', '#5aa0ff'],
+  ['--ex-color-mde-grip', '#cccccc', '#4a4b52'],
+  ['--ex-color-mde-sync-locate', '#9f9f9f', '#7d7e8a'],
+  ['--ex-color-mde-sync-scroll', '#555666', '#b8b9c4'],
+  ['--ex-color-mde-draft-bg', '#f2f2f2', '#2a2b30'],
+  ['--ex-color-mde-ai-from', '#6660ff', '#8580ff'],
+  ['--ex-color-mde-ai-to', '#bc7bf7', '#c993fa'],
+  ['--ex-color-quota-border', '#ffd9ca', '#5c3326'],
+  ['--ex-color-quota-bg', '#fff6f0', '#2e211c'],
+  ['--ex-color-tag-primary-bg', '#f4f8fc', '#1d2a38'],
+  ['--ex-color-tag-primary-border', '#cee0f4', '#2b4058'],
+  ['--ex-color-tag-primary-text', '#277dcc', '#6cb6ea'],
+  ['--ex-color-tag-primary-close', '#3585cf', '#6cb6ea'],
+]
+
+describe('参考图对齐新增 token（mac 参考图实测亮色；暗色为推断值）', () => {
+  it.each(MDE_NEW)('%s 亮色 %s / 暗色 %s', (name, light, dark) => {
+    expect(expected.get(name)).toEqual([light, dark])
+  })
+
+  it('Helvetica 字体栈只定义在主 .ex-root 块', () => {
+    expect(mainCss).toContain(
+      "--ex-font-family-helvetica: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;",
+    )
+    expect(fallbackCss).not.toContain('--ex-font-family-helvetica')
   })
 })

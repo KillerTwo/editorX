@@ -78,8 +78,8 @@
   --ex-color-pub-disabled-bg: light-dark(#f5f7fa, #26272b);
   --ex-color-pub-disabled-border: light-dark(#e4e7ed, #363637);
   --ex-color-pub-select-text-modal: light-dark(#808080, #a3a6ad);
-  --ex-color-pub-select-arrow: light-dark(#bec0c5, #6c6e72);
-  --ex-color-pub-select-arrow-modal: light-dark(#cdd0d7, #6c6e72);
+  --ex-color-pub-select-arrow: light-dark(#a9abb3, #6c6e72);
+  --ex-color-pub-select-arrow-modal: light-dark(#c0c4cc, #6c6e72);
   --ex-color-pub-sublabel: light-dark(#666666, #a3a6ad);
   --ex-color-pub-bar-border: light-dark(#e8e8e8, #2e2f34);
   --ex-color-pub-button-border: light-dark(#e5e5e5, #3a3b41);
@@ -90,9 +90,40 @@
   --ex-color-pub-thumb-border: light-dark(#e5e5e5, #3a3b41);
   --ex-color-pub-mask: light-dark(rgba(0, 0, 0, 0.19), rgba(0, 0, 0, 0.6));
   --ex-color-pub-footer-shadow: light-dark(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.4));
+  /* 参考图对齐（mac 2026-10-10）：亮色为截图实测，暗色为推断值（inferred default） */
+  --ex-color-mde-toolbar-divider: light-dark(#d9d9d9, #3a3b41);
+  --ex-color-mde-rail-label: light-dark(#999999, #7d7e8a);
+  --ex-color-mde-rail-ai-label: light-dark(#9a9a9a, #7d7e8a);
+  --ex-color-mde-badge: light-dark(#d9011c, #e5323f);
+  --ex-color-mde-toc-empty: light-dark(#616266, #9a9ba6);
+  --ex-color-mde-toc-empty-link: light-dark(#277dcc, #5aa0ff);
+  --ex-color-mde-grip: light-dark(#cccccc, #4a4b52);
+  --ex-color-mde-sync-locate: light-dark(#9f9f9f, #7d7e8a);
+  --ex-color-mde-sync-scroll: light-dark(#555666, #b8b9c4);
+  --ex-color-mde-draft-bg: light-dark(#f2f2f2, #2a2b30);
+  --ex-color-mde-ai-from: light-dark(#6660ff, #8580ff);
+  --ex-color-mde-ai-to: light-dark(#bc7bf7, #c993fa);
+  --ex-color-quota-border: light-dark(#ffd9ca, #5c3326);
+  --ex-color-quota-bg: light-dark(#fff6f0, #2e211c);
+  --ex-color-tag-primary-bg: light-dark(#f4f8fc, #1d2a38);
+  --ex-color-tag-primary-border: light-dark(#cee0f4, #2b4058);
+  --ex-color-tag-primary-text: light-dark(#277dcc, #6cb6ea);
+  --ex-color-tag-primary-close: light-dark(#3585cf, #6cb6ea);
+  --ex-color-pub-select-border-modal: light-dark(#e0e0e0, #4c4d4f);
+  --ex-color-pub-option-selected: light-dark(#409eff, #409eff);
+  --ex-color-pub-dropdown-border: light-dark(#e4e7ed, #363637);
+  --ex-color-pub-dropdown-shadow: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.5));
+  --ex-color-pub-scrollbar-thumb: light-dark(#cfcfcf, #4a4b52);
+  --ex-color-pub-schedule-mask: light-dark(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+  --ex-color-pub-dialog-text: light-dark(#222226, #e8e8ed);
+  --ex-color-pub-dialog-close: light-dark(#909399, #8d9095);
+  --ex-color-pub-picker-border: light-dark(#e2e2e2, #3a3b41);
+  --ex-color-pub-picker-title: light-dark(#404040, #dcdde3);
 
   --ex-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'SF UI Text', Arial, sans-serif;
   --ex-font-family-mono: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  /* 发布面板（CSDN Element 栈）：西文与数字走 Helvetica Neue（B04） */
+  --ex-font-family-helvetica: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
   --ex-font-size-sm: 12px;
   --ex-font-size-md: 14px;
   --ex-font-size-lg: 16px;
@@ -228,8 +259,8 @@
     --ex-color-pub-disabled-bg: #f5f7fa;
     --ex-color-pub-disabled-border: #e4e7ed;
     --ex-color-pub-select-text-modal: #808080;
-    --ex-color-pub-select-arrow: #bec0c5;
-    --ex-color-pub-select-arrow-modal: #cdd0d7;
+    --ex-color-pub-select-arrow: #a9abb3;
+    --ex-color-pub-select-arrow-modal: #c0c4cc;
     --ex-color-pub-sublabel: #666666;
     --ex-color-pub-bar-border: #e8e8e8;
     --ex-color-pub-button-border: #e5e5e5;
@@ -240,6 +271,35 @@
     --ex-color-pub-thumb-border: #e5e5e5;
     --ex-color-pub-mask: rgba(0, 0, 0, 0.19);
     --ex-color-pub-footer-shadow: rgba(0, 0, 0, 0.04);
+    /* 参考图对齐（mac 2026-10-10）：截图实测 */
+    --ex-color-mde-toolbar-divider: #d9d9d9;
+    --ex-color-mde-rail-label: #999999;
+    --ex-color-mde-rail-ai-label: #9a9a9a;
+    --ex-color-mde-badge: #d9011c;
+    --ex-color-mde-toc-empty: #616266;
+    --ex-color-mde-toc-empty-link: #277dcc;
+    --ex-color-mde-grip: #cccccc;
+    --ex-color-mde-sync-locate: #9f9f9f;
+    --ex-color-mde-sync-scroll: #555666;
+    --ex-color-mde-draft-bg: #f2f2f2;
+    --ex-color-mde-ai-from: #6660ff;
+    --ex-color-mde-ai-to: #bc7bf7;
+    --ex-color-quota-border: #ffd9ca;
+    --ex-color-quota-bg: #fff6f0;
+    --ex-color-tag-primary-bg: #f4f8fc;
+    --ex-color-tag-primary-border: #cee0f4;
+    --ex-color-tag-primary-text: #277dcc;
+    --ex-color-tag-primary-close: #3585cf;
+    --ex-color-pub-select-border-modal: #e0e0e0;
+    --ex-color-pub-option-selected: #409eff;
+    --ex-color-pub-dropdown-border: #e4e7ed;
+    --ex-color-pub-dropdown-shadow: rgba(0, 0, 0, 0.1);
+    --ex-color-pub-scrollbar-thumb: #cfcfcf;
+    --ex-color-pub-schedule-mask: rgba(0, 0, 0, 0.5);
+    --ex-color-pub-dialog-text: #222226;
+    --ex-color-pub-dialog-close: #909399;
+    --ex-color-pub-picker-border: #e2e2e2;
+    --ex-color-pub-picker-title: #404040;
   }
 
   .ex-root[data-ex-theme='dark'] {
@@ -334,6 +394,35 @@
     --ex-color-pub-thumb-border: #3a3b41;
     --ex-color-pub-mask: rgba(0, 0, 0, 0.6);
     --ex-color-pub-footer-shadow: rgba(0, 0, 0, 0.4);
+    /* 参考图对齐（mac 2026-10-10）：暗色为推断值（inferred default） */
+    --ex-color-mde-toolbar-divider: #3a3b41;
+    --ex-color-mde-rail-label: #7d7e8a;
+    --ex-color-mde-rail-ai-label: #7d7e8a;
+    --ex-color-mde-badge: #e5323f;
+    --ex-color-mde-toc-empty: #9a9ba6;
+    --ex-color-mde-toc-empty-link: #5aa0ff;
+    --ex-color-mde-grip: #4a4b52;
+    --ex-color-mde-sync-locate: #7d7e8a;
+    --ex-color-mde-sync-scroll: #b8b9c4;
+    --ex-color-mde-draft-bg: #2a2b30;
+    --ex-color-mde-ai-from: #8580ff;
+    --ex-color-mde-ai-to: #c993fa;
+    --ex-color-quota-border: #5c3326;
+    --ex-color-quota-bg: #2e211c;
+    --ex-color-tag-primary-bg: #1d2a38;
+    --ex-color-tag-primary-border: #2b4058;
+    --ex-color-tag-primary-text: #6cb6ea;
+    --ex-color-tag-primary-close: #6cb6ea;
+    --ex-color-pub-select-border-modal: #4c4d4f;
+    --ex-color-pub-option-selected: #409eff;
+    --ex-color-pub-dropdown-border: #363637;
+    --ex-color-pub-dropdown-shadow: rgba(0, 0, 0, 0.5);
+    --ex-color-pub-scrollbar-thumb: #4a4b52;
+    --ex-color-pub-schedule-mask: rgba(0, 0, 0, 0.7);
+    --ex-color-pub-dialog-text: #e8e8ed;
+    --ex-color-pub-dialog-close: #8d9095;
+    --ex-color-pub-picker-border: #3a3b41;
+    --ex-color-pub-picker-title: #dcdde3;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -429,6 +518,35 @@
       --ex-color-pub-thumb-border: #3a3b41;
       --ex-color-pub-mask: rgba(0, 0, 0, 0.6);
       --ex-color-pub-footer-shadow: rgba(0, 0, 0, 0.4);
+      /* 参考图对齐（mac 2026-10-10）：暗色为推断值（inferred default） */
+      --ex-color-mde-toolbar-divider: #3a3b41;
+      --ex-color-mde-rail-label: #7d7e8a;
+      --ex-color-mde-rail-ai-label: #7d7e8a;
+      --ex-color-mde-badge: #e5323f;
+      --ex-color-mde-toc-empty: #9a9ba6;
+      --ex-color-mde-toc-empty-link: #5aa0ff;
+      --ex-color-mde-grip: #4a4b52;
+      --ex-color-mde-sync-locate: #7d7e8a;
+      --ex-color-mde-sync-scroll: #b8b9c4;
+      --ex-color-mde-draft-bg: #2a2b30;
+      --ex-color-mde-ai-from: #8580ff;
+      --ex-color-mde-ai-to: #c993fa;
+      --ex-color-quota-border: #5c3326;
+      --ex-color-quota-bg: #2e211c;
+      --ex-color-tag-primary-bg: #1d2a38;
+      --ex-color-tag-primary-border: #2b4058;
+      --ex-color-tag-primary-text: #6cb6ea;
+      --ex-color-tag-primary-close: #6cb6ea;
+      --ex-color-pub-select-border-modal: #4c4d4f;
+      --ex-color-pub-option-selected: #409eff;
+      --ex-color-pub-dropdown-border: #363637;
+      --ex-color-pub-dropdown-shadow: rgba(0, 0, 0, 0.5);
+      --ex-color-pub-scrollbar-thumb: #4a4b52;
+      --ex-color-pub-schedule-mask: rgba(0, 0, 0, 0.7);
+      --ex-color-pub-dialog-text: #e8e8ed;
+      --ex-color-pub-dialog-close: #8d9095;
+      --ex-color-pub-picker-border: #3a3b41;
+      --ex-color-pub-picker-title: #dcdde3;
     }
   }
 }
