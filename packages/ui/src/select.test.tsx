@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -147,5 +147,65 @@ describe('Select', () => {
     )
     await userEvent.click(screen.getByRole('combobox', { name: '创作声明' }))
     expect(await screen.findByRole('listbox')).toHaveClass('ex-popover', 'ex-select__list', MODAL_LAYER_CLASS)
+  })
+})
+
+describe('Select 外观选项', () => {
+  const plain = { label: '声明', value: undefined, options, onChange: () => {} }
+
+  it('popperArrow + offset：列表带气泡箭头与 data-placement，选项仍是 listbox 的后代', async () => {
+    renderWithTheme(
+      <StrictMode>
+        <Select {...plain} popperArrow offset={12} />
+      </StrictMode>,
+    )
+    await userEvent.click(screen.getByRole('combobox', { name: '声明' }))
+    const list = await screen.findByRole('listbox', { name: '声明' })
+    expect(list).toHaveClass('ex-popover', 'ex-select__list', 'has-arrow')
+    expect(list).toHaveAttribute('data-placement', 'bottom-start')
+    expect(list.querySelector(':scope > .ex-select__caret')).not.toBeNull()
+    expect(list.querySelector(':scope > ul.ex-select__options')).toHaveAttribute('role', 'presentation')
+    expect(within(list).getAllByRole('option')).toHaveLength(4)
+  })
+
+  it('默认无气泡箭头；箭头是 10×6 自绘 chevron', async () => {
+    const { container } = renderWithTheme(
+      <StrictMode>
+        <Select {...plain} />
+      </StrictMode>,
+    )
+    const arrow = container.querySelector('svg.ex-select__arrow')!
+    expect(arrow).toHaveAttribute('width', '10')
+    expect(arrow).toHaveAttribute('height', '6')
+    await userEvent.click(screen.getByRole('combobox', { name: '声明' }))
+    const list = await screen.findByRole('listbox')
+    expect(list).not.toHaveClass('has-arrow')
+    expect(list.querySelector('.ex-select__caret')).toBeNull()
+  })
+
+  it('prefix 渲染在值之前；showArrow={false} 不渲染箭头', () => {
+    const { container } = renderWithTheme(
+      <StrictMode>
+        <Select {...plain} prefix={<i data-testid="prefix" />} showArrow={false} />
+      </StrictMode>,
+    )
+    const trigger = screen.getByRole('combobox', { name: '声明' })
+    expect(trigger.firstElementChild).toHaveClass('ex-select__prefix')
+    expect(trigger.firstElementChild).toContainElement(screen.getByTestId('prefix'))
+    expect(container.querySelector('.ex-select__arrow')).toBeNull()
+  })
+
+  it('键盘导航在新结构下仍可用', async () => {
+    const onChange = vi.fn()
+    renderWithTheme(
+      <StrictMode>
+        <Select {...plain} onChange={onChange} popperArrow />
+      </StrictMode>,
+    )
+    screen.getByRole('combobox', { name: '声明' }).focus()
+    await userEvent.keyboard('{Enter}')
+    await screen.findByRole('listbox')
+    await userEvent.keyboard('{ArrowDown}{Enter}')
+    expect(onChange).toHaveBeenCalledTimes(1)
   })
 })

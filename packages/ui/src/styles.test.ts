@@ -17,7 +17,7 @@ describe('ui styles.css', () => {
   })
 
   it('单选、复选、下拉、裁剪控件有样式', () => {
-    for (const cls of ['ex-radio', 'ex-radio__dot', 'ex-checkbox', 'ex-checkbox__box', 'ex-select', 'ex-select__option', 'ex-cropper__viewport']) {
+    for (const cls of ['ex-radio', 'ex-radio__dot', 'ex-checkbox', 'ex-checkbox__box', 'ex-select', 'ex-select__option', 'ex-cropper__viewport', 'ex-select__options', 'ex-select__caret', 'ex-select__prefix', 'ex-tag--primary']) {
       expect(css, cls).toMatch(new RegExp(`\\.${cls}(?![\\w-])`))
     }
   })

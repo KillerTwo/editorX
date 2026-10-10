@@ -4,7 +4,7 @@ import {
   FloatingFocusManager,
   FloatingNode,
   FloatingPortal,
-  offset,
+  offset as offsetMiddleware,
   size,
   useClick,
   useDismiss,
@@ -15,7 +15,6 @@ import {
   useRole,
 } from '@floating-ui/react'
 import { useTheme } from '@editorx/theme'
-import { ChevronDown } from 'lucide-react'
 import { useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'
@@ -39,6 +38,14 @@ export interface SelectProps<V extends string = string> {
   className?: string
   /** 弹出列表的类名 */
   listClassName?: string
+  /** 弹出列表与触发器的间距，默认 4 */
+  offset?: number
+  /** 列表上方显示指向触发器的小三角（Element 风格） */
+  popperArrow?: boolean
+  /** 值之前的图标 */
+  prefix?: ReactNode
+  /** 是否显示右侧下拉箭头，默认 true */
+  showArrow?: boolean
 }
 
 function SelectInner<V extends string>({
@@ -51,6 +58,10 @@ function SelectInner<V extends string>({
   labelledBy,
   className,
   listClassName,
+  offset: gap = 4,
+  popperArrow = false,
+  prefix,
+  showArrow = true,
 }: SelectProps<V>) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -59,7 +70,7 @@ function SelectInner<V extends string>({
   const nodeId = useFloatingNodeId()
   const listRef = useRef<Array<HTMLElement | null>>([])
   const selectedIndex = options.findIndex((option) => option.value === value)
-  const { refs, floatingStyles, context } = useFloating({
+  const { refs, floatingStyles, context, placement } = useFloating({
     nodeId,
     open,
     onOpenChange: (next) => {
@@ -67,7 +78,7 @@ function SelectInner<V extends string>({
     },
     placement: 'bottom-start',
     middleware: [
-      offset(4),
+      offsetMiddleware(gap),
       flip(),
       size({
         apply({ rects, elements }) {
@@ -104,45 +115,54 @@ function SelectInner<V extends string>({
         aria-labelledby={labelledBy}
         {...getReferenceProps()}
       >
+        {prefix !== undefined && (
+          <span className="ex-select__prefix" aria-hidden="true">
+            {prefix}
+          </span>
+        )}
         <span className="ex-select__value">{selected ? selected.label : placeholder}</span>
-        <ChevronDown className="ex-select__arrow" size={14} aria-hidden="true" />
+        {showArrow && <SelectChevron />}
       </button>
       <FloatingNode id={nodeId}>
         {open && (
           <FloatingPortal root={portalRoot}>
             <FloatingFocusManager context={context} modal={false}>
-              <ul
+              <div
                 ref={refs.setFloating}
                 style={floatingStyles}
-                className={cx('ex-popover ex-select__list', layerClass, listClassName)}
+                className={cx('ex-popover ex-select__list', popperArrow && 'has-arrow', layerClass, listClassName)}
+                data-placement={placement}
                 aria-label={label}
                 aria-labelledby={label ? undefined : labelledBy}
                 {...getFloatingProps()}
               >
-                {options.map((option, index) => (
-                  <li key={option.value} role="none">
-                    <button
-                      ref={(node) => {
-                        listRef.current[index] = node
-                      }}
-                      type="button"
-                      role="option"
-                      aria-selected={index === selectedIndex}
-                      className={cx('ex-select__option', index === selectedIndex && 'is-selected')}
-                      tabIndex={activeIndex === index ? 0 : -1}
-                      disabled={option.disabled}
-                      {...getItemProps({
-                        onClick: () => {
-                          onChange(option.value)
-                          setOpen(false)
-                        },
-                      })}
-                    >
-                      {option.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                {popperArrow && <span className="ex-select__caret" aria-hidden="true" />}
+                <ul className="ex-select__options" role="presentation">
+                  {options.map((option, index) => (
+                    <li key={option.value} role="none">
+                      <button
+                        ref={(node) => {
+                          listRef.current[index] = node
+                        }}
+                        type="button"
+                        role="option"
+                        aria-selected={index === selectedIndex}
+                        className={cx('ex-select__option', index === selectedIndex && 'is-selected')}
+                        tabIndex={activeIndex === index ? 0 : -1}
+                        disabled={option.disabled}
+                        {...getItemProps({
+                          onClick: () => {
+                            onChange(option.value)
+                            setOpen(false)
+                          },
+                        })}
+                      >
+                        {option.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </FloatingFocusManager>
           </FloatingPortal>
         )}
@@ -154,3 +174,23 @@ function SelectInner<V extends string>({
 export const Select = withFloatingTree(SelectInner, 'Select') as unknown as <V extends string = string>(
   props: SelectProps<V>,
 ) => ReactElement
+
+/** 10×5.5 细线 chevron */
+function SelectChevron() {
+  return (
+    <svg
+      className="ex-select__arrow"
+      width="10"
+      height="6"
+      viewBox="0 0 10 6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M0.5 0.5 5 5 9.5 0.5" />
+    </svg>
+  )
+}
