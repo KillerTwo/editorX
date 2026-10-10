@@ -51,7 +51,13 @@ describe('markdown styles.css', () => {
       /\.ex-mde-mode \{[^}]*gap: 6px;[^}]*height: 32px;[^}]*padding: 0 11\.5px 0 12px;[^}]*border-radius: var\(--ex-radius-lg\);[^}]*font-family: var\(--ex-mde-font-family\);[^}]*font-weight: 600;[^}]*letter-spacing: 0\.5px;/,
     )
     expect(css).toMatch(/\.ex-mde-toolbar \{[^}]*height: 39px;[^}]*margin-top: 17px;[^}]*padding: 0 10px;/)
-    expect(css).toMatch(/\.ex-mde-status \{[^}]*padding: 9px 24px 12px 25px;[^}]*font-size: 12px;[^}]*line-height: 21px;/)
+    expect(css).toMatch(
+      /\.ex-mde-status \{[^}]*gap: 24px;[^}]*box-sizing: border-box;[^}]*height: 64px;[^}]*padding: 9px 16px 12px 26\.5px;[^}]*font-size: 12px;[^}]*line-height: 21px;/,
+    )
+    expect(css).toMatch(/\.ex-mde-status__stats \{ flex: none; white-space: nowrap; \}/)
+    expect(css).toMatch(/\.ex-mde-status__md,\n\.ex-mde-status__html \{ display: flex; gap: 8px; \}/)
+    expect(css).toMatch(/\.ex-mde-status__end \{[^}]*gap: 16px;/)
+    expect(css).toMatch(/\.ex-mde-status__center,\n\.ex-mde-status__end \{ margin-top: 2px; \}/)
     expect(css).toMatch(/\.ex-mde-panel \{[^}]*width: 390px;[^}]*padding: 10px 0;/)
     expect(css).toMatch(/\.ex-mde-rail \{[^}]*width: 56px;/)
     expect(css).toContain('calc(var(--ex-mde-split, 0.5) * 100% - 13px)')
@@ -113,7 +119,7 @@ describe('markdown styles.css', () => {
   })
 
   it('组件中用到的每个 ex-mde-* 类名都有样式（纯结构包裹元素除外）', () => {
-    const STRUCTURAL = new Set(['ex-mde-toc', 'ex-mde-syntax', 'ex-mde-status__md', 'ex-mde-status__html'])
+    const STRUCTURAL = new Set(['ex-mde-toc', 'ex-mde-syntax'])
     const dir = import.meta.dirname
     const sources = (readdirSync(dir, { recursive: true }) as string[])
       .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f) && !f.startsWith('test-utils'))

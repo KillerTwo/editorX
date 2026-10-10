@@ -1,5 +1,5 @@
 import { formatMessage, useMessages } from '@editorx/toolbar'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { useEditorState, type EditorStore } from './store'
 import type { ViewMode } from './types'
 
@@ -27,8 +27,13 @@ export function StatusBar({
   const cursor = useEditorState(store, (x) => x.cursor)
   const save = useEditorState(store, (x) => x.save)
 
-  const md = `${s.markdown} ${stats?.mdWords ?? 0} ${s.words} ${stats?.lines ?? 1} ${s.lines} ${s.line} ${cursor.line}, ${s.column} ${cursor.column}`
-  const html = `${s.html} ${stats?.htmlWords ?? 0} ${s.words} ${stats?.paragraphs ?? 0} ${s.paragraphs}`
+  const md = [
+    s.markdown,
+    `${stats?.mdChars ?? 0} ${s.words}`,
+    `${stats?.lines ?? 2} ${s.lines}`,
+    `${s.line} ${cursor.line}, ${s.column} ${cursor.column}`,
+  ]
+  const html = [s.html, `${stats?.htmlChars ?? 0} ${s.words}`, `${stats?.paragraphs ?? 0} ${s.paragraphs}`]
   const saveText =
     save.status === 'saving'
       ? s.saving
@@ -41,8 +46,8 @@ export function StatusBar({
   return (
     <div className="ex-mde-status" role="group" aria-label={s.label}>
       <div className="ex-mde-status__stats">
-        {viewMode !== 'preview' && <div className="ex-mde-status__md">{md}</div>}
-        <div className="ex-mde-status__html">{html}</div>
+        {viewMode !== 'preview' && <StatGroups className="ex-mde-status__md" items={md} />}
+        <StatGroups className="ex-mde-status__html" items={html} />
       </div>
       {center !== undefined && <div className="ex-mde-status__center">{center}</div>}
       <div className="ex-mde-status__end">
@@ -51,6 +56,20 @@ export function StatusBar({
         </span>
         {end}
       </div>
+    </div>
+  )
+}
+
+/** 组间留空格文本节点（textContent 与读屏不变）；flex 容器不渲染纯空白文本，组距由 gap 给出（G09） */
+function StatGroups({ className, items }: { className: string; items: readonly string[] }) {
+  return (
+    <div className={className}>
+      {items.map((text, index) => (
+        <Fragment key={index}>
+          {index > 0 && ' '}
+          <span>{text}</span>
+        </Fragment>
+      ))}
     </div>
   )
 }

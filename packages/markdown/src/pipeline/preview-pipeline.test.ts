@@ -97,7 +97,7 @@ describe('createPreviewPipeline', () => {
   it('空闲时统计并回调 onStats', async () => {
     const { pipeline, opts } = setup('# 标题\n\n正文')
     await pipeline.flush()
-    await vi.waitFor(() => expect(opts.onStats).toHaveBeenCalledWith(expect.objectContaining({ lines: 3 })))
+    await vi.waitFor(() => expect(opts.onStats).toHaveBeenCalledWith(expect.objectContaining({ mdChars: 5, lines: 4 })))
   })
 
   it('预览内资源 load/error 触发 onLayout（rAF 合批）', async () => {

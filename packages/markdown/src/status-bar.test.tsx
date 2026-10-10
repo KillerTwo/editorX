@@ -17,7 +17,7 @@ describe('StatusBar', () => {
 
   it('显示 Markdown/HTML 统计与光标行列；预览模式只显示 HTML 行', async () => {
     const { handle } = renderEditor({ defaultValue: '# 标题\n\n正文 hello' })
-    await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown \d+ 字数 3 行数 当前行 1, 当前列 0$/), {
+    await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown \d+ 字数 4 行数 当前行 1, 当前列 0$/), {
       timeout: 3000,
     })
     expect(statusHtml()).toHaveTextContent(/^HTML \d+ 字数 \d+ 段落$/)
@@ -29,6 +29,26 @@ describe('StatusBar', () => {
     await userEvent.click(screen.getByRole('tab', { name: '预览' }))
     expect(statusMd()).toBeNull()
     expect(statusHtml()).not.toBeNull()
+  })
+
+  it('参考图计数：test → Markdown 4 字数 2 行数 / HTML 4 字数 1 段落；空文档 2 行；CRLF 与 LF 相同', async () => {
+    const { handle } = renderEditor({ defaultValue: 'test' })
+    await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown 4 字数 2 行数 当前行 1, 当前列 0$/), { timeout: 3000 })
+    expect(statusHtml()).toHaveTextContent(/^HTML 4 字数 1 段落$/)
+    act(() => handle().setValue(''))
+    await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown 0 字数 2 行数/))
+    expect(statusHtml()).toHaveTextContent(/^HTML 0 字数 0 段落$/)
+    act(() => handle().setValue('第一行\r\n第二行\r\n'))
+    await waitFor(() => expect(statusMd()).toHaveTextContent(/^Markdown 6 字数 3 行数/))
+    expect(statusHtml()).toHaveTextContent(/^HTML 6 字数 1 段落$/)
+  })
+
+  it('分组：每组一个 span，组间为空格文本节点（G09）', async () => {
+    renderEditor({ defaultValue: 'test' })
+    await waitFor(() => expect(statusMd()).toHaveTextContent('4 字数 2 行数'), { timeout: 3000 })
+    expect([...statusMd()!.children].map((el) => el.textContent)).toEqual(['Markdown', '4 字数', '2 行数', '当前行 1, 当前列 0'])
+    expect([...statusHtml()!.children].map((el) => el.textContent)).toEqual(['HTML', '4 字数', '1 段落'])
+    expect(statusMd()!.textContent).toBe('Markdown 4 字数 2 行数 当前行 1, 当前列 0')
   })
 
   it('statusCenter / statusEnd 插槽', () => {

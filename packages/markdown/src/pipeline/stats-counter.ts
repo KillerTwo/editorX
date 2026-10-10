@@ -1,9 +1,12 @@
 import { countHtml, countWords, type HtmlCount, type RenderedSection, type WordCount } from '@editorx/markdown-core'
 
 export interface PreviewStats {
-  mdWords: number
+  /** Markdown 源码非空白字符数（G18：「test」→ 4） */
+  mdChars: number
+  /** 编辑器行数：换行数 + 1；文本不以 '\n' 结尾时再 + 1（cledit getTextContent 语义；空文档为 2） */
   lines: number
-  htmlWords: number
+  /** 渲染文本非空白字符数 */
+  htmlChars: number
   paragraphs: number
 }
 
@@ -22,7 +25,7 @@ export function createStatsCounter() {
     count(sections: readonly RenderedSection[], hasTime: () => boolean): PreviewStats | null {
       const usedMd = new Set<string>()
       const usedHtml = new Set<string>()
-      const stats: PreviewStats = { mdWords: 0, lines: 1, htmlWords: 0, paragraphs: 0 }
+      const stats: PreviewStats = { mdChars: 0, lines: 1, htmlChars: 0, paragraphs: 0 }
       for (const section of sections) {
         let words = md.get(section.text)
         let markup = html.get(section.html)
@@ -31,11 +34,13 @@ export function createStatsCounter() {
         if (!markup) html.set(section.html, (markup = countHtml(section.html)))
         usedMd.add(section.text)
         usedHtml.add(section.html)
-        stats.mdWords += words.words
+        stats.mdChars += words.chars
         stats.lines += words.lines - 1
-        stats.htmlWords += markup.words
+        stats.htmlChars += markup.chars
         stats.paragraphs += markup.paragraphs
       }
+      // cledit 在内容末尾不是换行时补一个换行，编辑器因此多出一行（空文档也是 2 行）
+      if (!(sections.at(-1)?.text ?? '').endsWith('\n')) stats.lines += 1
       prune(md, usedMd)
       prune(html, usedHtml)
       return stats
