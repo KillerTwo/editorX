@@ -46,6 +46,10 @@ export interface SelectProps<V extends string = string> {
   prefix?: ReactNode
   /** 是否显示右侧下拉箭头，默认 true */
   showArrow?: boolean
+  /** 触发器的 aria-describedby（空格分隔的 id） */
+  describedBy?: string
+  /** 输出 aria-invalid */
+  invalid?: boolean
 }
 
 function SelectInner<V extends string>({
@@ -62,6 +66,8 @@ function SelectInner<V extends string>({
   popperArrow = false,
   prefix,
   showArrow = true,
+  describedBy,
+  invalid = false,
 }: SelectProps<V>) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -113,6 +119,8 @@ function SelectInner<V extends string>({
         disabled={disabled}
         aria-label={label}
         aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
+        aria-invalid={invalid || undefined}
         {...getReferenceProps()}
       >
         {prefix !== undefined && (

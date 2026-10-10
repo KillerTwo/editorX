@@ -17,6 +17,9 @@ export interface TimePickerProps {
   label: string
   className?: string
   listClassName?: string
+  /** 触发器的 aria-describedby（空格分隔的 id） */
+  describedBy?: string
+  invalid?: boolean
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')

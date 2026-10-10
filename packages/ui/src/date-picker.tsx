@@ -51,11 +51,26 @@ export interface DatePickerProps {
   label: string
   labels?: Partial<DatePickerLabels>
   className?: string
+  /** 追加到触发器 aria-describedby 的 id（空格分隔），排在当前值描述之后 */
+  describedBy?: string
+  invalid?: boolean
 }
 
 const monthStart = (key: DateKey) => `${key.slice(0, 7)}-01`
 
-function DatePickerInner({ value, onChange, min, max, placeholder, disabled = false, label, labels: overrides, className }: DatePickerProps) {
+function DatePickerInner({
+  value,
+  onChange,
+  min,
+  max,
+  placeholder,
+  disabled = false,
+  label,
+  labels: overrides,
+  className,
+  describedBy,
+  invalid = false,
+}: DatePickerProps) {
   const labels = { ...DATE_PICKER_LABELS, ...overrides }
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState<DateKey>(() => clampDateKey(value ?? todayKey(), min, max))
@@ -159,7 +174,8 @@ function DatePickerInner({ value, onChange, min, max, placeholder, disabled = fa
         className={cx('ex-picker-input ex-date-picker', open && 'is-open', !value && 'is-placeholder', className)}
         disabled={disabled}
         aria-label={label}
-        aria-describedby={valueId}
+        aria-describedby={cx(valueId, describedBy)}
+        aria-invalid={invalid || undefined}
         {...getReferenceProps()}
       >
         <CalendarIcon />

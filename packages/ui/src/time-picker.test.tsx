@@ -53,6 +53,18 @@ describe('TimePicker', () => {
     expect(onChange).toHaveBeenCalledWith('16:00')
   })
 
+  it('describedBy / invalid 透传', () => {
+    renderWithTheme(
+      <StrictMode>
+        <p id="hint">请选择时间</p>
+        <TimePicker label="发布时间" value={undefined} onChange={() => {}} options={[]} describedBy="hint" invalid />
+      </StrictMode>,
+    )
+    const trigger = screen.getByRole('combobox', { name: '发布时间' })
+    expect(trigger).toHaveAccessibleDescription('请选择时间')
+    expect(trigger).toHaveAttribute('aria-invalid', 'true')
+  })
+
   it('disabled：不可打开', async () => {
     renderWithTheme(
       <StrictMode>

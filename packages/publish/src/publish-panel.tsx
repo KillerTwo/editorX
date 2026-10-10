@@ -155,7 +155,9 @@ function usePublishParts(
     <ScheduleDialog
       range={props.scheduleRange}
       error={schedule.showError ? ctl.errors.scheduledAt : undefined}
+      errorKey={schedule.attempts}
       busy={ctl.busy === 'publish'}
+      onChange={() => setSchedule((s) => (s?.showError ? { ...s, showError: false } : s))}
       onCancel={() => setSchedule(null)}
       onConfirm={publish}
     />

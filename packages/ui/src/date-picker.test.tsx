@@ -46,6 +46,18 @@ describe('DatePicker', () => {
     expect(icon.querySelectorAll('rect[fill="currentColor"]')).toHaveLength(6)
   })
 
+  it('describedBy 与值描述合并；invalid 输出 aria-invalid', () => {
+    renderWithTheme(
+      <StrictMode>
+        <p id="hint">请选择日期</p>
+        <Harness describedBy="hint" invalid />
+      </StrictMode>,
+    )
+    const trigger = screen.getByRole('button', { name: '发布日期' })
+    expect(trigger).toHaveAccessibleDescription('选择日期 请选择日期')
+    expect(trigger).toHaveAttribute('aria-invalid', 'true')
+  })
+
   it('打开：焦点在今天，今天 aria-current，区间外日期禁用', async () => {
     renderWithTheme(
       <StrictMode>

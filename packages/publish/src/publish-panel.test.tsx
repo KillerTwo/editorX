@@ -385,6 +385,49 @@ describe('定时发布', () => {
     expect(a.onPublish).not.toHaveBeenCalled()
   })
 
+  it('宿主错误：改选后清除；再次失败重新播报；空选确认显示区间提示', async () => {
+    const a = adapters()
+    renderWithProviders(
+      <PublishPanel
+        document={doc}
+        adapters={a}
+        defaultValue={{ tags: ['React'] }}
+        rules={{ scheduledAt: () => '该时段不可发布' }}
+      />,
+    )
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
+    const confirm = within(dialog).getByRole('button', { name: '定时发布' })
+    await userEvent.click(confirm)
+    const first = await within(dialog).findByRole('alert')
+    expect(first).toHaveTextContent('该时段不可发布')
+    await userEvent.click(confirm)
+    await waitFor(() => expect(within(dialog).getByRole('alert')).not.toBe(first))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('该时段不可发布')
+    await userEvent.click(within(dialog).getByRole('button', { name: '发布日期' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: '发布日期' })).getByRole('button', { name: '2026-10-09' }))
+    expect(within(dialog).queryByRole('alert')).toBeNull()
+    expect(within(dialog).getByText(SCHEDULE_HINT)).toHaveClass('ex-pub-schedule__hint')
+    await userEvent.click(confirm)
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(SCHEDULE_HINT)
+    expect(a.onPublish).not.toHaveBeenCalled()
+  })
+
+  it('onPublish 失败：弹窗保持打开，加载态解除，可以再次确认', async () => {
+    const a = adapters({ onPublish: vi.fn(async () => Promise.reject(new Error('网络错误'))) })
+    renderWithProviders(<PublishPanel document={doc} adapters={a} defaultValue={{ tags: ['React'] }} />)
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
+    const confirm = within(dialog).getByRole('button', { name: '定时发布' })
+    await userEvent.click(confirm)
+    expect(await screen.findByText('发布失败：网络错误')).toBeInTheDocument()
+    await waitFor(() => expect(confirm).not.toHaveAttribute('aria-busy'))
+    expect(confirm).toBeEnabled()
+    expect(dialog).toBeInTheDocument()
+    await userEvent.click(confirm)
+    await waitFor(() => expect(a.onPublish).toHaveBeenCalledTimes(2))
+  })
+
   it('其他字段校验失败时关闭弹窗并聚焦首个错误字段', async () => {
     const a = adapters()
     renderWithProviders(<PublishPanel document={doc} adapters={a} />)

@@ -96,6 +96,26 @@ describe('Select', () => {
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 
+  it('describedBy / invalid 透传到触发器', () => {
+    const { rerender } = renderWithTheme(
+      <StrictMode>
+        <p id="hint">请选择创作声明</p>
+        <Select label="创作声明" value={undefined} options={options} onChange={() => {}} describedBy="hint" invalid />
+      </StrictMode>,
+    )
+    const trigger = screen.getByRole('combobox', { name: '创作声明' })
+    expect(trigger).toHaveAccessibleDescription('请选择创作声明')
+    expect(trigger).toHaveAttribute('aria-invalid', 'true')
+    rerender(
+      <StrictMode>
+        <p id="hint">请选择创作声明</p>
+        <Select label="创作声明" value={undefined} options={options} onChange={() => {}} />
+      </StrictMode>,
+    )
+    expect(trigger).not.toHaveAttribute('aria-describedby')
+    expect(trigger).not.toHaveAttribute('aria-invalid')
+  })
+
   it('仅传 labelledBy 时列表也以其为无障碍名称', async () => {
     renderWithTheme(
       <StrictMode>
