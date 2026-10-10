@@ -11,6 +11,8 @@ const CJK_CHAR =
 const LATIN_OR_DIGIT = '\\p{Script=Latin}0-9\\uFF10-\\uFF19'
 const WORD = new RegExp(`[${CJK_CHAR}]|[${LATIN_OR_DIGIT}]+`, 'gu')
 const WHITESPACE = /\s/gu
+// KaTeX emits U+200B after fractions and subscripts (`.vlist-s`).
+const INVISIBLE = /[\u200B-\u200D\u2060\uFEFF]/gu
 
 export function countWords(md: string): WordCount {
   return {
@@ -46,7 +48,7 @@ export function countHtml(html: string): HtmlCount {
     el.before(' ')
     el.after(' ')
   })
-  const text = doc.body.textContent
+  const text = doc.body.textContent.replace(INVISIBLE, '')
   return {
     words: text.match(WORD)?.length ?? 0,
     chars: Array.from(text.replace(WHITESPACE, '')).length,

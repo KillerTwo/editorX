@@ -373,14 +373,38 @@ describe('createScrollSync', () => {
     expect(preview.scrollTop).toBe(0)
   })
 
-  it('destroy 后 syncFrom / setPaused 为空操作', () => {
+  it('恢复时从暂停期间最后滚动的一侧（预览）对齐', () => {
     const { editor, preview, sync } = setup()
+    sync.setPaused(true)
+    scrollTo(editor, 50)
+    scrollTo(preview, 300)
+    vi.advanceTimersByTime(20)
+    expect(editor.scrollTop).toBe(50)
+    sync.setPaused(false)
+    expect(editor.scrollTop).toBe(200)
+    expect(preview.scrollTop).toBe(300)
+  })
+
+  it('syncFrom 未暂停时立即以指定侧对齐，并锁住被写入的一侧', () => {
+    const { editor, preview, sync } = setup()
+    scrollTo(preview, 300)
+    sync.syncFrom('preview')
+    expect(editor.scrollTop).toBe(200)
+    scrollTo(editor, 20)
+    vi.advanceTimersByTime(10)
+    expect(preview.scrollTop).toBe(300)
+  })
+
+  it('destroy 后 syncFrom / setPaused 为空操作', () => {
+    const { editor, preview, engine, sync } = setup()
     sync.destroy()
+    const calls = vi.mocked(engine.getSectionOffsets).mock.calls.length
     editor.scrollTop = 50
     sync.syncFrom('editor')
     sync.setPaused(true)
     sync.setPaused(false)
     expect(preview.scrollTop).toBe(0)
+    expect(vi.mocked(engine.getSectionOffsets).mock.calls.length).toBe(calls)
   })
 
   it('setPaused 重复传入相同值不触发对齐', () => {

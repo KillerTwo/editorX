@@ -21,6 +21,13 @@ describe('countHtml', () => {
     expect(countHtml(html)).toMatchObject({ words: 1, paragraphs: 1 })
   })
 
+  it('ignores the zero-width spaces KaTeX inserts after fractions and subscripts', () => {
+    const render = (md: string) => countHtml(createRenderer().render(md).html)
+    expect(render('$\\frac{a}{b}$').chars).toBe(2)
+    expect(render('$a_ib$')).toMatchObject({ words: 1, chars: 3 })
+    expect(render('$x^2y$')).toMatchObject({ words: 1, chars: 3 })
+  })
+
   it('counts a rendered document', () => {
     const html = createRenderer().render('# 标题\n\n第一段 text\n\n- 项一\n- 项二').html
     expect(countHtml(html)).toEqual({ words: 10, chars: 13, paragraphs: 4 })
