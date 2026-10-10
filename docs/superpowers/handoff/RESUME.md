@@ -7,14 +7,17 @@
 | 1 | 基础设施：monorepo、theme、ui、playground | 已完成 |
 | 2 | markdown-core：渲染链、cledit 移植、命令、同步滚动 | 已完成 |
 | 3 | toolbar 扩展 API + `<MarkdownEditor />` + CSDN 外观 | 已完成，浏览器验证通过（`4ac6969`） |
-| 4 | `<PublishPanel />`（`@editorx/publish`） | 实施计划已写好（`05f85fe`，14 个任务）：`docs/superpowers/plans/2026-10-09-phase4-publish-panel.md`，尚未开始实现 |
+| 4 | `<PublishPanel />` / `<PublishModal />`（`@editorx/publish`） | 已完成（develop，09154c1..36196eb，未 push），浏览器验证通过（macOS） |
 | 5–8 | 富文本（CKEditor 5 GPL）、CsdnEditor 组合、csdn-extensions、发布准备 | 未开始 |
 
 设计文档：`docs/superpowers/specs/2026-10-09-csdn-editor-design.md`（第 10 节为阶段划分）。
 
 ## 新机器准备
 
-1. Node 24、pnpm 10（原机 node v24.5.0 / pnpm 10.33.4），Windows + PowerShell（Playwright 视觉基线只有 win32 版本）。
+1. Node 24、pnpm 10（原机 node v24.5.0 / pnpm 10.33.4）。Windows + PowerShell 或 macOS + zsh 都是正式验收平台：
+   阶段 1–3 的视觉基线有 win32 与 darwin 两版；阶段 4 的 `publish-visual` 基线只有 darwin 版，首次在 Windows 上运行时用
+   `--update-snapshots` 只针对 `e2e/publish-visual.spec.ts` 生成 win32 版，`publish-parity` 失败按测量校正处理。
+   macOS 上 corepack 报 “Cannot find matching keyid” 时，每个 shell 先 `export COREPACK_INTEGRITY_KEYS=0`。
 2. `pnpm install`，`pnpm exec playwright install chromium`（在 `apps/playground` 下）。
 3. 恢复本地工作目录（`.superpowers/` 被 `.git/info/exclude` 排除，不进 git）：
    ```powershell
@@ -24,14 +27,18 @@
    ```
 4. 验证：`pnpm build --force; pnpm test; pnpm typecheck; pnpm lint`（PowerShell 中 `;` 失败也会继续，逐条看 `$LASTEXITCODE`），
    然后 `pnpm --filter playground exec playwright test --project=chromium`，性能 `--project=chromium-perf --no-deps`。
-   基线状态：单元 theme 55 / markdown-core 479(+1 skip) / ui 53 / toolbar 94 / markdown 234；e2e chromium 53/53；perf 4/4。
+   macOS：杀端口用 `lsof -ti tcp:3100 | xargs kill -9 2>/dev/null`，每条命令检查退出码。
+   基线状态（阶段 4 结束，macOS）：单元 theme 92 / ui 84 / toolbar 98 / markdown-core 479(+1 skip) / markdown 234 / publish 98；
+   e2e chromium 74/74；perf 4/4。改了包的 CSS 后要完整 `pnpm build` 再跑 e2e（playground 用的是预构建的 Next 产物）。
 
 ## 交接材料（本目录）
 
-- `phase4-notes-from-3.md`：阶段 4 必读，含可复用 API、性能实测、/compare 结论、全部遗留项。
+- `phase5-notes-from-4.md`：阶段 5 必读，含发布面板公开 API、性能实测、/compare 结论、遗留项、phase 8 清单。
+- `phase4-notes-from-3.md`：阶段 3 → 4 的笔记（仍有效，除非被 phase5 笔记取代）。
 - `reference-index.md`：CSDN 参考截图（`apps/playground/public/reference/`）内容与所属阶段。
 - `phase2-contract.md`、`phase2b-notes-from-2a.md`、`phase3-notes-from-2.md`：前序阶段的约束（仍有效，除非被后续笔记取代）。
 - `task-brief.ps1 -Plan <plan> -N <n>`：从计划生成任务简报；`review-package.ps1 -Plan <plan> -Base X -Head Y -Label L`：生成审查 diff 包。输出写在 `.superpowers/sdd/<plan名>/`。
+  macOS 用同目录的 bash 版：`bash .superpowers/task-brief.sh <plan名> <n>`、`bash .superpowers/review-package.sh <plan名> <BASE> <HEAD> <LABEL>`。
 
 ## 工作流程与约定（用户已确认）
 
@@ -47,5 +54,5 @@
 
 ## 下一步
 
-执行阶段 4 计划：先通读计划并对照设计文档 §6.3 与 `phase4-notes-from-3.md` 审一遍，然后从 Task 1 开始按上述流程执行。
-计划末尾的「Open questions / defaults chosen」尚未经控制方审阅：逐条判断，可逆的按默认执行并记为裁定，涉及产品取舍的再问用户。
+阶段 5（`<RichTextEditor />`，CKEditor 5 GPL）：先按设计文档第 10 节与 `phase5-notes-from-4.md` 写实施计划，
+再按上述流程执行。待业主提供的参考截图：创作声明下拉选项、定时发布弹窗（两者目前是推断实现）。
