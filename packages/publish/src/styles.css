@@ -1,3 +1,5 @@
+.ex-pub-theme { display: contents; }
+
 /* 内联卡片（12-36-05）为默认值，模态框（12-36-37）在 .ex-pub--modal 上覆盖 */
 .ex-pub {
   --ex-pub-label-width: 88px;

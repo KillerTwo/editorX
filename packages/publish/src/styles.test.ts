@@ -55,6 +55,10 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub \.ex-radio\.is-checked \{[^}]*color: var\(--ex-pub-option-checked\);/)
   })
 
+  it('自建主题根与 .ex-mde-theme 一致，不占布局', () => {
+    expect(css).toMatch(/\.ex-pub-theme \{\s*display: contents;\s*\}/)
+  })
+
   it('模态摘要框不可拖拽缩放，内联保留', () => {
     expect(css).toMatch(/\.ex-pub-textarea \{[^}]*resize: vertical;/)
     expect(css).toMatch(/\.ex-pub--modal \.ex-pub-textarea \{[^}]*resize: none;/)
@@ -68,7 +72,6 @@ describe('publish styles.css', () => {
       .join('\n')
     const used = new Set([...sources.matchAll(/['"`\s](ex-pub-[\w-]*\w)(?![\w-]*\$)/g)].map((m) => m[1]!))
     const STRUCTURAL = new Set([
-      'ex-pub-theme',
       'ex-pub-checkbox',
       'ex-pub-tags',
       'ex-pub-summary',
