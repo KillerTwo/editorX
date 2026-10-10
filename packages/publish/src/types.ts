@@ -34,7 +34,7 @@ export interface PublishBaseProps {
   rules?: PublishRules
   /** 可选封面模式；默认 ['single']（CSDN 截图无模式切换），多于一项时显示单选 */
   coverModes?: readonly CoverMode[]
-  /** 文章模板选项；默认 默认模板 / 简洁模板 / 墨衍模板（禁用） */
+  /** 文章模板选项；默认 默认模板 / 简洁模板 / 墨衍模板（仅 Markdown 文档可选） */
   templates?: readonly PublishOption[]
   /** GitCode 协议链接；未提供时渲染为纯文本 */
   agreementLinks?: AgreementLinks

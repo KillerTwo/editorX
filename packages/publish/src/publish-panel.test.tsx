@@ -47,6 +47,44 @@ async function collectUnhandledRejections(run: () => Promise<void>): Promise<unk
 
 const LABELS = ['文章标签', '添加封面', '文章摘要', '分类专栏', '文章类型', '创作声明', '文章备份', '可见范围', '文章模板', '多平台发布', '参与活动']
 
+describe('文章模板默认列表', () => {
+  const moyan = () => screen.getByRole('radio', { name: '墨衍模板' })
+
+  it('Markdown 文档：墨衍模板可选', () => {
+    renderWithProviders(<PublishPanel document={doc} adapters={adapters()} />)
+    expect(moyan()).toBeEnabled()
+  })
+
+  it('富文本文档或未传文档：墨衍模板禁用', () => {
+    const { unmount } = renderWithProviders(
+      <PublishPanel document={{ editorType: 'richtext', title: '富文本', html: '<p>正文</p>' }} adapters={adapters()} />,
+    )
+    expect(moyan()).toBeDisabled()
+    unmount()
+    renderWithProviders(<PublishPanel adapters={adapters()} />)
+    expect(moyan()).toBeDisabled()
+  })
+
+  it('显式传入 templates 时以其为准', () => {
+    const templates = [
+      { id: 'default', name: '默认模板' },
+      { id: 'moyan', name: '墨衍模板', disabled: true },
+    ]
+    const { unmount } = renderWithProviders(<PublishPanel document={doc} adapters={adapters()} templates={templates} />)
+    expect(moyan()).toBeDisabled()
+    expect(screen.queryByRole('radio', { name: '简洁模板' })).toBeNull()
+    unmount()
+    renderWithProviders(
+      <PublishPanel
+        document={{ editorType: 'richtext', title: '富文本', html: '<p>正文</p>' }}
+        adapters={adapters()}
+        templates={[{ id: 'moyan', name: '墨衍模板' }]}
+      />,
+    )
+    expect(moyan()).toBeEnabled()
+  })
+})
+
 describe('PublishPanel（内联）', () => {
   it('按 CSDN 顺序渲染全部字段与底部操作栏', async () => {
     const { container } = renderWithProviders(<PublishPanel document={doc} adapters={adapters()} />)

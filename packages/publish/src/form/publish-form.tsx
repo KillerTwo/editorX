@@ -91,7 +91,7 @@ export function PublishForm(props: PublishFormProps) {
     templates ?? [
       { id: 'default', name: p.template.default },
       { id: 'simple', name: p.template.simple },
-      { id: 'moyan', name: p.template.moyan, disabled: true },
+      { id: 'moyan', name: p.template.moyan, disabled: doc?.editorType !== 'markdown' },
     ]
   ).map((t) => ({ value: t.id, label: t.name, disabled: t.disabled }))
 
