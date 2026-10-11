@@ -120,7 +120,8 @@ test('视图模式：Markdown / 比对 / 预览', async ({ page }) => {
 test('状态栏：格式与 CSDN 一致，随输入与光标更新', async ({ page }) => {
   await open(page, '?view=split')
   await expect(statusMd(page)).toHaveText(/^Markdown \d+ 字数 \d+ 行数 当前行 \d+, 当前列 \d+$/)
-  await expect(statusMd(page)).toContainText(`${SAMPLE.split('\n').length} 行数`)
+  const lineCount = SAMPLE.split('\n').length + (SAMPLE.endsWith('\n') ? 0 : 1)
+  await expect(statusMd(page)).toContainText(`${lineCount} 行数`)
   await expect(statusHtml(page)).toHaveText(/^HTML \d+ 字数 \d+ 段落$/)
   await appendLine(page, '新增')
   await expect(statusMd(page)).toContainText(`当前行 ${SAMPLE.split('\n').length + 1}, 当前列 2`)
@@ -390,4 +391,41 @@ test('演示页外壳：额度提示、切换按钮、AI 标签色与 test 夹�
   const aiLabel = page.locator(".ex-mde-rail__item[data-panel='csdn:ai'] .ex-mde-rail__label")
   await expect(aiLabel).toHaveText('AI')
   await expect(aiLabel).toHaveCSS('color', 'rgb(154, 154, 154)')
+})
+
+test('目录空状态：点击「添加」插入 @[TOC]（G19/G26）', async ({ page }) => {
+  await page.goto('/markdown?fixture=test&view=split&panel=toc')
+  const panel = page.getByRole('complementary', { name: '目录' })
+  await expect(panel.getByText('暂无目录')).toBeVisible()
+  await expect(panel.getByRole('heading')).toHaveCount(0)
+  await panel.getByRole('button', { name: '添加' }).click()
+  await expect(content(page)).toContainText('@[TOC](这里写目录标题)')
+})
+
+test('面板宽度拖柄：键盘与拖拽调整右侧面板宽度（G23）', async ({ page }) => {
+  await page.goto('/markdown?fixture=test&view=edit&panel=toc')
+  const grip = page.getByRole('separator', { name: '调整面板宽度' })
+  const panel = page.getByRole('complementary', { name: '目录' })
+  await expect(grip).toHaveAttribute('aria-valuenow', '390')
+  await grip.focus()
+  await page.keyboard.press('ArrowLeft')
+  await expect(grip).toHaveAttribute('aria-valuenow', '400')
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(400)
+  const g = (await grip.boundingBox())!
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(g.x + g.width / 2 + 50, g.y + g.height / 2, { steps: 5 })
+  await page.mouse.up()
+  await expect(grip).toHaveAttribute('aria-valuenow', '350')
+})
+
+test('比对模式：同步滚动开关与定位（G24）', async ({ page }) => {
+  await page.goto('/markdown?view=split')
+  const scroll = page.getByRole('button', { name: '同步滚动' })
+  await expect(scroll).toHaveAttribute('aria-pressed', 'true')
+  await scroll.click()
+  await expect(scroll).toHaveAttribute('aria-pressed', 'false')
+  await page.getByRole('button', { name: '定位到编辑位置' }).click()
+  await page.goto('/markdown?view=edit')
+  await expect(page.getByRole('button', { name: '同步滚动' })).toHaveCount(0)
 })
