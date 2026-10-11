@@ -5,6 +5,7 @@ import { ThemeProvider } from '@editorx/theme'
 import type { EditorAdapters, MissingAdapterPolicy } from '@editorx/toolbar'
 import { Button, ThemeToggle } from '@editorx/ui'
 import { useMemo, useState } from 'react'
+import { QuotaNotice } from '../quota-notice'
 import { INLINE_DOC, MODAL_DOC, WORD_COUNT } from './fixture'
 import { createPublishAdapters, type PublishLogKind } from './mock-adapters'
 
@@ -53,13 +54,18 @@ function Playground({ mode, missing, categories }: PublishPlaygroundProps) {
           document={doc}
           adapters={adapters}
           missingAdapter={policy}
+          barPosition="fixed"
           slots={{
             barStart: (
               <>
-                <span>共 {WORD_COUNT} 字</span>
+                <span className="pg-pub__count">共 {WORD_COUNT} 字</span>
                 <button type="button" className="pg-pub__top" onClick={() => window.scrollTo({ top: 0 })}>
                   回到顶部
+                  <svg className="pg-pub__top-icon" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
+                    <path d="M.5 5.5 5 1l4.5 4.5" />
+                  </svg>
                 </button>
+                <QuotaNotice />
               </>
             ),
           }}

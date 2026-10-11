@@ -184,6 +184,27 @@ test.describe('/publish 内联', () => {
     const expected = await page.evaluate(() => new Date(2099, 0, 1, 10, 0).toISOString())
     expect(await logged(page, 'publish')).toMatchObject({ scheduledAt: expected })
   })
+
+  test('标签面板：分类切换、按需加载；操作栏固定在视口底部且有占位（B20–B24、B37）', async ({ page }) => {
+    await open(page)
+    await tagButton(page).click()
+    const picker = page.getByRole('dialog', { name: '标签' })
+    await expect(picker.getByRole('list', { name: '推荐标签' }).getByRole('button')).toHaveCount(6)
+    // 分类列是 role="tab" 的垂直 tablist（Task 12），不是 list/button
+    await picker.getByRole('tab', { name: 'Java' }).click()
+    await picker.getByRole('button', { name: 'Spring', exact: true }).click()
+    await expect(card(page).locator('.ex-pub-tag')).toHaveText(['Spring'])
+    await page.locator('.pg-pub__paper').click()
+    await expect(picker).toBeVisible()
+    await picker.getByRole('button', { name: '关闭标签面板' }).click()
+    await expect(picker).toBeHidden()
+
+    await expect(bar(page)).toHaveCSS('position', 'fixed')
+    await expect(page.locator('.ex-pub-bar-spacer')).toHaveCount(1)
+    await expect(bar(page).locator('.pg-pub__count')).toHaveText(/^共 \d+ 字$/)
+    await expect(bar(page).getByRole('button', { name: '回到顶部' })).toHaveCSS('font-weight', '700')
+    await expect(bar(page).locator('.pg-quota')).toBeVisible()
+  })
 })
 
 test.describe('/publish 模态', () => {

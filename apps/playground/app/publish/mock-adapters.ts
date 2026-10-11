@@ -1,4 +1,4 @@
-import type { Category, EditorAdapters, PublishOption } from '@editorx/toolbar'
+import type { Category, EditorAdapters, PublishOption, TagCategory } from '@editorx/toolbar'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -15,11 +15,32 @@ const TOPICS: PublishOption[] = [
   { id: 'ai-coding', name: 'AI 编程' },
   { id: 'fe-eng', name: '前端工程化' },
 ]
+const TAG_CATEGORIES: TagCategory[] = [
+  { id: 'recommended', name: '推荐', tags: TAGS.slice(0, 6) },
+  { id: 'python', name: 'Python', tags: ['Python', 'Django', 'Flask', 'pandas', 'NumPy'] },
+  { id: 'java', name: 'Java' },
+  { id: 'lang', name: '编程语言', tags: ['Go', 'Rust', 'C++', 'Kotlin'] },
+  { id: 'tools', name: '开发工具', tags: ['VS Code', 'Git', 'Docker', 'Vim'] },
+  { id: 'db', name: '数据库', tags: ['MySQL', 'Redis', 'PostgreSQL', 'MongoDB'] },
+]
+/** 未内联 tags 的分类，演示 getTagsByCategory 按需加载 */
+const CATEGORY_TAGS: Record<string, string[]> = { java: ['Java', 'Spring', 'Spring Boot', 'JVM', 'Maven'] }
 
 export type PublishLogKind = 'publish' | 'draft'
 
 export type PublishMockAdapters = Required<
-  Pick<EditorAdapters, 'onPublish' | 'onSaveDraft' | 'searchTags' | 'getCategories' | 'getActivities' | 'getTopics' | 'uploadImage'>
+  Pick<
+    EditorAdapters,
+    | 'onPublish'
+    | 'onSaveDraft'
+    | 'searchTags'
+    | 'getCategories'
+    | 'getActivities'
+    | 'getTopics'
+    | 'uploadImage'
+    | 'getTagCategories'
+    | 'getTagsByCategory'
+  >
 >
 
 export interface PublishMockOptions {
@@ -44,6 +65,14 @@ export function createPublishAdapters({ categories, onLog }: PublishMockOptions)
       await delay(150)
       const query = keyword.trim().toLowerCase()
       return (query ? TAGS.filter((tag) => tag.toLowerCase().includes(query)) : TAGS).slice(0, 6)
+    },
+    async getTagCategories() {
+      await delay(100)
+      return TAG_CATEGORIES
+    },
+    async getTagsByCategory(categoryId) {
+      await delay(150)
+      return CATEGORY_TAGS[categoryId] ?? []
     },
     async getCategories() {
       await delay(100)

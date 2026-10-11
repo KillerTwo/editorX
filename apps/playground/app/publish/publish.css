@@ -31,11 +31,19 @@
   line-height: 1.75;
 }
 .pg-pub__paper img { width: 240px; height: auto; }
+/* 宿主 barStart（B37）：「共 N 字」与「回到顶部」都是 #1a1a1a，后者粗体 + 细 ^；不是红色 */
+.pg-pub__count { color: var(--ex-color-pub-text); font-size: 14px; }
 .pg-pub__top {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px; /* inferred default */
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ex-color-primary);
+  color: var(--ex-color-pub-text);
   font: inherit;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
 }
+.pg-pub__top-icon { flex: none; }

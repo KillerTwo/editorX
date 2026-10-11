@@ -1,3 +1,4 @@
+import '../quota-notice.css'
 import './publish.css'
 import type { MissingAdapterPolicy } from '@editorx/toolbar'
 import { PublishPlayground } from './publish-playground'

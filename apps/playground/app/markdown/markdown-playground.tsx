@@ -31,7 +31,7 @@ function Playground({ fixture, view, panel, autosave, publish }: MarkdownPlaygro
   const [saves, setSaves] = useState(0)
   const [publishDoc, setPublishDoc] = useState<EditorDocument | null>(null)
   const adapters = useMemo<EditorAdapters>(() => {
-    const { onPublish, searchTags, getCategories, getActivities, getTopics } = createPublishAdapters({
+    const { onPublish, searchTags, getCategories, getActivities, getTopics, getTagCategories, getTagsByCategory } = createPublishAdapters({
       categories: false,
       onLog: (kind, data) => console.info(`[publish:${kind}] ${JSON.stringify(data)}`),
     })
@@ -42,6 +42,8 @@ function Playground({ fixture, view, panel, autosave, publish }: MarkdownPlaygro
       getCategories,
       getActivities,
       getTopics,
+      getTagCategories,
+      getTagsByCategory,
     }
   }, [])
   const openPublish = () => setPublishDoc(ref.current?.getDocument() ?? null)
