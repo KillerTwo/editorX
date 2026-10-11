@@ -43,7 +43,7 @@ describe('publish styles.css', () => {
   it('必填星号：内联在标签文字之后，模态在标签左侧', () => {
     expect(css).toMatch(/\.ex-pub-item__text \{[^}]*order: 0;/)
     expect(css).toMatch(/\.ex-pub-item__required \{[^}]*order: 1;/)
-    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__required \{[^}]*position: absolute;[^}]*top: 3\.5px;[^}]*left: -16px;/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__required \{[^}]*position: absolute;[^}]*top: -3\.5px;[^}]*left: -16px;/)
   })
 
   it('mac 参考图修正（B01–B08、B12、B13、B35、B36）', () => {
