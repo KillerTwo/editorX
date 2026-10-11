@@ -75,10 +75,10 @@
 /* G14：未激活的「AI」标签单独实测为 #9a9a9a，比其他标签浅 */
 .pg-mde .ex-mde-rail__item[data-panel='csdn:ai']:not(.is-active) .ex-mde-rail__label { color: var(--ex-color-mde-rail-ai-label); }
 
-/* NEW 角标 22×11，相对图标左上 (12, -6.5)（G12/G17） */
+/* NEW 角标 22×11，相对图标左上 (12, -5)。图标在 y 315，几何表裁定角标 y 310（G12） */
 .pg-mde-new {
   position: absolute;
-  top: -6.5px;
+  top: -5px;
   left: 12px;
   box-sizing: border-box;
   width: 22px;
