@@ -25,12 +25,12 @@
   --ex-pub-select-arrow: var(--ex-color-pub-select-arrow);
   --ex-pub-select-placeholder: var(--ex-color-pub-sublabel);
   --ex-pub-declaration-width: 300px;
-  --ex-pub-declaration-padding: 0 8px 0 11px;
+  --ex-pub-declaration-padding: 0 13px 0 11px;
   --ex-pub-activity-width: 612px;
-  --ex-pub-activity-padding: 0 8px 0 11px;
+  --ex-pub-activity-padding: 0 13px 0 11px;
   --ex-pub-agreement-color: var(--ex-color-pub-text);
   color: var(--ex-color-pub-text);
-  font-family: var(--ex-font-family);
+  font-family: var(--ex-font-family-helvetica);
   font-size: 14px;
 }
 .ex-pub--modal {
@@ -49,7 +49,7 @@
   --ex-pub-upload-border: var(--ex-color-pub-upload-border-modal);
   --ex-pub-upload-icon: var(--ex-color-pub-upload-icon-modal);
   --ex-pub-cover-gap: 20px;
-  --ex-pub-summary-height: 58px;
+  --ex-pub-summary-height: 57px;
   --ex-pub-extract-width: 121px;
   --ex-pub-extract-height: 30px;
   --ex-pub-extract-gap: 4px;
@@ -57,9 +57,9 @@
   --ex-pub-select-arrow: var(--ex-color-pub-select-arrow-modal);
   --ex-pub-select-placeholder: var(--ex-color-pub-placeholder-modal);
   --ex-pub-declaration-width: 200px;
-  --ex-pub-declaration-padding: 0 7px 0 12px;
+  --ex-pub-declaration-padding: 0 12px 0 12px;
   --ex-pub-activity-width: 532px;
-  --ex-pub-activity-padding: 0 6px 0 15px;
+  --ex-pub-activity-padding: 0 12px 0 15px;
   --ex-pub-agreement-color: var(--ex-color-text-secondary);
 }
 
@@ -87,8 +87,8 @@
   line-height: 32px;
 }
 .ex-pub-item__text { order: 0; }
-.ex-pub-item__required { order: 1; color: var(--ex-color-error); }
-.ex-pub-item__help { order: 2; display: inline-flex; color: var(--ex-color-text-muted); cursor: help; }
+.ex-pub-item__required { order: 1; color: var(--ex-color-primary); }
+.ex-pub-item__help { order: 2; display: inline-flex; color: var(--ex-color-pub-label); cursor: help; }
 .ex-pub-item__suffix { order: 3; }
 /* 内联参考图：小号「*」上标式紧贴文字，占位不计入与帮助图标的间距 */
 .ex-pub-card .ex-pub-item__required {
@@ -98,12 +98,11 @@
   font-size: 10px;
   line-height: 10px;
 }
-.ex-pub--modal .ex-pub-item__required { position: absolute; left: -16px; }
-.ex-pub--modal .ex-pub-item__help { color: var(--ex-color-pub-label); }
+.ex-pub--modal .ex-pub-item__required { position: absolute; top: 3.5px; left: -16px; line-height: 14px; }
 .ex-pub-item__control { flex: none; width: var(--ex-pub-control-width); min-width: 0; }
 .ex-pub-item__error { margin-top: 4px; color: var(--ex-color-error); font-size: 12px; line-height: 18px; }
 .ex-pub-card [data-field='categories'] { min-height: 34px; }
-.ex-pub--modal [data-field='multiPlatform'] { min-height: 33px; }
+.ex-pub--modal [data-field='multiPlatform'] { min-height: 32px; }
 .ex-pub--modal :is([data-field='declaration'], [data-field='backup']) .ex-pub-item__control { margin-left: -10px; }
 
 .ex-pub-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 32px; }
@@ -128,12 +127,18 @@
 a.ex-pub-link:hover { text-decoration: underline; }
 
 .ex-pub-tags { position: relative; column-gap: 12px; row-gap: 8px; } /* row-gap：inferred default */
+/* R-1431：chip 在 32px 行里比垂直居中低 1px（框底视口 136，居中为 135）；面板仍保持 chip 底 + 7 */
+.ex-pub--modal .ex-pub-tag,
+.ex-pub--modal .ex-pub-tag-add { position: relative; top: 1px; }
+.ex-pub--modal .ex-pub-tag-picker { top: calc(100% + 6px); }
 /* B10：chip 右缘到 × 墨迹 8.5 = 边框 1 + padding 7.5 */
 .ex-pub-tag {
   box-sizing: border-box;
   height: 28px;
   padding: 0 7.5px 0 8px;
   gap: 13px;
+  /* R-1431「jvm」chip 宽：Helvetica/Arial 59.78，Helvetica Neue 60.06，参考 59.5 */
+  font-family: Helvetica, Arial, var(--ex-font-family-helvetica);
   font-size: 14px;
 }
 .ex-pub-tag-add {
@@ -376,7 +381,6 @@ a.ex-pub-link:hover { text-decoration: underline; }
   font-size: 14px;
   cursor: pointer;
 }
-.ex-pub--modal .ex-pub-summary__extract { margin-bottom: 1px; }
 .ex-pub-summary__extract:disabled { cursor: not-allowed; opacity: 0.6; }
 .ex-pub-summary__wand { flex: none; margin-left: 1px; }
 
@@ -427,7 +431,7 @@ a.ex-pub-link:hover { text-decoration: underline; }
   height: 100%;
   margin: 0 auto;
 }
-.ex-pub-bar__start { display: flex; align-items: center; gap: 16px; color: var(--ex-color-text-secondary); font-size: 14px; }
+.ex-pub-bar__start { display: flex; align-items: center; gap: 16px; color: var(--ex-color-pub-text); font-size: 14px; }
 .ex-pub-actions { display: flex; gap: 16px; margin-left: auto; }
 .ex-pub-action .ex-btn__label { display: inline-flex; align-items: center; gap: 8px; }
 .ex-pub-bar .ex-pub-action {
@@ -462,13 +466,12 @@ a.ex-pub-link:hover { text-decoration: underline; }
   padding: 0;
   color: var(--ex-color-pub-close);
 }
-.ex-pub-modal .ex-modal__body { padding: 26px 28px 40px; }
 .ex-pub-modal .ex-modal__footer {
   box-sizing: border-box;
   height: 64px;
   padding: 12px 34px 12px 28px;
   gap: 16px;
-  box-shadow: 0 -4px 8px var(--ex-color-pub-footer-shadow);
+  box-shadow: 0 -3px 3px var(--ex-color-pub-footer-shadow);
 }
 .ex-pub-modal .ex-pub-action {
   height: 40px;
@@ -484,8 +487,12 @@ a.ex-pub-link:hover { text-decoration: underline; }
 .ex-pub-modal .ex-pub-action[data-action='publish'] { width: 96px; font-weight: 700; }
 
 /* ---------- 定时发布弹窗（B25–B33，366×218；日期面板外观 inferred default） ---------- */
-.ex-pub-schedule-mask { background: var(--ex-color-pub-schedule-mask); }
+/* Element 对话框按视口高度顶部偏移而非垂直居中（R-0901：932 高视口中框顶 250）；矮视口时间距最少收到 16 */
+.ex-pub-schedule-mask { flex-direction: column; justify-content: flex-start; background: var(--ex-color-pub-schedule-mask); }
+.ex-pub-schedule-mask::before { content: ''; flex: 0 1 26.8vh; min-height: 16px; }
 .ex-pub-schedule.ex-modal {
+  flex: none;
+  margin-bottom: 16px;
   border-radius: var(--ex-radius-sm);
   color: var(--ex-color-pub-dialog-text);
   font-family: var(--ex-font-family-helvetica);
@@ -536,3 +543,22 @@ a.ex-pub-link:hover { text-decoration: underline; }
 .ex-pub-select-list .ex-select__option.is-selected { color: var(--ex-color-pub-option-selected); font-weight: 700; }
 .ex-pub-select-list .ex-select__option:disabled { color: var(--ex-color-pub-placeholder-modal); }
 .ex-pub-crop .ex-modal__body { padding-top: 8px; }
+
+/* ---------- mac 参考图修正（B01–B05、B12、B13、B36） ---------- */
+.ex-pub-modal .ex-modal__body { padding: 26px 20px 40px 28px; scrollbar-gutter: stable; }
+.ex-pub-modal .ex-modal__body::-webkit-scrollbar { width: 11px; }
+.ex-pub-modal .ex-modal__body::-webkit-scrollbar-track { background: var(--ex-color-surface); }
+.ex-pub-modal .ex-modal__body::-webkit-scrollbar-thumb {
+  border: solid transparent;
+  border-width: 0 2px 0 3px;
+  border-radius: 5px;
+  background: var(--ex-color-pub-scrollbar-thumb);
+  background-clip: padding-box;
+}
+.ex-pub--modal .ex-pub-item__control { flex: 1; width: auto; }
+.ex-pub--modal .ex-pub-item__label { letter-spacing: 0.5px; }
+.ex-pub--modal .ex-pub-textarea { padding: 7px 8px; }
+.ex-pub--modal .ex-pub-select--wide { flex: 1; width: auto; margin-right: 32px; }
+.ex-pub--modal .ex-pub-select--declaration { border-color: var(--ex-color-pub-select-border-modal); }
+.ex-pub-card .ex-radio { gap: 8px; }
+.ex-pub-help-icon { display: block; }

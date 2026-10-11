@@ -166,6 +166,9 @@ export function PublishForm(props: PublishFormProps) {
       <FormItem field="declaration" id={fid('decl')} label={p.fields.declaration}>
         <Select
           className="ex-pub-select ex-pub-select--declaration"
+          offset={12}
+          popperArrow
+          listClassName="ex-pub-select-list"
           labelledBy={labelId(fid('decl'))}
           value={settings.declaration}
           options={DECLARATIONS.map((value) => ({ value, label: p.declaration[value] }))}

@@ -1,7 +1,7 @@
 import { Tooltip } from '@editorx/ui'
-import { CircleHelp } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cx } from '../cx'
+import { HelpIcon } from '../icons'
 
 export const labelId = (id: string) => `${id}-label`
 export const errorId = (id: string) => `${id}-error`
@@ -35,7 +35,7 @@ export function FormItem({ field, id, label, labelSuffix, required, help, error,
         {help && (
           <Tooltip content={help} placement="top">
             <span className="ex-pub-item__help" role="img" aria-label={help} tabIndex={0}>
-              <CircleHelp size={14} aria-hidden="true" />
+              <HelpIcon />
             </span>
           </Tooltip>
         )}

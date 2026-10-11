@@ -116,6 +116,9 @@ export function ActivityField(props: ActivityFieldProps) {
           </span>
           <Select
             className="ex-pub-select ex-pub-select--wide"
+            offset={12}
+            popperArrow
+            listClassName="ex-pub-select-list"
             labelledBy={`${id}-activity`}
             value={activityId}
             placeholder={p.activity.placeholder}
@@ -132,6 +135,9 @@ export function ActivityField(props: ActivityFieldProps) {
           </span>
           <Select
             className="ex-pub-select ex-pub-select--wide"
+            offset={12}
+            popperArrow
+            listClassName="ex-pub-select-list"
             labelledBy={`${id}-topic`}
             value={topicId}
             placeholder={p.activity.topicPlaceholder}

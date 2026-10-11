@@ -58,6 +58,7 @@ describe('FormItem', () => {
     expect(item).toHaveClass('ex-pub-item', 'is-error')
     expect(item.querySelector('.ex-pub-item__required')).toHaveTextContent('*')
     expect(screen.getByRole('img', { name: '帮助' })).toHaveClass('ex-pub-item__help')
+    expect(screen.getByRole('img', { name: '帮助' }).querySelector('svg.ex-pub-help-icon')).toHaveAttribute('width', '14')
     expect(screen.getByRole('button', { name: '控件' })).toHaveAccessibleDescription('请至少添加 1 个文章标签')
   })
 })

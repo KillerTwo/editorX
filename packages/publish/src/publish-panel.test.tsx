@@ -112,6 +112,29 @@ describe('PublishPanel（内联）', () => {
     )
   })
 
+  it('发布面板下拉：offset 12、气泡箭头、ex-pub-select-list（B14–B19）', async () => {
+    renderWithProviders(<PublishPanel document={doc} adapters={adapters()} />)
+    await userEvent.click(screen.getByRole('combobox', { name: '创作声明' }))
+    const list = await screen.findByRole('listbox')
+    expect(list).toHaveClass('ex-pub-select-list', 'has-arrow')
+  })
+
+  it('活动 / 话题下拉同样使用发布面板列表样式与气泡箭头', async () => {
+    renderWithProviders(<PublishPanel document={doc} adapters={adapters()} />)
+    const region = screen.getByRole('region', { name: '发布设置' })
+    await screen.findByRole('checkbox', { name: '前端' })
+    const combos = within(region).getAllByRole('combobox')
+    expect(combos).toHaveLength(3)
+    for (const combo of combos.slice(1)) {
+      await waitFor(() => expect(combo).toBeEnabled())
+      await userEvent.click(combo)
+      const list = await screen.findByRole('listbox')
+      expect(list).toHaveClass('ex-pub-select-list', 'has-arrow')
+      await userEvent.keyboard('{Escape}')
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull())
+    }
+  })
+
   it('非受控：defaultValue 生效并回调 onChange；受控：跟随 value', async () => {
     const onChange = vi.fn()
     const { unmount } = renderWithProviders(

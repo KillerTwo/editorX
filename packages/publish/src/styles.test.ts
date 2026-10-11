@@ -35,7 +35,7 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub--modal \{[^}]*--ex-pub-label-width: 92px;[^}]*--ex-pub-control-width: 600px;[^}]*--ex-pub-row-gap: 16px;/)
     expect(css).toMatch(/\.ex-pub-bar \{[^}]*position: sticky;[^}]*height: 69px;[^}]*margin-top: 26px;/)
     expect(css).toMatch(/\.ex-pub-bar__inner \{[^}]*width: 1080px;/)
-    expect(css).toMatch(/\.ex-pub-modal \.ex-modal__body \{[^}]*padding: 26px 28px 40px;/)
+    expect(css).toMatch(/\.ex-pub-modal \.ex-modal__body \{[^}]*padding: 26px 20px 40px 28px;[^}]*scrollbar-gutter: stable;/)
     expect(css).toMatch(/\.ex-pub-modal \.ex-modal__footer \{[^}]*height: 64px;[^}]*padding: 12px 34px 12px 28px;/)
     expect(css).toMatch(/\.ex-pub-mask \{[^}]*background: var\(--ex-color-pub-mask\);/)
   })
@@ -43,7 +43,31 @@ describe('publish styles.css', () => {
   it('必填星号：内联在标签文字之后，模态在标签左侧', () => {
     expect(css).toMatch(/\.ex-pub-item__text \{[^}]*order: 0;/)
     expect(css).toMatch(/\.ex-pub-item__required \{[^}]*order: 1;/)
-    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__required \{[^}]*position: absolute;[^}]*left: -16px;/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__required \{[^}]*position: absolute;[^}]*top: 3\.5px;[^}]*left: -16px;/)
+  })
+
+  it('mac 参考图修正（B01–B08、B12、B13、B35、B36）', () => {
+    expect(css).toMatch(/\.ex-pub \{[^}]*font-family: var\(--ex-font-family-helvetica\);/)
+    expect(css).toMatch(/\.ex-pub-modal \.ex-modal__body::-webkit-scrollbar \{ width: 11px; \}/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__control \{[^}]*flex: 1;[^}]*width: auto;/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-select--wide \{[^}]*flex: 1;[^}]*width: auto;[^}]*margin-right: 32px;/)
+    expect(css).toMatch(/\.ex-pub--modal \{[^}]*--ex-pub-summary-height: 57px;/)
+    expect(css).not.toMatch(/\.ex-pub--modal \.ex-pub-summary__extract \{ margin-bottom: 1px; \}/)
+    expect(css).toMatch(/\.ex-pub--modal \[data-field='multiPlatform'\] \{ min-height: 32px; \}/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-textarea \{[^}]*padding: 7px 8px;/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__label \{ letter-spacing: 0\.5px; \}/)
+    expect(css).toMatch(/\.ex-pub-item__required \{[^}]*color: var\(--ex-color-primary\);/)
+    expect(css).toMatch(/\.ex-pub-item__help \{[^}]*color: var\(--ex-color-pub-label\);/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-select--declaration \{ border-color: var\(--ex-color-pub-select-border-modal\); \}/)
+    expect(css).toMatch(/\.ex-pub-modal \.ex-modal__footer \{[^}]*box-shadow: 0 -3px 3px var\(--ex-color-pub-footer-shadow\);/)
+    expect(css).toMatch(/\.ex-pub-card \.ex-radio \{ gap: 8px; \}/)
+    expect(css).toMatch(/\.ex-pub-bar__start \{[^}]*color: var\(--ex-color-pub-text\);/)
+  })
+
+  it('定时发布弹窗按 Element 顶部偏移定位（R-0901：932 高视口中框顶 250），矮视口不出屏', () => {
+    expect(css).toMatch(/\.ex-pub-schedule-mask \{[^}]*flex-direction: column;[^}]*justify-content: flex-start;/)
+    expect(css).toMatch(/\.ex-pub-schedule-mask::before \{[^}]*flex: 0 1 26\.8vh;[^}]*min-height: 16px;/)
+    expect(css).toMatch(/\.ex-pub-schedule\.ex-modal \{[^}]*flex: none;[^}]*margin-bottom: 16px;/)
   })
 
   it('单选文字：未选/已选颜色按呈现取 token（内联 #606266/#1a1a1a，模态 #555666/#409eff）', () => {
@@ -88,6 +112,9 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub-tag-picker__search \{[^}]*width: 548px;[^}]*height: 36px;[^}]*margin-left: 15px;/)
     expect(css).toMatch(/\.ex-pub-tag-picker__categories \{[^}]*width: 164px;/)
     expect(css).toMatch(/\.ex-pub-tag \{[^}]*height: 28px;[^}]*padding: 0 7\.5px 0 8px;/)
+    expect(css).toMatch(/\.ex-pub-tag \{[^}]*font-family: Helvetica, Arial, var\(--ex-font-family-helvetica\);/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-tag,\n\.ex-pub--modal \.ex-pub-tag-add \{[^}]*top: 1px;/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-tag-picker \{ top: calc\(100% \+ 6px\); \}/)
     expect(css).toMatch(/\.ex-pub-tag-option \{[^}]*height: 24px;[^}]*padding: 0 8px;/)
     expect(css).not.toContain('.ex-pub-tag-popover')
   })

@@ -45,6 +45,27 @@ export function CloseIcon({ className }: { className?: string }) {
   )
 }
 
+/** 13.5×13.5 圆圈问号，描边 1.3（B08） */
+export function HelpIcon() {
+  return (
+    <svg
+      className="ex-pub-help-icon"
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <circle cx="7" cy="7" r="6.1" />
+      <path d="M5.3 5.4a1.75 1.75 0 1 1 2.5 1.6c-.5.25-.8.6-.8 1.1v.4" />
+      <circle cx="7" cy="10.3" r="0.35" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 /** 上传框中的细「+」 */
 export function PlusIcon({ size, className = 'ex-pub-plus' }: { size: number; className?: string }) {
   return (
