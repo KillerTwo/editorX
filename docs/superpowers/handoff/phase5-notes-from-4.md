@@ -134,3 +134,12 @@ e2e chromium 74/74（基线无改动）、perf 4/4。
 - 复核 `MODAL_LAYER_CLASS` / `ModalLayer` / `useModalLayerClass` 是否继续公开导出。
 - 首次在 Windows 上运行（Recommendation 5）：补 win32 发布面板基线，`--update-snapshots` 只限 `e2e/publish-visual.spec.ts`；
   `publish-parity.spec.ts` 若失败按测量值修正处理，不视为回退。
+
+## 阶段 3/4 参考图对齐之后（可直接复用）
+
+上文「定时发布弹窗为 400px + 原生 datetime-local」和「回到顶部为红色」已被本节取代。
+
+- `PublishPanel` 新增 `barPosition`（富文本页用 `'fixed'`）；`barStart` 宿主内容样式见 `/publish` 演示页（`共 N 字` + 粗体「回到顶部 ^」+ `QuotaNotice`，#1a1a1a 非红色）。
+- 新 adapter `getTagCategories` / `getTagsByCategory`；`scheduleRange` 属性。
+- ui 新增 `DatePicker` / `TimePicker` / `Select` 的 `popperArrow` / `offset` / `prefix`、`Tag variant="primary"`，富文本阶段可直接复用。
+- 仍未做：Audit C 其余项、G20/G21/G22/G25。
