@@ -3,12 +3,9 @@ import { scrollToBottom, testPng } from './helpers'
 
 test.skip(process.platform !== 'win32' && process.platform !== 'darwin', 'Windows/macOS-only visual baselines')
 
-// 定时发布弹窗的日期时间输入按浏览器 locale 排版，基线按 en-US（10/09/2026, 11:00 AM）生成
-test.use({ locale: 'en-US' })
-
 type Scheme = 'light' | 'dark'
 
-// 定时发布弹窗的默认时间由 Date.now() 推算，固定时钟才能得到稳定基线；计时器照常运行
+// 定时发布弹窗的可选日期 / 时间档由 Date.now() 推算，固定时钟才能得到稳定基线；计时器照常运行
 const FIXED_TIME = new Date('2026-10-09T10:00:00')
 const INLINE_VIEWPORT = { width: 1440, height: 1310 }
 const MODAL_VIEWPORT = { width: 1440, height: 1000 }
@@ -62,12 +59,14 @@ for (const scheme of ['light', 'dark'] as const) {
 test('视觉基线：标签弹层', async ({ page }) => {
   await openInline(page, 'light')
   await page.getByRole('button', { name: '添加文章标签' }).click()
-  await expect(page.getByRole('list', { name: '推荐标签' }).getByRole('button')).toHaveCount(6)
+  await expect(
+    page.getByRole('dialog', { name: '标签' }).getByRole('list', { name: '推荐标签' }).getByRole('button'),
+  ).toHaveCount(6)
   await page.mouse.move(0, 0)
   await expect(page).toHaveScreenshot('publish-tags-popover-light.png')
 })
 
-// 没有 CSDN 参考图，仅作稳定性基线
+// 参考 19-09-01（弹窗本体；日期面板外观为 inferred default）
 test('视觉基线：定时发布弹窗', async ({ page }) => {
   await openInline(page, 'light')
   await page.locator('.ex-pub-bar').getByRole('button', { name: '定时发布', exact: true }).click()
