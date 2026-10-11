@@ -5,16 +5,17 @@ import { PublishModal } from '@editorx/publish'
 import { ThemeProvider } from '@editorx/theme'
 import type { EditorAdapters, EditorDocument } from '@editorx/toolbar'
 import { Button, ThemeToggle } from '@editorx/ui'
-import { ArrowLeftRight, ChevronDown, CircleAlert } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from '../markdown-core/sample'
+import { QuotaNotice } from '../quota-notice'
 import { createPublishAdapters } from '../publish/mock-adapters'
 import { csdnDemoExtensions } from './csdn-demo-extensions'
 import { CSDN_SAMPLE, CSDN_TITLE } from './csdn-sample'
 import { createMockAdapters } from './mock-adapters'
 
 export interface MarkdownPlaygroundProps {
-  fixture: 'sample' | 'csdn'
+  fixture: 'sample' | 'csdn' | 'test'
   view: ViewMode
   panel: string | null
   /** 0 为关闭自动保存 */
@@ -48,7 +49,7 @@ function Playground({ fixture, view, panel, autosave, publish }: MarkdownPlaygro
   useEffect(() => {
     if (publish) setPublishDoc(ref.current?.getDocument() ?? null)
   }, [publish])
-  const title = fixture === 'csdn' ? CSDN_TITLE : 'EditorX 示例文档'
+  const title = fixture === 'sample' ? 'EditorX 示例文档' : CSDN_TITLE
 
   return (
     <div className="pg-mde">
@@ -71,7 +72,7 @@ function Playground({ fixture, view, panel, autosave, publish }: MarkdownPlaygro
       <div className="pg-mde__frame">
         <MarkdownEditor
           ref={ref}
-          defaultValue={fixture === 'csdn' ? CSDN_SAMPLE : SAMPLE}
+          defaultValue={fixture === 'csdn' ? CSDN_SAMPLE : fixture === 'test' ? 'test' : SAMPLE}
           title={title}
           defaultViewMode={view}
           defaultPanel={panel}
@@ -83,16 +84,11 @@ function Playground({ fixture, view, panel, autosave, publish }: MarkdownPlaygro
           slots={{
             headerEnd: (
               <button type="button" className="pg-mde-switch">
-                <ArrowLeftRight size={14} aria-hidden="true" />
+                <SwitchIcon />
                 使用富文本编辑器
               </button>
             ),
-            statusCenter: (
-              <span className="pg-mde-quota">
-                <CircleAlert size={16} aria-hidden="true" />
-                今日发文额度还有 <em>5</em> 篇，<a href="#quota">可去这里提升额度</a>
-              </span>
-            ),
+            statusCenter: <QuotaNotice />,
             statusEnd: (
               <>
                 <button type="button" className="pg-mde-draft" onClick={() => void ref.current?.saveDraft()}>
@@ -122,5 +118,25 @@ export function MarkdownPlayground(props: MarkdownPlaygroundProps) {
     <ThemeProvider storageKey="editorx-playground-theme">
       <Playground {...props} />
     </ThemeProvider>
+  )
+}
+
+/** ⇄ 13×13：上箭头向右、下箭头向左（G28） */
+function SwitchIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 13 13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M1 4h11M9 1l3 3-3 3" />
+      <path d="M12 9H1M4 6 1 9l3 3" />
+    </svg>
   )
 }

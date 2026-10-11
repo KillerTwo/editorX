@@ -1,6 +1,6 @@
 import { errorMessage, type EditorExtension, type ExtensionContext, type Template } from '@editorx/toolbar'
 import { Button } from '@editorx/ui'
-import { Bot, History, Megaphone } from 'lucide-react'
+import { History } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 function TemplatePicker({ ctx, close }: { ctx: ExtensionContext; close(): void }) {
@@ -41,12 +41,43 @@ function TemplatePicker({ ctx, close }: { ctx: ExtensionContext; close(): void }
   )
 }
 
-/** CSDN 模板按钮的草稿（软盘）图标：14×14 外框 */
+/** CSDN 模板按钮的草稿（软盘）图标：16 盒内墨迹 12×12（G30） */
 function DraftIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1}>
-      <path d="M1.5 1.5h13V13a1.5 1.5 0 0 1-1.5 1.5H3A1.5 1.5 0 0 1 1.5 13z" />
-      <path d="M4.5 1.5v5h7v-5M9.5 3v2.5" />
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1} aria-hidden="true">
+      <path d="M2.5 2.5h11v10a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z" />
+      <path d="M5 2.5v4h6v-4M9 3.75v1.5" />
+    </svg>
+  )
+}
+
+/** 紫色渐变「AI」字标（G31）；渐变 id 固定，页面上只渲染一次 */
+function AiIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="pg-mde-ai-gradient" x1="2" y1="10" x2="18" y2="10" gradientUnits="userSpaceOnUse">
+          <stop offset="0" style={{ stopColor: 'var(--ex-color-mde-ai-from)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--ex-color-mde-ai-to)' }} />
+        </linearGradient>
+      </defs>
+      <path
+        d="M2.5 16 7 4h2l4.5 12M4.4 11.5h7.2M16.5 4v12"
+        stroke="url(#pg-mde-ai-gradient)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** 营销组件：票券轮廓 + 虚线（G31） */
+function MarketingIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 5.5h15v3a1.5 1.5 0 0 0 0 3v3h-15v-3a1.5 1.5 0 0 0 0-3z" />
+      <path d="M12.5 6.5v7" strokeDasharray="1.5 1.5" />
     </svg>
   )
 }
@@ -99,7 +130,7 @@ export const csdnHistoryExtension: EditorExtension = {
 
 export const csdnAiPanelExtension: EditorExtension = {
   name: 'csdn:ai',
-  panels: [{ id: 'csdn:ai', title: 'AI', icon: <Bot size={20} />, position: 'right', order: 10, render: () => <AiPanel /> }],
+  panels: [{ id: 'csdn:ai', title: 'AI', icon: <AiIcon />, position: 'right', order: 10, render: () => <AiPanel /> }],
 }
 
 export const csdnMarketingExtension: EditorExtension = {
@@ -110,7 +141,7 @@ export const csdnMarketingExtension: EditorExtension = {
       title: '营销组件',
       icon: (
         <span className="pg-mde-badge-icon">
-          <Megaphone size={20} />
+          <MarketingIcon />
           <span className="pg-mde-new">NEW</span>
         </span>
       ),

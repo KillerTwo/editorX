@@ -1,4 +1,4 @@
-/* /markdown 演示页：顶栏 61px + 外框 padding 16/16/14/14（与 CSDN 参考截图一致） */
+/* /markdown 演示页：顶栏 56px 无下边框 + 外框四周 16px（mac 参考图 2026-10-10） */
 .pg-mde {
   display: flex;
   flex-direction: column;
@@ -12,9 +12,8 @@
   align-items: center;
   gap: 16px;
   box-sizing: border-box;
-  height: 61px;
+  height: 56px;
   padding: 0 24px;
-  border-bottom: 1px solid var(--ex-color-mde-divider);
   background: var(--ex-color-surface);
   color: var(--ex-color-text);
 }
@@ -28,7 +27,7 @@
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
-  padding: 16px 16px 14px 14px;
+  padding: 16px;
 }
 
 .pg-mde-switch,
@@ -47,26 +46,6 @@
   cursor: pointer;
 }
 
-.pg-mde-draft { height: 36px; padding: 0 16px; }
-.pg-mde-publish { height: 36px; padding: 0 16px; }
-
-.pg-mde-quota {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid color-mix(in srgb, var(--ex-color-primary) 25%, transparent);
-  border-radius: var(--ex-radius-md);
-  background: color-mix(in srgb, var(--ex-color-primary) 6%, transparent);
-  color: var(--ex-color-text-secondary);
-  font-size: 14px;
-}
-
-.pg-mde-quota svg { color: var(--ex-color-primary); }
-.pg-mde-quota em { color: var(--ex-color-primary); font-style: normal; }
-.pg-mde-quota a { color: var(--ex-color-primary); text-decoration: none; }
-
 .pg-mde-badge-icon { position: relative; display: inline-flex; }
 
 .pg-mde-dot {
@@ -79,16 +58,37 @@
   background: var(--ex-color-error);
 }
 
+.pg-mde-switch { justify-content: center; width: 158px; padding: 0; }
+/* 发布按钮 43px 会把状态栏的 min-height:64 撑到 67，顶边从 852 抬到 849。定高后分组的 margin-top 才把额度提示与按钮中心落在卡片底 −32（G06/G07） */
+.pg-mde .ex-mde-status { height: 64px; }
+/* G07：草稿 ≈41、发布 ≈43 高；垂直中心由状态栏分组的 margin-top 定在主区底边上方 32 */
+.pg-mde-draft {
+  justify-content: center;
+  width: 114px;
+  height: 41px;
+  padding: 0;
+  border-radius: 6px;
+  background: var(--ex-color-mde-draft-bg);
+}
+.ex-btn.pg-mde-publish { width: 98px; height: 43px; padding: 0; border-radius: 6px; }
+
+/* G14：未激活的「AI」标签单独实测为 #9a9a9a，比其他标签浅 */
+.pg-mde .ex-mde-rail__item[data-panel='csdn:ai']:not(.is-active) .ex-mde-rail__label { color: var(--ex-color-mde-rail-ai-label); }
+
+/* NEW 角标 22×11，相对图标左上 (12, -6.5)（G12/G17） */
 .pg-mde-new {
   position: absolute;
-  top: -8px;
-  right: -14px;
-  padding: 0 3px;
+  top: -6.5px;
+  left: 12px;
+  box-sizing: border-box;
+  width: 22px;
+  height: 11px;
   border-radius: var(--ex-radius-pill);
-  background: var(--ex-color-error);
-  color: var(--ex-color-surface);
+  background: var(--ex-color-mde-badge);
+  color: var(--ex-color-on-primary);
   font-size: 8px;
-  line-height: 12px;
+  line-height: 11px;
+  text-align: center;
 }
 
 .pg-mde-panel { display: flex; flex-direction: column; }

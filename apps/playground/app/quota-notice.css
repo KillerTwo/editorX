@@ -1,0 +1,20 @@
+/* 320×38；图标在 +13，文字墨迹起点 +39.5（G08） */
+.pg-quota {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 320px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--ex-color-quota-border);
+  border-radius: var(--ex-radius-md);
+  background: var(--ex-color-quota-bg);
+  color: var(--ex-color-text-secondary);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.pg-quota__icon { flex: none; color: var(--ex-color-primary); }
+.pg-quota em { color: var(--ex-color-primary); font-style: normal; }
+.pg-quota a { color: var(--ex-color-primary); text-decoration: none; }

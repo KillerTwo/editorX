@@ -376,3 +376,18 @@ test.describe('性能（MarkdownEditor）', () => {
     expect(longTasks).toEqual([])
   })
 })
+
+test('演示页外壳：额度提示、切换按钮、AI 标签色与 test 夹具（G08/G14/G18/G28/G32）', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.goto('/markdown?fixture=test&view=edit')
+  const quota = page.locator('.pg-quota')
+  await expect(quota).toHaveText('今日发文额度还有 5 篇，可去这里提升额度')
+  await expect(quota.getByRole('link', { name: '可去这里提升额度' })).toBeVisible()
+  await expect(quota.locator('svg.pg-quota__icon')).toHaveAttribute('width', '18')
+  await expect(page.getByRole('button', { name: '使用富文本编辑器' })).toBeVisible()
+  await expect(statusMd(page)).toHaveText('Markdown 4 字数 2 行数 当前行 1, 当前列 0')
+  await expect(statusHtml(page)).toHaveText('HTML 4 字数 1 段落')
+  const aiLabel = page.locator(".ex-mde-rail__item[data-panel='csdn:ai'] .ex-mde-rail__label")
+  await expect(aiLabel).toHaveText('AI')
+  await expect(aiLabel).toHaveCSS('color', 'rgb(154, 154, 154)')
+})
