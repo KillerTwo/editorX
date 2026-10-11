@@ -307,6 +307,23 @@ describe('PublishPanel（内联）', () => {
     expect(container.querySelector('.ex-pub-theme')).toBeNull()
     expect(container.querySelector('.ex-root')).toContainElement(screen.getByRole('region', { name: '发布设置' }))
   })
+
+  it('barPosition 默认 sticky：无占位、无 is-fixed', () => {
+    const { container } = renderWithProviders(<PublishPanel document={doc} adapters={adapters()} />)
+    expect(container.querySelector('.ex-pub')).not.toHaveClass('ex-pub--bar-fixed')
+    expect(container.querySelector('.ex-pub-bar')).not.toHaveClass('is-fixed')
+    expect(container.querySelector('.ex-pub-bar-spacer')).toBeNull()
+  })
+
+  it('barPosition="fixed"：操作栏 is-fixed，卡片后有 aria-hidden 占位', () => {
+    const { container } = renderWithProviders(<PublishPanel document={doc} adapters={adapters()} barPosition="fixed" />)
+    const section = container.querySelector('.ex-pub')!
+    expect(section).toHaveClass('ex-pub--bar-fixed')
+    const spacer = section.querySelector('.ex-pub-card + .ex-pub-bar-spacer')
+    expect(spacer).toHaveAttribute('aria-hidden', 'true')
+    expect(spacer!.nextElementSibling).toHaveClass('ex-pub-bar', 'is-fixed')
+    expect(within(spacer!.nextElementSibling as HTMLElement).getByRole('button', { name: '发布博客' })).toBeInTheDocument()
+  })
 })
 
 describe('定时发布', () => {

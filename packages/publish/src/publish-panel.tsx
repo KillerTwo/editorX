@@ -168,10 +168,12 @@ function usePublishParts(
 function InlinePanel(props: PublishPanelProps) {
   const m = useMessages()
   const { form, actions, schedule } = usePublishParts(props, 'inline', true)
+  const fixed = props.barPosition === 'fixed'
   return (
-    <section className={cx('ex-pub', props.className)} aria-label={m.publish.label}>
+    <section className={cx('ex-pub', fixed && 'ex-pub--bar-fixed', props.className)} aria-label={m.publish.label}>
       <div className="ex-pub-card">{form}</div>
-      <div className="ex-pub-bar">
+      {fixed && <div className="ex-pub-bar-spacer" aria-hidden="true" />}
+      <div className={cx('ex-pub-bar', fixed && 'is-fixed')}>
         <div className="ex-pub-bar__inner">
           <div className="ex-pub-bar__start">{props.slots?.barStart}</div>
           {actions}

@@ -138,7 +138,7 @@ test.describe('内联卡片（12-36-05，2554×1310，滚到底）', () => {
 
     const bar = await box(page.locator('.ex-pub-bar'))
     near(bar.y, 1241, 1, '操作栏顶')
-    near(bar.height, 69, 0.5, '操作栏高')
+    near(bar.height, 68, 0.5, '操作栏高')
     const actions: Array<[action: string, offset: number, width: number]> = [
       ['draft', 588, 116],
       ['schedule', 720, 116],

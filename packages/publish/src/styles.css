@@ -416,12 +416,15 @@ a.ex-pub-link:hover { text-decoration: underline; }
   bottom: 0;
   z-index: 1;
   box-sizing: border-box;
-  height: 69px;
+  height: 68px;
   margin-top: 26px;
-  padding-bottom: 4px;
+  padding-bottom: 3px;
   border-top: 1px solid var(--ex-color-pub-bar-border);
   background: var(--ex-color-surface);
 }
+.ex-pub-bar.is-fixed { position: fixed; z-index: 10; right: 0; bottom: 0; left: 0; margin-top: 0; }
+/* 固定底栏的等高占位：卡片最后一行底边 + 26 ≤ 操作栏顶 */
+.ex-pub-bar-spacer { flex: none; height: 68px; margin-top: 26px; }
 .ex-pub-bar__inner {
   display: flex;
   align-items: center;

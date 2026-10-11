@@ -33,7 +33,7 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub-card \{[^}]*width: 816px;[^}]*padding: 32px 40px 56px;/)
     expect(css).toMatch(/\.ex-pub \{[^}]*--ex-pub-label-width: 88px;[^}]*--ex-pub-control-width: 648px;[^}]*--ex-pub-row-gap: 32px;/)
     expect(css).toMatch(/\.ex-pub--modal \{[^}]*--ex-pub-label-width: 92px;[^}]*--ex-pub-control-width: 600px;[^}]*--ex-pub-row-gap: 16px;/)
-    expect(css).toMatch(/\.ex-pub-bar \{[^}]*position: sticky;[^}]*height: 69px;[^}]*margin-top: 26px;/)
+    expect(css).toMatch(/\.ex-pub-bar \{[^}]*position: sticky;[^}]*height: 68px;[^}]*margin-top: 26px;/)
     expect(css).toMatch(/\.ex-pub-bar__inner \{[^}]*width: 1080px;/)
     expect(css).toMatch(/\.ex-pub-modal \.ex-modal__body \{[^}]*padding: 26px 20px 40px 28px;[^}]*scrollbar-gutter: stable;/)
     expect(css).toMatch(/\.ex-pub-modal \.ex-modal__footer \{[^}]*height: 64px;[^}]*padding: 12px 34px 12px 28px;/)
@@ -155,6 +155,12 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub-tag-option\.is-selected \{ opacity: 0\.5; cursor: default; \}/)
   })
 
+  it('固定底栏与占位（Audit C §bar）', () => {
+    expect(css).toMatch(/\.ex-pub-bar\.is-fixed \{[^}]*position: fixed;[^}]*right: 0;[^}]*bottom: 0;[^}]*left: 0;[^}]*margin-top: 0;/)
+    expect(css).toMatch(/\.ex-pub-bar-spacer \{[^}]*height: 68px;[^}]*margin-top: 26px;/)
+    expect(css).toMatch(/\.ex-pub-bar \{[^}]*height: 68px;[^}]*padding-bottom: 3px;/)
+  })
+
   it('自建主题根与 .ex-mde-theme 一致，不占布局', () => {
     expect(css).toMatch(/\.ex-pub-theme \{\s*display: contents;\s*\}/)
   })
@@ -176,6 +182,7 @@ describe('publish styles.css', () => {
       'ex-pub-tags',
       'ex-pub-summary',
       'ex-pub-schedule',
+      'ex-pub--bar-fixed',
     ])
     expect(used.size).toBeGreaterThan(30)
     for (const name of used) {

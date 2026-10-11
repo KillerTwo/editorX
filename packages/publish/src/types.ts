@@ -70,6 +70,11 @@ export interface PublishPanelSlots {
 
 export interface PublishPanelProps extends PublishBaseProps {
   slots?: PublishPanelSlots
+  /**
+   * 'sticky'（默认）：操作栏随卡片滚动并吸附在滚动容器底部。
+   * 'fixed'：操作栏固定在视口底部（CSDN 发文设置页，Audit C §bar），并在卡片后放等高占位，避免遮挡最后一行。
+   */
+  barPosition?: 'sticky' | 'fixed'
 }
 
 export interface PublishModalProps extends PublishBaseProps {
