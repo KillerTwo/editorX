@@ -64,6 +64,28 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub-bar__start \{[^}]*color: var\(--ex-color-pub-text\);/)
   })
 
+  it('打开的标签面板盖住摘要计数：计数右缘在面板右缘内侧', () => {
+    expect(css).toMatch(/\.ex-pub-tag-picker \{[^}]*position: absolute;[^}]*z-index: 10;[^}]*left: 0;[^}]*width: 580px;/)
+    expect(css).toMatch(/\.ex-pub-summary__count \{[^}]*position: absolute;[^}]*right: 10px;/)
+    expect(css).toMatch(/\.ex-pub--modal \{[^}]*--ex-pub-label-width: 92px;/)
+    expect(css).toMatch(/\.ex-pub-modal \.ex-modal__body \{[^}]*padding: 26px 20px 40px 28px;[^}]*scrollbar-gutter: stable;/)
+    expect(css).toMatch(/\.ex-pub-modal \.ex-modal__body::-webkit-scrollbar \{ width: 11px; \}/)
+    expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__control \{[^}]*flex: 1;[^}]*width: auto;/)
+    // 740 − 左 28 − 右 20 − 滚动条 11 − 标签 92 = 589；计数 right 10 → 右缘 579，面板宽 580
+    const MODAL_WIDTH = 740
+    const pad = css.match(/\.ex-pub-modal \.ex-modal__body \{[^}]*padding: 26px (\d+)px 40px (\d+)px/)
+    const bar = css.match(/\.ex-pub-modal \.ex-modal__body::-webkit-scrollbar \{ width: (\d+)px; \}/)
+    const label = css.match(/\.ex-pub--modal \{[^}]*--ex-pub-label-width: (\d+)px;/)
+    const picker = css.match(/\.ex-pub-tag-picker \{[^}]*left: (\d+);[^}]*width: (\d+)px;/)
+    const counter = css.match(/\.ex-pub-summary__count \{[^}]*right: (\d+)px;/)
+    expect(pad && bar && label && picker && counter).toBeTruthy()
+    const control = MODAL_WIDTH - Number(pad![2]) - Number(pad![1]) - Number(bar![1]) - Number(label![1])
+    expect(control).toBe(589)
+    const counterRight = control - Number(counter![1])
+    const pickerRight = Number(picker![1]) + Number(picker![2])
+    expect(counterRight).toBeLessThan(pickerRight)
+  })
+
   it('定时发布弹窗按 Element 顶部偏移定位（R-0901：932 高视口中框顶 250），矮视口不出屏', () => {
     expect(css).toMatch(/\.ex-pub-schedule-mask \{[^}]*flex-direction: column;[^}]*justify-content: flex-start;/)
     expect(css).toMatch(/\.ex-pub-schedule-mask::before \{[^}]*flex: 0 1 26\.8vh;[^}]*min-height: 16px;/)
