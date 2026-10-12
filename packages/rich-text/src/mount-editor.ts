@@ -8,6 +8,7 @@ export interface MountedEditor {
   focus(): void
   destroy(): Promise<void>
   onChange(cb: () => void): () => void
+  setReadOnly(readOnly: boolean): void
 }
 
 type EditorLike = {
@@ -16,6 +17,8 @@ type EditorLike = {
   focus(): void
   destroy(): Promise<unknown>
   execute(name: string, ...params: unknown[]): void
+  enableReadOnlyMode(lockId: string): void
+  disableReadOnlyMode(lockId: string): void
   data: {
     processor: { toView(html: string): never }
     toModel(view: never): never
@@ -29,6 +32,8 @@ type EditorLike = {
     }
   }
 }
+
+const READ_ONLY_LOCK = 'ex-rte'
 
 /** 只在客户端调用。初始 HTML 走 initialData，避免首次 setData 触发 onChange。 */
 export async function mountEditor(
@@ -65,6 +70,10 @@ export async function mountEditor(
     },
     focus() {
       editor.focus()
+    },
+    setReadOnly(readOnly) {
+      if (readOnly) editor.enableReadOnlyMode(READ_ONLY_LOCK)
+      else editor.disableReadOnlyMode(READ_ONLY_LOCK)
     },
     destroy: () => editor.destroy().then(() => undefined),
     onChange(cb) {

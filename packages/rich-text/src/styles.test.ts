@@ -11,6 +11,33 @@ describe('rich-text styles', () => {
     expect(css).not.toMatch(/window/)
   })
 
+  it('工具栏带不把滚动区顶出根', () => {
+    const root = css.match(/\.ex-rte \{[^}]*\}/)?.[0] ?? ''
+    const band = css.match(/\.ex-rte__band \{[^}]*\}/)?.[0] ?? ''
+    const scroll = css.match(/\.ex-rte__scroll \{[^}]*\}/)?.[0] ?? ''
+    expect(root).toContain('display: flex')
+    expect(root).toContain('flex-direction: column')
+    expect(root).toContain('overflow: hidden')
+    expect(band).toContain('flex: 0 0 52px')
+    expect(scroll).toContain('flex: 1 1 auto')
+    expect(scroll).toContain('min-height: 0')
+    expect(scroll).toContain('height: auto')
+    expect(scroll).toContain('overflow: auto')
+    expect(scroll).not.toContain('height: 100%')
+  })
+
+  it('首尾块下边距和分隔线压过 CKEditor', () => {
+    expect(css).toMatch(
+      /\.ex-rte \.ck\.ck-editor__editable_inline\.ck-content > :first-child \{[^}]*margin-top:\s*0;[^}]*margin-bottom:\s*24px/,
+    )
+    expect(css).toMatch(
+      /\.ex-rte \.ck\.ck-editor__editable_inline\.ck-content > :last-child \{[^}]*margin-bottom:\s*24px/,
+    )
+    expect(css).toMatch(
+      /\.ex-rte \.ck\.ck-content hr \{[^}]*display:\s*block;[^}]*height:\s*0;[^}]*background:\s*none;[^}]*border-top:\s*1px solid var\(--ex-color-rte-rule\)/,
+    )
+  })
+
   it('不写死颜色值', () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|light-dark\(/)
   })

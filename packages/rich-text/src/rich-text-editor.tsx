@@ -238,12 +238,16 @@ function EditorShell({
     let cancelled = false
     let current: MountedEditor | undefined
     let stop = () => {}
-    mountEditor(element, createEditorConfig({ uploadImage: liveRef.current.adapters.uploadImage }), initialHtmlRef.current)
+    const passedHtml = initialHtmlRef.current
+    mountEditor(element, createEditorConfig({ uploadImage: liveRef.current.adapters.uploadImage }), passedHtml)
       .then((editor) => {
         if (cancelled) {
           void editor.destroy()
           return
         }
+        const pendingHtml = initialHtmlRef.current
+        if (pendingHtml !== passedHtml) editor.setData(pendingHtml)
+        editor.setReadOnly(liveRef.current.readOnly)
         current = editor
         editorRef.current = editor
         stop = editor.onChange(() => {
@@ -262,6 +266,10 @@ function EditorShell({
       void current?.destroy()
     }
   }, [])
+
+  useEffect(() => {
+    editorRef.current?.setReadOnly(readOnly)
+  }, [readOnly])
 
   useImperativeHandle(
     ref,

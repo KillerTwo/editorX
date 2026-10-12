@@ -1,6 +1,8 @@
 .ex-rte-theme { display: contents; }
 
 .ex-rte {
+  display: flex;
+  flex-direction: column;
   position: relative;
   height: 100%;
   min-height: 0;
@@ -11,7 +13,9 @@
 }
 
 .ex-rte__scroll {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -19,6 +23,7 @@
 .ex-rte__band {
   box-sizing: border-box;
   display: flex;
+  flex: 0 0 52px;
   align-items: center;
   height: 52px;
   border-bottom: 1px solid var(--ex-color-rte-band-border);
@@ -94,10 +99,19 @@
 .ex-rte .ck-content h3 { font-size: 18px; line-height: 28px; }
 .ex-rte .ck-content :is(h4, h5, h6) { font-size: 16px; line-height: 26px; }
 .ex-rte .ck-content :is(p, ul, ol) { margin: 0 0 24px; }
+.ex-rte .ck.ck-editor__editable_inline.ck-content > :first-child { margin-top: 0; margin-bottom: 24px; }
+.ex-rte .ck.ck-editor__editable_inline.ck-content > :last-child { margin-bottom: 24px; }
 .ex-rte .ck-content :is(ul, ol) { padding-left: 31px; }
 .ex-rte .ck-content li { color: var(--ex-color-rte-list); }
 .ex-rte .ck-content a { color: var(--ex-color-rte-link); }
-.ex-rte .ck-content hr { border: 0; border-top: 1px solid var(--ex-color-rte-rule); }
+.ex-rte .ck.ck-content hr {
+  display: block;
+  height: 0;
+  margin: 24px 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--ex-color-rte-rule);
+}
 
 .ex-rte-colors {
   display: grid;
