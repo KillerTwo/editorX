@@ -54,3 +54,11 @@
 }
 
 .ex-csdn-title__count.is-over { color: var(--ex-color-error); }
+
+.ex-csdn__editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ex-csdn[data-editor='markdown'] .ex-csdn__editor { padding: 16px; }

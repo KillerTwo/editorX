@@ -20,4 +20,9 @@ describe('csdn styles', () => {
   it('超长标题计数使用错误色变量', () => {
     expect(css).toMatch(/\.ex-csdn-title__count\.is-over \{[^}]*color:\s*var\(--ex-color-error\)/)
   })
+
+  it('Markdown 编辑区在顶栏下留 16px，富文本编辑区不留', () => {
+    expect(css).toMatch(/\.ex-csdn__editor \{[^}]*overflow: hidden/)
+    expect(css).toMatch(/\.ex-csdn\[data-editor='markdown'\] \.ex-csdn__editor \{[^}]*padding: 16px/)
+  })
 })
