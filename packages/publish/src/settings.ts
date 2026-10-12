@@ -1,4 +1,22 @@
-import type { CoverMode, EditorDocument, PublishCover, PublishPayload, PublishSettings } from '@editorx/toolbar'
+import type { CoverMode, EditorDocument, EditorType, PublishCover, PublishPayload, PublishSettings } from '@editorx/toolbar'
+
+export const FALLBACK_DOC: EditorDocument = { editorType: 'markdown', title: '', html: '' }
+
+export function resolveTemplate(
+  current: string,
+  editorType: EditorType,
+  templates?: readonly { id: string; disabled?: boolean }[],
+): string {
+  const disabled = (id: string) => {
+    if (templates) {
+      const found = templates.find((item) => item.id === id)
+      return !found || Boolean(found.disabled)
+    }
+    return id === 'moyan' ? editorType !== 'markdown' : id !== 'default' && id !== 'simple'
+  }
+  if (!disabled(current)) return current
+  return 'default'
+}
 
 export const COVER_CAPACITY: Record<CoverMode, number> = { single: 1, triple: 3, none: 0 }
 

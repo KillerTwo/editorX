@@ -80,6 +80,7 @@ function usePublishParts(
     defaultValue: props.defaultValue,
     onChange: props.onChange,
     document: props.document,
+    templates: props.templates,
     adapters,
     rules: props.rules,
     scheduleRange: props.scheduleRange,

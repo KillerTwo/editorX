@@ -154,6 +154,7 @@ describe('usePublishController', () => {
           adapters: { onPublish },
           messages: zhCN.publish,
           notify,
+          document: doc,
           defaultValue: { tags: ['React'] },
           now: () => NOW,
         }),
@@ -200,6 +201,60 @@ describe('usePublishController', () => {
       expect(await result.current.saveDraft()).toBe(false)
     })
     expect(notify).toHaveBeenCalledWith('保存草稿失败：网络错误', 'error')
+  })
+
+  it('未传 document：不发布空标题，草稿回退为 markdown', async () => {
+    const { result, onPublish, onSaveDraft, notify } = setup({ document: undefined, rules: { tags: false } })
+    await act(async () => {
+      expect(await result.current.publish()).toBe(false)
+    })
+    expect(onPublish).not.toHaveBeenCalled()
+    expect(notify).toHaveBeenCalledWith('文章标题需为 5～100 个字', 'error')
+    await act(async () => {
+      expect(await result.current.saveDraft()).toBe(true)
+    })
+    expect(onSaveDraft).toHaveBeenCalledWith(
+      { editorType: 'markdown', title: '', html: '' },
+      expect.objectContaining({ template: 'default' }),
+    )
+  })
+
+  it('标题够长但正文为空：不调用 onPublish', async () => {
+    const { result, onPublish, notify } = setup({
+      rules: { tags: false, title: false },
+      document: { editorType: 'richtext', title: '足够长的标题', html: '<p>&nbsp;</p>' },
+    })
+    await act(async () => {
+      expect(await result.current.publish()).toBe(false)
+    })
+    expect(onPublish).not.toHaveBeenCalled()
+    expect(notify).toHaveBeenCalledWith('正文不能为空', 'error')
+  })
+
+  it('富文本已选墨衍：发布前改回 default', async () => {
+    const { result, onPublish } = setup({
+      rules: { tags: false },
+      document: { editorType: 'richtext', title: '足够长的标题', html: '<p>正文</p>' },
+      defaultValue: { template: 'moyan' },
+    })
+    await act(async () => {
+      expect(await result.current.publish()).toBe(true)
+    })
+    expect(onPublish.mock.lastCall![0].template).toBe('default')
+    expect(result.current.settings.template).toBe('default')
+  })
+
+  it('显式 templates 未禁用墨衍时，富文本发布保留墨衍', async () => {
+    const { result, onPublish } = setup({
+      rules: { tags: false },
+      document: { editorType: 'richtext', title: '足够长的标题', html: '<p>正文</p>' },
+      defaultValue: { template: 'moyan' },
+      templates: [{ id: 'moyan' }],
+    })
+    await act(async () => {
+      expect(await result.current.publish()).toBe(true)
+    })
+    expect(onPublish.mock.lastCall![0].template).toBe('moyan')
   })
 
   it('缺少 adapter 时 publish / saveDraft 返回 false', async () => {

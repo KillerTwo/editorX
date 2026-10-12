@@ -66,14 +66,16 @@ describe('文章模板默认列表', () => {
     expect(moyan()).toBeEnabled()
   })
 
-  it('富文本文档或未传文档：墨衍模板禁用', () => {
-    const { unmount } = renderWithProviders(
+  it('富文本文档：墨衍模板禁用', () => {
+    renderWithProviders(
       <PublishPanel document={{ editorType: 'richtext', title: '富文本', html: '<p>正文</p>' }} adapters={adapters()} />,
     )
     expect(moyan()).toBeDisabled()
-    unmount()
+  })
+
+  it('未传文档：与 FALLBACK_DOC 一致，墨衍模板可选', () => {
     renderWithProviders(<PublishPanel adapters={adapters()} />)
-    expect(moyan()).toBeDisabled()
+    expect(moyan()).toBeEnabled()
   })
 
   it('显式传入 templates 时以其为准', () => {

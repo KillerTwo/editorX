@@ -14,6 +14,7 @@ import { RadioGroup, Select, type ToastType } from '@editorx/ui'
 import { useEffect, useId, useMemo, useRef } from 'react'
 import { adapterState } from '../adapter-state'
 import { extractImages, extractSummary } from '../extract'
+import { FALLBACK_DOC } from '../settings'
 import type { AgreementLinks, PublishVariant } from '../types'
 import type { PublishController } from '../use-publish-controller'
 import { CategoryField } from './category-field'
@@ -97,7 +98,7 @@ export function PublishForm(props: PublishFormProps) {
     templates ?? [
       { id: 'default', name: p.template.default },
       { id: 'simple', name: p.template.simple },
-      { id: 'moyan', name: p.template.moyan, disabled: doc?.editorType !== 'markdown' },
+      { id: 'moyan', name: p.template.moyan, disabled: (doc ?? FALLBACK_DOC).editorType !== 'markdown' },
     ]
   ).map((t) => ({ value: t.id, label: t.name, disabled: t.disabled }))
 

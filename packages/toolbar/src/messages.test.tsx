@@ -77,6 +77,7 @@ describe('Messages', () => {
 
   it('publish 分桶：CSDN 文案、冻结、可深合并覆盖', () => {
     expect(zhCN.publish.modalTitle).toBe('发布文章')
+    expect(zhCN.publish.errors.emptyHtml).toBe('正文不能为空')
     expect(zhCN.publish.a11y.help).toBe('帮助')
     expect(zhCN.publish.fields.tags).toBe('文章标签')
     expect(zhCN.publish.fields.activity).toBe('参与活动')

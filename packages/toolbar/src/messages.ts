@@ -281,6 +281,7 @@ export const zhCN = deepFreeze({
     a11y: { help: '帮助' },
     errors: {
       title: '文章标题需为 {min}～{max} 个字',
+      emptyHtml: '正文不能为空',
       tagsRequired: '请至少添加 1 个文章标签',
       tagsMax: '最多添加 {max} 个文章标签',
       summaryMax: '摘要不能超过 {max} 个字',

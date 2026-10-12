@@ -9,10 +9,20 @@ import {
 } from '@editorx/toolbar'
 import type { ToastType } from '@editorx/ui'
 import { useCallback, useLayoutEffect, useReducer, useRef, useState } from 'react'
+import { htmlToText } from './extract'
 import { formatScheduleTime, type ScheduleRange } from './schedule'
-import { createSettings, toPayload } from './settings'
+import { createSettings, FALLBACK_DOC, resolveTemplate, toPayload } from './settings'
 import { useLatest } from './use-latest'
-import { firstError, validatePublish, type PublishErrors, type PublishField, type PublishRules } from './validate'
+import {
+  countChars,
+  firstError,
+  TITLE_MAX,
+  TITLE_MIN,
+  validatePublish,
+  type PublishErrors,
+  type PublishField,
+  type PublishRules,
+} from './validate'
 
 export type PublishBusy = 'publish' | 'draft' | null
 
@@ -31,6 +41,7 @@ export interface PublishControllerOptions {
   onPublished?: (payload: PublishPayload) => void
   /** 当前时间（ms），便于测试注入 */
   now?: () => number
+  templates?: readonly { id: string; disabled?: boolean }[]
 }
 
 export interface PublishController {
@@ -47,8 +58,6 @@ export interface PublishController {
   publish(scheduledAt?: string): Promise<boolean>
   saveDraft(): Promise<boolean>
 }
-
-const EMPTY_DOC: EditorDocument = { editorType: 'markdown', title: '', html: '' }
 
 const ERROR_FIELD: Partial<Record<keyof PublishSettings, PublishField>> = {
   tags: 'tags',
@@ -101,12 +110,31 @@ export function usePublishController(options: PublishControllerOptions): Publish
 
   const publish = useCallback(
     async (scheduledAt?: string) => {
-      const { adapters, document: doc, rules, scheduleRange, messages, notify, now = Date.now } = latest.current
+      const { adapters, rules, scheduleRange, messages, notify, now = Date.now } = latest.current
       if (busyRef.current || !adapters.onPublish) return false
       const target: PublishSettings = { ...pending.current }
       if (scheduledAt === undefined) delete target.scheduledAt
       else target.scheduledAt = scheduledAt
-      const found = validatePublish(target, { messages, now: now(), title: doc?.title, scheduleRange }, rules)
+      const doc = latest.current.document ?? FALLBACK_DOC
+      const template = resolveTemplate(target.template, doc.editorType, latest.current.templates)
+      if (template !== target.template) {
+        target.template = template
+        pending.current = { ...pending.current, template }
+        if (latest.current.controlled) rerender()
+        else setInner(pending.current)
+        latest.current.onChange?.(pending.current)
+      }
+      const titleEmpty = countChars(doc.title.trim()) === 0
+      if (titleEmpty || htmlToText(doc.html) === '') {
+        const message = titleEmpty
+          ? formatMessage(messages.errors.title, { min: TITLE_MIN, max: TITLE_MAX })
+          : messages.errors.emptyHtml
+        setErrors(titleEmpty ? { title: message } : {})
+        setFailedAttempts((n) => n + 1)
+        notify(message, 'error')
+        return false
+      }
+      const found = validatePublish(target, { messages, now: now(), title: doc.title, scheduleRange }, rules)
       const first = firstError(found)
       if (first) {
         setErrors(found)
@@ -117,7 +145,7 @@ export function usePublishController(options: PublishControllerOptions): Publish
       setErrors({})
       busyRef.current = true
       setBusy('publish')
-      const payload = toPayload(doc ?? EMPTY_DOC, target)
+      const payload = toPayload(doc ?? FALLBACK_DOC, target)
       try {
         await adapters.onPublish(payload)
       } catch (error) {
@@ -146,7 +174,7 @@ export function usePublishController(options: PublishControllerOptions): Publish
     busyRef.current = true
     setBusy('draft')
     try {
-      await adapters.onSaveDraft(doc ?? EMPTY_DOC, pending.current)
+      await adapters.onSaveDraft(doc ?? FALLBACK_DOC, pending.current)
     } catch (error) {
       notify(formatMessage(messages.errors.saveDraft, { message: errorMessage(error) }), 'error')
       return false
