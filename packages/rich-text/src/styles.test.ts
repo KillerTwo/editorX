@@ -78,6 +78,19 @@ describe('rich-text styles', () => {
     expect(scroll).not.toContain('height: 100%')
   })
 
+  it('右侧抽屉浮在稿纸上，不推动稿纸', () => {
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*width:\s*390px/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*top:\s*52px/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*bottom:\s*68px/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*right:\s*0/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*z-index:\s*20/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*position:\s*absolute/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*background:\s*var\(--ex-color-rte-paper\)/)
+    expect(css).toMatch(/\.ex-rte-drawer\s*\{[^}]*box-shadow:\s*0 0 20px var\(--ex-color-rte-drawer-shadow\)/)
+    expect(css).toMatch(/\.ex-rte-collapsed\s*\{[^}]*top:\s*86px/)
+    expect(css).toMatch(/\.ex-rte-collapsed\s*\{[^}]*right:\s*8px/)
+  })
+
   it('图标在文字上方，且只作用于 .ex-rte', () => {
     expect(css).toMatch(/\.ex-rte \.ex-toolbar__item\.has-label \{[^}]*grid-template-areas: 'icon caret' 'label label'/)
     expect(css).toMatch(/\.ex-rte \.ex-toolbar__item:disabled \{[^}]*color: var\(--ex-color-rte-ink\)/)

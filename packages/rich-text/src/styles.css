@@ -292,3 +292,39 @@
 @media (max-width: 1199px) {
   .ex-rte-toc:not(.is-open) ~ .ex-rte-toc__expand { visibility: visible; }
 }
+
+.ex-rte-drawer {
+  position: absolute;
+  z-index: 20;
+  top: 52px;
+  right: 0;
+  bottom: 68px;
+  width: 390px;
+  overflow: auto;
+  background: var(--ex-color-rte-paper);
+  box-shadow: 0 0 20px var(--ex-color-rte-drawer-shadow);
+}
+.ex-rte-drawer__head {
+  display: flex;
+  justify-content: flex-end;
+}
+.ex-rte-drawer__collapse {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 12px 8px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-rte-ink);
+  cursor: pointer;
+}
+.ex-rte-collapsed {
+  position: absolute;
+  z-index: 20;
+  top: 86px;
+  right: 8px;
+}

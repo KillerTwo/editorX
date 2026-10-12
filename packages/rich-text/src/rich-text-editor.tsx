@@ -4,6 +4,7 @@ import {
   errorMessage,
   formatMessage,
   MessagesProvider,
+  resolvePanels,
   resolveToolbar,
   Toolbar,
   useExtensionSetup,
@@ -19,6 +20,7 @@ import { ToastProvider, useToast } from '@editorx/ui'
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react'
 import { richTextCoreExtensions } from './core-extensions'
 import { createEditorConfig } from './ck-config'
+import { RichTextDrawer } from './drawer'
 import { scrollHeadingIntoView } from './headings'
 import { RICH_TEXT_TOOLBAR_LAYOUT } from './layout'
 import { mountEditor, type MountedEditor } from './mount-editor'
@@ -184,6 +186,9 @@ function EditorShell({
   ariaLabel,
   height = '100%',
   defaultTocOpen = true,
+  defaultRightOpen,
+  rightOpen: rightOpenProp,
+  onRightOpenChange,
   slots,
   className,
   ref,
@@ -194,6 +199,13 @@ function EditorShell({
   const [wide, setWide] = useState(false)
   const [panel, setPanel] = useState<string | null>(defaultTocOpen ? 'toc' : null)
   const [tocOverlay, setTocOverlay] = useState(false)
+  const [innerRightOpen, setInnerRightOpen] = useState(defaultRightOpen ?? true)
+  const rightOpenControlled = rightOpenProp !== undefined
+  const isRightOpen = rightOpenControlled ? rightOpenProp : innerRightOpen
+  const setRightOpen = (open: boolean) => {
+    if (!rightOpenControlled) setInnerRightOpen(open)
+    onRightOpenChange?.(open)
+  }
   const [, setMounted] = useState<MountedEditor | null>(null)
   const [ownTitle, setOwnTitle] = useState(defaultTitle ?? '')
   const [documentHtml, setDocumentHtml] = useState(() => value ?? defaultValue ?? '')
@@ -244,10 +256,16 @@ function EditorShell({
   const allExtensions = useStableArray(useMemo(() => [...coreExtensions, ...extensions], [coreExtensions, extensions]))
   const active = useMemo(() => activeExtensions(allExtensions, 'richtext'), [allExtensions])
   useExtensionSetup(active, ctx, reportError)
-  const groups = useMemo(
-    () => resolveToolbar(active, toolbarLayout, { editorType: 'richtext', adapters, missingAdapter }),
-    [active, toolbarLayout, adapters, missingAdapter],
+  const resolveOptions = useMemo(
+    () => ({ editorType: 'richtext' as const, adapters, missingAdapter }),
+    [adapters, missingAdapter],
   )
+  const groups = useMemo(() => resolveToolbar(active, toolbarLayout, resolveOptions), [active, toolbarLayout, resolveOptions])
+  const rightPanels = useMemo(
+    () => resolvePanels(active, resolveOptions).filter((entry) => entry.panel.position === 'right'),
+    [active, resolveOptions],
+  )
+  const hasRightPanels = rightPanels.length > 0
 
   useEffect(() => {
     const element = editableRef.current
@@ -385,6 +403,18 @@ function EditorShell({
       >
         <ExpandGlyph />
       </button>
+      {hasRightPanels && isRightOpen ? (
+        <RichTextDrawer onCollapse={() => setRightOpen(false)}>
+          {rightPanels.map(({ panel: panelDef, extension }) => (
+            <div key={panelDef.id} data-extension={extension}>
+              {panelDef.render(ctx)}
+            </div>
+          ))}
+        </RichTextDrawer>
+      ) : null}
+      {hasRightPanels && !isRightOpen && slots?.rightCollapsed ? (
+        <div className="ex-rte-collapsed">{slots.rightCollapsed}</div>
+      ) : null}
     </div>
   )
 }
