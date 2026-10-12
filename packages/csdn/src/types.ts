@@ -13,6 +13,8 @@ import type { ReactNode, Ref } from 'react'
 
 export interface CsdnEditorHandle {
   getDocument(): EditorDocument
+  getSettings(): PublishSettings
+  saveDraft(): Promise<boolean>
 }
 
 export interface CsdnEditorProps {
@@ -32,6 +34,9 @@ export interface CsdnEditorProps {
   locale?: DeepPartial<Messages>
   adapters?: EditorAdapters
   initialSettings?: Partial<PublishSettings>
+  autoSaveInterval?: number
+  initialUpdatedAt?: number
+  draftStorageKey?: string
   slots?: { publishBarStart?: ReactNode }
   ref?: Ref<CsdnEditorHandle>
 }

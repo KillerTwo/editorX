@@ -3,6 +3,7 @@ import { createSettings, PublishPanel } from '@editorx/publish'
 import { RichTextEditor, type RichTextEditorHandle } from '@editorx/rich-text'
 import { ThemeProvider } from '@editorx/theme'
 import {
+  errorMessage,
   formatMessage,
   MessagesProvider,
   useMessages,
@@ -10,10 +11,20 @@ import {
   type EditorDocument,
   type EditorExtension,
   type EditorType,
+  type PublishSettings,
 } from '@editorx/toolbar'
 import { Button, Modal, ToastProvider, useToast } from '@editorx/ui'
-import { useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { cx } from './cx'
+import {
+  DRAFT_STORAGE_KEY,
+  MAX_TIMER_DELAY,
+  draftFingerprint,
+  readDraftBackup,
+  shouldPromptRestore,
+  writeDraftBackup,
+  type CsdnDraftBackup,
+} from './draft-backup'
 import { submitPublish } from './submit-publish'
 import { switchedDocument } from './switch-document'
 import { TopBar } from './top-bar'
@@ -53,6 +64,9 @@ function CsdnEditorShell({
   onEditorTypeChange,
   adapters: adaptersProp,
   initialSettings,
+  autoSaveInterval,
+  initialUpdatedAt,
+  draftStorageKey,
   slots,
   ref,
 }: CsdnEditorProps) {
@@ -68,17 +82,83 @@ function CsdnEditorShell({
   const { notify } = useToast()
   const adapters = adaptersProp ?? EMPTY_ADAPTERS
   const [settings, setSettings] = useState(() => createSettings(initialSettings))
+  const draftKey = draftStorageKey ?? DRAFT_STORAGE_KEY
+  const seed = useRef<{ doc: EditorDocument; settings: PublishSettings } | null>(null)
+  if (seed.current === null) {
+    seed.current = {
+      doc: {
+        editorType: defaultEditor ?? initialDocument?.editorType ?? 'markdown',
+        title: initialDocument?.title ?? '',
+        html: initialDocument?.html ?? '',
+        markdown: initialDocument?.markdown ?? '',
+      },
+      settings,
+    }
+  }
+  const [offer, setOffer] = useState<CsdnDraftBackup | null>(() => {
+    if (typeof window === 'undefined' || seed.current === null) return null
+    const backup = readDraftBackup(window.localStorage, draftKey)
+    return shouldPromptRestore(backup, initialUpdatedAt ?? 0, seed.current.doc, seed.current.settings) ? backup : null
+  })
+  const savedFingerprint = useRef<string | null>(null)
+  if (savedFingerprint.current === null && seed.current) {
+    savedFingerprint.current = draftFingerprint(seed.current.doc, seed.current.settings)
+  }
+  const errorShown = useRef(false)
+  const [saveVersion, setSaveVersion] = useState(0)
   const [words, setWords] = useState(0)
   const publishing = useRef(false)
 
   const readDocument = useCallback((): EditorDocument => {
     if (editorType === 'markdown') {
-      const live = markdownRef.current?.getDocument()
-      if (live) return { ...live, title }
+      const fromEditor = markdownRef.current?.getDocument()
+      if (fromEditor) return { ...fromEditor, title }
       return { editorType: 'markdown', title, markdown, html }
     }
     return { editorType: 'richtext', title, html, markdown: undefined }
   }, [editorType, title, markdown, html])
+
+  const live = useRef({ readDocument, settings, adapters, notify, messages, offer, draftKey })
+  live.current = { readDocument, settings, adapters, notify, messages, offer, draftKey }
+
+  const persist = useCallback(async (force: boolean): Promise<boolean> => {
+    const current = live.current
+    if (current.offer) return false
+    const doc = current.readDocument()
+    const fingerprint = draftFingerprint(doc, current.settings)
+    if (!force && fingerprint === savedFingerprint.current) return true
+    writeDraftBackup(
+      window.localStorage,
+      { document: doc, settings: current.settings, updatedAt: Date.now() },
+      current.draftKey,
+    )
+    const adapter = current.adapters.onSaveDraft
+    if (!adapter) return false
+    try {
+      await adapter(doc, current.settings)
+    } catch (error) {
+      if (force || !errorShown.current) {
+        current.notify(formatMessage(current.messages.publish.errors.saveDraft, { message: errorMessage(error) }), 'error')
+        errorShown.current = true
+      }
+      setSaveVersion((version) => version + 1)
+      return false
+    }
+    savedFingerprint.current = fingerprint
+    errorShown.current = false
+    setSaveVersion((version) => version + 1)
+    if (force) current.notify(current.messages.publish.status.draftSaved, 'success')
+    return true
+  }, [])
+
+  useEffect(() => {
+    const interval = autoSaveInterval
+    if (!(typeof interval === 'number' && interval > 0 && interval <= MAX_TIMER_DELAY)) return
+    const timer = window.setInterval(() => {
+      void persist(false)
+    }, interval)
+    return () => window.clearInterval(timer)
+  }, [autoSaveInterval, persist])
 
   const confirmSwitch = () => {
     const next = switchedDocument(readDocument())
@@ -91,7 +171,15 @@ function CsdnEditorShell({
     onEditorTypeChange?.(next.editorType)
   }
 
-  useImperativeHandle(ref, () => ({ getDocument: readDocument }), [readDocument])
+  useImperativeHandle(
+    ref,
+    () => ({
+      getDocument: readDocument,
+      getSettings: () => live.current.settings,
+      saveDraft: () => persist(true),
+    }),
+    [readDocument, persist],
+  )
 
   const publish = () => {
     if (publishing.current) return
@@ -107,15 +195,21 @@ function CsdnEditorShell({
     })
   }
 
+  void saveVersion
+  const dirty = draftFingerprint(readDocument(), settings) !== savedFingerprint.current
+
   return (
-    <div className={cx('ex-csdn', className)} data-editor={editorType}>
+    <div className={cx('ex-csdn', className)} data-editor={editorType} data-dirty={dirty ? 'true' : 'false'}>
       <TopBar
         editorType={editorType}
         title={title}
         onTitleChange={setTitle}
         onBack={onBack}
         showThemeToggle={showThemeToggle}
-        onSaveDraft={() => undefined}
+        actionsDisabled={offer !== null}
+        onSaveDraft={() => {
+          void persist(true)
+        }}
         onSwitch={() => setSwitchOpen(true)}
         onPublish={publish}
       />
@@ -188,6 +282,39 @@ function CsdnEditorShell({
         {editorType === 'markdown'
           ? '切换后将用当前 HTML 打开富文本编辑器。'
           : '切换后将把 HTML 转成 Markdown，部分格式会丢失。'}
+      </Modal>
+      <Modal
+        open={offer !== null}
+        onClose={() => setOffer(null)}
+        title="恢复本地草稿"
+        closeOnMaskClick={false}
+        footer={
+          <>
+            <Button type="button" onClick={() => setOffer(null)}>
+              {messages.dialog.cancel}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                if (!offer) return
+                const next = offer.document
+                setTitle(next.title)
+                setMarkdown(next.markdown ?? '')
+                setHtml(next.html)
+                setEditorType(next.editorType)
+                setSettings(createSettings(offer.settings))
+                setMountKey((key) => key + 1)
+                setOffer(null)
+                onEditorTypeChange?.(next.editorType)
+              }}
+            >
+              恢复
+            </Button>
+          </>
+        }
+      >
+        本地备份比当前文档更新。恢复会替换标题、正文和发布设置。
       </Modal>
     </div>
   )
