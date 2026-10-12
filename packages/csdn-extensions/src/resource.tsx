@@ -35,7 +35,7 @@ function ResourceDialog({ ctx, close }: { ctx: ExtensionContext; close: () => vo
       },
       (error: unknown) => {
         setPending(false)
-        setResults([])
+        setResults(null)
         reportFailure(ctx, copy.resourceFailed, error)
       },
     )

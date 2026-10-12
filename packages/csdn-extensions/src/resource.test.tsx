@@ -37,6 +37,21 @@ describe('csdn:resource', () => {
     expect(screen.getByRole('dialog', { name: '资源绑定' })).toBeInTheDocument()
   })
 
+  it('搜索失败只提示，不显示没有匹配的资源', async () => {
+    const user = userEvent.setup()
+    const ctx = extensionCtx({
+      adapters: { searchResources: vi.fn(async () => Promise.reject(new Error('超时'))) },
+    })
+    renderExtension([csdnResourceExtension], ctx, [['csdn:resource']])
+    await user.click(screen.getByRole('button', { name: '资源绑定' }))
+    const dialog = await screen.findByRole('dialog', { name: '资源绑定' })
+    await user.type(within(dialog).getByRole('textbox', { name: '搜索资源' }), '手册')
+    await user.click(within(dialog).getByRole('button', { name: '搜索' }))
+    expect(ctx.notify).toHaveBeenCalledWith('搜索资源失败：超时', 'error')
+    expect(ctx.insertEmbed).not.toHaveBeenCalled()
+    expect(within(dialog).queryByText('没有匹配的资源')).toBeNull()
+  })
+
   it('选中 http 资源后插入并关闭', async () => {
     const user = userEvent.setup()
     const ctx = extensionCtx({
