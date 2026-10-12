@@ -6,6 +6,7 @@ export {
   pickCover,
   placeCover,
   removeCover,
+  resolveTemplate,
   setCoverMode,
   toPayload,
 } from './settings'

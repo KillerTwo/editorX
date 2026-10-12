@@ -1,6 +1,15 @@
 import type { ThemeMode } from '@editorx/theme'
-import type { DeepPartial, EditorDocument, EditorExtension, EditorType, Messages, ToolbarLayout } from '@editorx/toolbar'
-import type { Ref } from 'react'
+import type {
+  DeepPartial,
+  EditorAdapters,
+  EditorDocument,
+  EditorExtension,
+  EditorType,
+  Messages,
+  PublishSettings,
+  ToolbarLayout,
+} from '@editorx/toolbar'
+import type { ReactNode, Ref } from 'react'
 
 export interface CsdnEditorHandle {
   getDocument(): EditorDocument
@@ -21,5 +30,8 @@ export interface CsdnEditorProps {
   defaultTocOpen?: boolean
   onEditorTypeChange?: (editorType: EditorType) => void
   locale?: DeepPartial<Messages>
+  adapters?: EditorAdapters
+  initialSettings?: Partial<PublishSettings>
+  slots?: { publishBarStart?: ReactNode }
   ref?: Ref<CsdnEditorHandle>
 }
