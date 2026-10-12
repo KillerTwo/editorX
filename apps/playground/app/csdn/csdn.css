@@ -1,0 +1,36 @@
+html:has(.pg-csdn),
+html:has(.pg-csdn) body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.pg-csdn { height: 100%; }
+
+.pg-csdn .ex-rte__scroll { scrollbar-width: none; }
+.pg-csdn .ex-rte__scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+.pg-csdn-jump {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-rte-chrome);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pg-csdn-float {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 104px;
+  height: 159px;
+  border-radius: 20px 0 8px 20px;
+  background: var(--ex-color-rte-paper);
+  box-shadow: 0 0 40px var(--ex-color-rte-drawer-shadow);
+  color: var(--ex-color-rte-chrome);
+  font-size: 14px;
+  font-weight: 600;
+}

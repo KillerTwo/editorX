@@ -318,6 +318,7 @@ function CsdnEditorShell({
                   }}
                 />
               ),
+              rightCollapsed: slots?.rightCollapsed,
             }}
           />
         )}

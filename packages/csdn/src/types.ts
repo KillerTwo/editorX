@@ -37,6 +37,6 @@ export interface CsdnEditorProps {
   autoSaveInterval?: number
   initialUpdatedAt?: number
   draftStorageKey?: string
-  slots?: { publishBarStart?: ReactNode }
+  slots?: { publishBarStart?: ReactNode; rightCollapsed?: ReactNode }
   ref?: Ref<CsdnEditorHandle>
 }
