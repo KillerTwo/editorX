@@ -59,8 +59,7 @@ test.describe('darwin（19-13-05，1727×932）', () => {
     const bar = await box(page.locator('.ex-pub-bar.is-fixed'))
     near(bar.x, 0, 1, 'bar.x')
     near(bar.y, 932 - 68, 1, 'bar.y')
-    // left:0; right:0 落在布局视口上，宽度等于内容宽，不伸进滚动条。
-    near(bar.width, CONTENT_WIDTH, 1, 'bar.w')
+    near(bar.width, 1727, 1, 'bar.w')
     near(bar.height, 68, 1, 'bar.h')
 
     const inner = await box(page.locator('.ex-pub-bar__inner'))

@@ -23,6 +23,11 @@ html:has(.pg-rte) body {
   height: 100%;
 }
 
+/* 固定栏的包含块是带 transform 的 .ex-rte（内容宽）。right: 0 到不了视口宽；100vw 在滚动条出现时也等于内容宽。伸出 15px 槽。 */
+.pg-rte .ex-pub-bar.is-fixed {
+  width: calc(100% + 15px);
+}
+
 .pg-rte-jump {
   padding: 0;
   border: 0;
