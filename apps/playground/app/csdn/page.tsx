@@ -1,3 +1,7 @@
+import '@editorx/markdown-core/styles.css'
+import '@editorx/toolbar/styles.css'
+import '@editorx/markdown/styles.css'
+import 'katex/dist/katex.min.css'
 import type { EditorType } from '@editorx/toolbar'
 import { CsdnPlayground } from './csdn-playground'
 
