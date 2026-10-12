@@ -11,4 +11,9 @@ describe('csdn styles', () => {
     expect(css).not.toMatch(/transform\s*:/)
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|light-dark\(/)
   })
+
+  it('顶栏高 56 且无下边框', () => {
+    expect(css).toMatch(/\.ex-csdn__bar \{[^}]*height: 56px/)
+    expect(css).toMatch(/\.ex-csdn__bar \{[^}]*border-bottom:\s*0/)
+  })
 })

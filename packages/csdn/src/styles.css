@@ -1,3 +1,5 @@
+.ex-csdn-theme { display: contents; }
+
 .ex-csdn {
   display: flex;
   flex-direction: column;
@@ -8,3 +10,19 @@
   color: var(--ex-color-text);
   font-family: var(--ex-font-family);
 }
+
+/* G01：顶栏高 56，无下边框。阶段 5 的 /rich-text 把参考坐标减 48，是因为那一页没有画这根栏。 */
+.ex-csdn__bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 0;
+  background: var(--ex-color-surface);
+}
+
+.ex-csdn__spacer { flex: 1; min-width: 0; }
+.ex-csdn__actions { display: flex; flex: none; align-items: center; gap: 12px; }
