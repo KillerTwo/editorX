@@ -11,6 +11,12 @@ function decode(value: string | null): string {
   }
 }
 
+function embedSource(node: HTMLElement): string {
+  if (node.hasAttribute('data-ex-payload')) return decode(node.getAttribute('data-ex-payload'))
+  if (node.hasAttribute('data-payload')) return node.getAttribute('data-payload') ?? ''
+  return ''
+}
+
 /**
  * Empty placeholders make their section wrapper "blank" to turndown, which would drop the whole
  * section before any rule sees the block, so ex blocks become ordinary fenced code beforehand.
@@ -18,7 +24,7 @@ function decode(value: string | null): string {
 function replaceExBlocks(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>('div[data-ex-embed], div[data-ex-diagram]').forEach((node) => {
     const [info, source] = node.hasAttribute('data-ex-embed')
-      ? [`ex-embed:${node.getAttribute('data-ex-embed') ?? ''}`, decode(node.getAttribute('data-ex-payload'))]
+      ? [`ex-embed:${node.getAttribute('data-ex-embed') ?? ''}`, embedSource(node)]
       : [hasClass(node, 'ex-flowchart') ? 'flow' : 'mermaid', decode(node.getAttribute('data-ex-diagram'))]
     const doc = root.ownerDocument
     const pre = doc.createElement('pre')

@@ -41,6 +41,21 @@ describe('mountEditor readOnly', () => {
     expect(editor.getData()).toContain('world')
     await editor.destroy()
   })
+
+  it('把 markdown 的 data-ex-payload 收成 data-payload', async () => {
+    const element = document.createElement('div')
+    document.body.append(element)
+    const editor = await mountEditor(
+      element,
+      createEditorConfig({}),
+      '<div data-ex-embed="vote" data-ex-payload="eyJpZCI6InYxIn0="></div>',
+    )
+    const data = editor.getData()
+    expect(data).toContain('data-ex-embed="vote"')
+    expect(data).toContain('&quot;id&quot;:&quot;v1&quot;')
+    expect(data).not.toContain('data-ex-payload')
+    await editor.destroy()
+  })
 })
 
 type CkWriter = {

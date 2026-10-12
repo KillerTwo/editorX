@@ -219,4 +219,26 @@ describe('htmlToMarkdown', () => {
       '```ex-embed:card\nnot base64!\n```',
     )
   })
+
+  it('reads rich-text data-payload as the ex-embed fence', () => {
+    expect(htmlToMarkdown('<div data-ex-embed="vote" data-payload="{&quot;id&quot;:&quot;v1&quot;}"></div>')).toBe(
+      '```ex-embed:vote\n{"id":"v1"}\n```',
+    )
+  })
+
+  it('prefers data-ex-payload when both attributes exist', () => {
+    expect(
+      htmlToMarkdown(
+        '<div data-ex-embed="vote" data-ex-payload="not base64!" data-payload="{&quot;id&quot;:&quot;v1&quot;}"></div>',
+      ),
+    ).toBe('```ex-embed:vote\nnot base64!\n```')
+  })
+
+  it('round-trips a vote card rendered with data-ex-payload', () => {
+    const renderer = createRenderer({
+      embeds: [{ type: 'vote', renderHtml: () => '<p>vote</p>' }],
+    })
+    const source = '```ex-embed:vote\n{\n  "id": "v1"\n}\n```'
+    expect(htmlToMarkdown(renderer.render(source).html)).toBe(source)
+  })
 })

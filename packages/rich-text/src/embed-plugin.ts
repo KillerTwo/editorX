@@ -16,6 +16,24 @@ function embedAttributes(element: ModelElement): Record<string, string> {
   }
 }
 
+function decodePayload(value: string | undefined): string {
+  if (!value) return ''
+  try {
+    const binary = atob(value)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    return new TextDecoder().decode(bytes)
+  } catch {
+    return value
+  }
+}
+
+function readPayload(viewElement: { getAttribute(name: string): string | undefined }): string {
+  const raw = viewElement.getAttribute('data-payload')
+  if (raw !== undefined) return raw
+  return decodePayload(viewElement.getAttribute('data-ex-payload'))
+}
+
 /** 嵌入块模型 `exEmbed`，数据 HTML 为 `<div data-ex-embed data-payload>`。 */
 export function registerExEmbed(editor: Editor): void {
   editor.model.schema.register('exEmbed', {
@@ -31,7 +49,7 @@ export function registerExEmbed(editor: Editor): void {
     model: (viewElement, { writer }) =>
       writer.createElement('exEmbed', {
         embedType: viewElement.getAttribute('data-ex-embed') ?? '',
-        payload: viewElement.getAttribute('data-payload') ?? '',
+        payload: readPayload(viewElement),
       }),
   })
 
