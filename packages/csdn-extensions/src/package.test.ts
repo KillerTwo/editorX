@@ -19,7 +19,7 @@ function productSource(): string {
 }
 
 describe('@editorx/csdn-extensions package', () => {
-  it('只依赖 toolbar、ui、theme，数组初始为空', () => {
+  it('只依赖 toolbar、ui、theme，导出列表包含模板', () => {
     const own = readJson('../package.json')
     const markdown = readJson('../../markdown/package.json')
     const rich = readJson('../../rich-text/package.json')
@@ -35,7 +35,7 @@ describe('@editorx/csdn-extensions package', () => {
     expect(own.devDependencies?.['@editorx/rich-text']).toBeUndefined()
     expect(JSON.stringify(markdown)).not.toContain('@editorx/csdn-extensions')
     expect(JSON.stringify(rich)).not.toContain('@editorx/csdn-extensions')
-    expect(csdnExtensions).toEqual([])
+    expect(csdnExtensions.map((ext) => ext.name)).toContain('csdn:template')
     expect(productSource()).not.toContain('阶段 7 接入')
     expect(productSource()).not.toContain('阶段 6 接入')
   })
