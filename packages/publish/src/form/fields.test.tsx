@@ -50,16 +50,30 @@ const closeTagPanel = () => userEvent.click(screen.getByRole('button', { name: '
 describe('FormItem', () => {
   it('标签、必填星号、帮助图标、错误信息与 data-field', () => {
     const { container } = renderWithProviders(
-      <FormItem field="tags" id="f" label="文章标签" required help="帮助" error="请至少添加 1 个文章标签">
+      <FormItem field="tags" id="f" label="文章标签" required help="最多 7 个标签" error="请至少添加 1 个文章标签">
         <button aria-describedby="f-error">控件</button>
       </FormItem>,
     )
     const item = container.querySelector('[data-field="tags"]')!
     expect(item).toHaveClass('ex-pub-item', 'is-error')
     expect(item.querySelector('.ex-pub-item__required')).toHaveTextContent('*')
-    expect(screen.getByRole('img', { name: '帮助' })).toHaveClass('ex-pub-item__help')
-    expect(screen.getByRole('img', { name: '帮助' }).querySelector('svg.ex-pub-help-icon')).toHaveAttribute('width', '14')
+    expect(screen.queryByRole('img')).toBeNull()
+    const help = screen.getByRole('button', { name: '帮助' })
+    expect(help).toHaveClass('ex-pub-item__help')
+    expect(help).toHaveAttribute('aria-label', '帮助')
+    expect(help.getAttribute('aria-label')).not.toBe('最多 7 个标签')
+    expect(screen.getByRole('button', { name: '控件' })).toHaveAttribute('aria-required', 'true')
+    expect(item.querySelector('.ex-pub-item__required')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.getByRole('button', { name: '控件' })).toHaveAccessibleDescription('请至少添加 1 个文章标签')
+  })
+
+  it('标签字段把 aria-required 放在添加按钮上', () => {
+    renderWithProviders(
+      <FormItem field="tags" id="f" label="文章标签" required>
+        <TagField id="f" tags={[]} onChange={() => {}} invalid={false} />
+      </FormItem>,
+    )
+    expect(screen.getByRole('button', { name: '添加文章标签' })).toHaveAttribute('aria-required', 'true')
   })
 })
 

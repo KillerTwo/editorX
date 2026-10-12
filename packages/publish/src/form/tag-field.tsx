@@ -12,10 +12,11 @@ export interface TagFieldProps extends TagSources {
   tags: readonly string[]
   onChange(tags: string[]): void
   invalid: boolean
+  'aria-required'?: boolean
 }
 
 /** 缺 searchTags 时（无论 hide 还是 disable 策略）推荐分类不出现；两个分类 adapter 也缺时面板只有输入框 */
-export function TagField({ id, tags, onChange, invalid, ...sources }: TagFieldProps) {
+export function TagField({ id, tags, onChange, invalid, 'aria-required': ariaRequired, ...sources }: TagFieldProps) {
   const p = useMessages().publish
   const [open, setOpen] = useState(false)
   const catalog = useTagCatalog(sources)
@@ -54,7 +55,12 @@ export function TagField({ id, tags, onChange, invalid, ...sources }: TagFieldPr
   }
   const canAdd = tags.length < MAX_TAGS
   return (
-    <div ref={rootRef} className="ex-pub-line ex-pub-tags" tabIndex={-1}>
+    <div
+      ref={rootRef}
+      className="ex-pub-line ex-pub-tags"
+      tabIndex={-1}
+      aria-required={!canAdd && ariaRequired ? true : undefined}
+    >
       {tags.map((tag, index) => (
         <Tag
           key={tag}
@@ -74,6 +80,7 @@ export function TagField({ id, tags, onChange, invalid, ...sources }: TagFieldPr
           className="ex-pub-tag-add"
           aria-expanded={open}
           aria-invalid={invalid || undefined}
+          aria-required={canAdd && ariaRequired ? true : undefined}
           aria-describedby={invalid ? errorId(id) : undefined}
           onClick={() => setOpen((v) => !v)}
         >

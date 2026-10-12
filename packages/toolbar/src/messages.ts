@@ -278,6 +278,7 @@ export const zhCN = deepFreeze({
       scheduled: '已设置定时发布：{time}',
       draftSaved: '草稿已保存',
     },
+    a11y: { help: '帮助' },
     errors: {
       title: '文章标题需为 {min}～{max} 个字',
       tagsRequired: '请至少添加 1 个文章标签',

@@ -1,5 +1,6 @@
+import { useMessages } from '@editorx/toolbar'
 import { Tooltip } from '@editorx/ui'
-import type { ReactNode } from 'react'
+import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { cx } from '../cx'
 import { HelpIcon } from '../icons'
 
@@ -21,6 +22,11 @@ export interface FormItemProps {
 }
 
 export function FormItem({ field, id, label, labelSuffix, required, help, error, children }: FormItemProps) {
+  const helpName = useMessages().publish.a11y.help
+  const control =
+    required && isValidElement(children)
+      ? cloneElement(children as ReactElement<{ 'aria-required'?: boolean }>, { 'aria-required': true })
+      : children
   return (
     <div className={cx('ex-pub-item', error && 'is-error')} data-field={field}>
       <div className="ex-pub-item__label">
@@ -34,15 +40,15 @@ export function FormItem({ field, id, label, labelSuffix, required, help, error,
         </span>
         {help && (
           <Tooltip content={help} placement="top">
-            <span className="ex-pub-item__help" role="img" aria-label={help} tabIndex={0}>
+            <button type="button" className="ex-pub-item__help" aria-label={helpName}>
               <HelpIcon />
-            </span>
+            </button>
           </Tooltip>
         )}
         {labelSuffix && <span className="ex-pub-item__suffix">{labelSuffix}</span>}
       </div>
       <div className="ex-pub-item__control">
-        {children}
+        {control}
         {error && (
           <div className="ex-pub-item__error" id={errorId(id)}>
             {error}
