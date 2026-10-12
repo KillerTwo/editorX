@@ -1,0 +1,10 @@
+.ex-csdn {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ex-color-mde-canvas);
+  color: var(--ex-color-text);
+  font-family: var(--ex-font-family);
+}

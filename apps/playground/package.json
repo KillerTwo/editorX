@@ -11,6 +11,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@editorx/csdn": "workspace:*",
     "@editorx/markdown": "workspace:*",
     "@editorx/markdown-core": "workspace:*",
     "@editorx/publish": "workspace:*",

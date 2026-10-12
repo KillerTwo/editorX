@@ -11,6 +11,7 @@ export default function Home() {
         <li><Link href="/markdown">Markdown 编辑器 /markdown</Link></li>
         <li><Link href="/rich-text">富文本编辑器 /rich-text</Link></li>
         <li><Link href="/publish">发布设置 /publish</Link></li>
+        <li><Link href="/csdn">CSDN 编辑器 /csdn</Link></li>
       </ul>
     </main>
   )
