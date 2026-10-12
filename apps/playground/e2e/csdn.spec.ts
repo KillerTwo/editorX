@@ -32,3 +32,18 @@ test('富文本空格不计入字数，历史占位提示阶段 7', async ({ pag
   await expect(page.getByRole('alert').filter({ hasText: '发布成功' })).toHaveCount(0)
   expect(errors).toEqual([])
 })
+
+test('模板替换写入 Markdown，工具栏不提示阶段 6', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/csdn')
+  await page.getByRole('button', { name: '模版' }).click()
+  await page.getByRole('button', { name: '替换全文 周报模板' }).click()
+  await expect(page.locator('.ex-mde-preview')).toContainText('本周工作')
+  await expect(page.getByRole('status').filter({ hasText: '阶段 6 接入' })).toHaveCount(0)
+  await page.goto('/csdn?editor=richtext')
+  await page.getByRole('button', { name: '历史' }).click()
+  await expect(page.getByRole('status').filter({ hasText: '阶段 7 接入' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '使用 MD 编辑器' })).toHaveCount(0)
+  expect(errors).toEqual([])
+})
