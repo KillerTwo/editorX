@@ -1,12 +1,10 @@
 import { ThemeProvider } from '@editorx/theme'
-import type { EditorDocument } from '@editorx/toolbar'
+import { MessagesProvider, type EditorDocument, type EditorType } from '@editorx/toolbar'
 import { ToastProvider } from '@editorx/ui'
-import { useImperativeHandle } from 'react'
+import { useImperativeHandle, useState } from 'react'
 import { cx } from './cx'
 import { TopBar } from './top-bar'
 import type { CsdnEditorProps } from './types'
-
-const EMPTY_DOCUMENT: EditorDocument = { editorType: 'markdown', title: '', html: '', markdown: '' }
 
 export function CsdnEditor(props: CsdnEditorProps) {
   return (
@@ -17,18 +15,38 @@ export function CsdnEditor(props: CsdnEditorProps) {
       storageKey="editorx-csdn-theme"
       className="ex-csdn-theme"
     >
-      <ToastProvider>
-        <CsdnEditorShell {...props} />
-      </ToastProvider>
+      <MessagesProvider messages={props.locale}>
+        <ToastProvider>
+          <CsdnEditorShell {...props} />
+        </ToastProvider>
+      </MessagesProvider>
     </ThemeProvider>
   )
 }
 
-function CsdnEditorShell({ className, onBack, showThemeToggle = true, ref }: CsdnEditorProps) {
-  useImperativeHandle(ref, () => ({ getDocument: () => EMPTY_DOCUMENT }), [])
+function CsdnEditorShell({
+  className,
+  onBack,
+  showThemeToggle = true,
+  initialDocument,
+  defaultEditor,
+  ref,
+}: CsdnEditorProps) {
+  const editorType: EditorType = defaultEditor ?? initialDocument?.editorType ?? 'markdown'
+  const [title, setTitle] = useState(initialDocument?.title ?? '')
+  const document: EditorDocument = {
+    editorType,
+    title,
+    html: initialDocument?.html ?? '',
+    ...(editorType === 'markdown' ? { markdown: initialDocument?.markdown ?? '' } : { markdown: undefined }),
+  }
+  useImperativeHandle(ref, () => ({ getDocument: () => document }), [document])
   return (
-    <div className={cx('ex-csdn', className)} data-editor="markdown">
+    <div className={cx('ex-csdn', className)} data-editor={editorType}>
       <TopBar
+        editorType={editorType}
+        title={title}
+        onTitleChange={setTitle}
         onBack={onBack}
         showThemeToggle={showThemeToggle}
         onSaveDraft={() => undefined}

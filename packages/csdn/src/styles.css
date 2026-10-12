@@ -26,3 +26,31 @@
 
 .ex-csdn__spacer { flex: 1; min-width: 0; }
 .ex-csdn__actions { display: flex; flex: none; align-items: center; gap: 12px; }
+
+.ex-csdn-title {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ex-csdn-title__input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.ex-csdn-title__count {
+  flex: none;
+  color: var(--ex-color-text-secondary);
+  font-size: 12px;
+}
+
+.ex-csdn-title__count.is-over { color: var(--ex-color-error); }

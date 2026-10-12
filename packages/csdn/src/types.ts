@@ -1,5 +1,5 @@
 import type { ThemeMode } from '@editorx/theme'
-import type { EditorDocument } from '@editorx/toolbar'
+import type { DeepPartial, EditorDocument, EditorType, Messages } from '@editorx/toolbar'
 import type { Ref } from 'react'
 
 export interface CsdnEditorHandle {
@@ -13,5 +13,8 @@ export interface CsdnEditorProps {
   theme?: ThemeMode
   defaultTheme?: ThemeMode
   onThemeChange?: (mode: ThemeMode) => void
+  initialDocument?: EditorDocument
+  defaultEditor?: EditorType
+  locale?: DeepPartial<Messages>
   ref?: Ref<CsdnEditorHandle>
 }

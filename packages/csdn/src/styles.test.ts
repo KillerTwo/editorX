@@ -16,4 +16,8 @@ describe('csdn styles', () => {
     expect(css).toMatch(/\.ex-csdn__bar \{[^}]*height: 56px/)
     expect(css).toMatch(/\.ex-csdn__bar \{[^}]*border-bottom:\s*0/)
   })
+
+  it('超长标题计数使用错误色变量', () => {
+    expect(css).toMatch(/\.ex-csdn-title__count\.is-over \{[^}]*color:\s*var\(--ex-color-error\)/)
+  })
 })
