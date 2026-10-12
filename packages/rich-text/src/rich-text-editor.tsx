@@ -18,8 +18,9 @@ import {
 } from '@editorx/toolbar'
 import { ToastProvider, useToast } from '@editorx/ui'
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react'
-import { richTextCoreExtensions } from './core-extensions'
 import { createEditorConfig } from './ck-config'
+import { countRichTextChars } from './count'
+import { richTextCoreExtensions } from './core-extensions'
 import { RichTextDrawer } from './drawer'
 import { scrollHeadingIntoView } from './headings'
 import { RICH_TEXT_TOOLBAR_LAYOUT } from './layout'
@@ -174,6 +175,7 @@ function EditorShell({
   value,
   defaultValue,
   onChange,
+  onWordCount,
   title,
   defaultTitle,
   onTitleChange,
@@ -216,6 +218,7 @@ function EditorShell({
   const silentRef = useRef(false)
   const initialHtmlRef = useRef(value ?? defaultValue ?? '')
   const onChangeRef = useRef(onChange)
+  const onWordCountRef = useRef(onWordCount)
   const panelRef = useRef(panel)
   const liveRef = useRef({
     adapters,
@@ -226,6 +229,7 @@ function EditorShell({
     notify,
   })
   onChangeRef.current = onChange
+  onWordCountRef.current = onWordCount
   panelRef.current = panel
   liveRef.current = {
     adapters,
@@ -289,9 +293,12 @@ function EditorShell({
           if (cancelled || silentRef.current) return
           const html = editor.getData()
           onChangeRef.current?.(html)
+          onWordCountRef.current?.(countRichTextChars(html))
           setDocumentHtml(html)
         })
-        setDocumentHtml(editor.getData())
+        const html = editor.getData()
+        onWordCountRef.current?.(countRichTextChars(html))
+        setDocumentHtml(html)
         setMounted(editor)
       })
       .catch((error: unknown) => {
@@ -323,6 +330,7 @@ function EditorShell({
         const editor = editorRef.current
         if (!editor) {
           initialHtmlRef.current = html
+          onWordCountRef.current?.(countRichTextChars(html))
           return
         }
         silentRef.current = true
@@ -331,6 +339,7 @@ function EditorShell({
         } finally {
           silentRef.current = false
         }
+        onWordCountRef.current?.(countRichTextChars(editor.getData()))
       },
       getDocument() {
         return {

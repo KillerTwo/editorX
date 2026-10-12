@@ -1,3 +1,4 @@
+export { countRichTextChars } from './count'
 export { richTextCoreExtensions } from './core-extensions'
 export { RICH_TEXT_TOOLBAR_LAYOUT } from './layout'
 export { RichTextEditor } from './rich-text-editor'
