@@ -164,6 +164,15 @@ describe('extract', () => {
       '<p><img src="/a.png" alt=""><img alt="" src=\'/b.png?x=1&amp;y=2\'></p><img src="/a.png"><img src="ex-uploading://1"><img src="">'
     expect(extractImages(html)).toEqual(['/a.png', '/b.png?x=1&y=2'])
   })
+
+  it('extractImages 不把 data-src 当成 src', () => {
+    expect(extractImages('<img data-src="/lazy.png" src="/real.png">')).toEqual(['/real.png'])
+    expect(extractImages('<img data-src="/only.png">')).toEqual([])
+    expect(extractImages('<p><img src="/a.png" alt=""><img alt="" src=\'/b.png?x=1&amp;y=2\'></p><img src="/a.png"><img src="ex-uploading://1"><img src="">')).toEqual([
+      '/a.png',
+      '/b.png?x=1&y=2',
+    ])
+  })
 })
 
 describe('schedule', () => {

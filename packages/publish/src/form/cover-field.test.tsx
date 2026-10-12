@@ -216,4 +216,19 @@ describe('CoverField', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('图片无法显示')
     expect(screen.getByRole('button', { name: '确定' })).toBeDisabled()
   })
+
+  it('上传中焦点留在该控件并标 aria-busy', async () => {
+    let release: (value: { url: string }) => void = () => {}
+    const uploadImage = vi.fn(() => new Promise<{ url: string }>((resolve) => { release = resolve }))
+    const { container } = renderWithProviders(<Cover uploadImage={uploadImage} />)
+    screen.getByRole('button', { name: '从本地上传' }).focus()
+    chooseFile(container)
+    loadCropImage()
+    await userEvent.click(screen.getByRole('button', { name: '确定' }))
+    const busy = await screen.findByRole('button', { name: '上传中…' })
+    expect(busy).toHaveAttribute('aria-busy', 'true')
+    expect(document.activeElement).toBe(busy)
+    release({ url: '/uploaded.png' })
+    await waitFor(() => expect(screen.getByTestId('cover')).toHaveTextContent('/uploaded.png'))
+  })
 })

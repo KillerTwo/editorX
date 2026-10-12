@@ -28,7 +28,7 @@ export function extractSummary(doc: Pick<EditorDocument, 'html'> | undefined, ma
 
 export function extractImages(html: string): string[] {
   const urls: string[] = []
-  for (const match of html.matchAll(/<img\b[^>]*?\bsrc\s*=\s*(["'])(.*?)\1/gi)) {
+  for (const match of html.matchAll(/<img\b[^>]*?[\s"']src\s*=\s*(["'])(.*?)\1/gi)) {
     const src = (match[2] ?? '').replace(/&amp;/g, '&').trim()
     if (src && !src.startsWith(UPLOADING_PREFIX) && !urls.includes(src)) urls.push(src)
   }

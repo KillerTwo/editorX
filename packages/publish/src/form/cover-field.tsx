@@ -7,7 +7,7 @@ import {
 } from '@editorx/toolbar'
 import { RadioGroup } from '@editorx/ui'
 import { Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from 'react'
 import type { AdapterState } from '../adapter-state'
 import { cx } from '../cx'
 import { PlusIcon } from '../icons'
@@ -39,6 +39,7 @@ export function CoverField(props: CoverFieldProps) {
   const { id, cover, onChange, bodyImages, modes, uploadState, uploadImage, variant, invalid, onError } = props
   const p = useMessages().publish
   const fileRef = useRef<HTMLInputElement>(null)
+  const slotRef = useRef<HTMLButtonElement>(null)
   const coverRef = useLatest(cover)
   const [slot, setSlot] = useState(0)
   const [crop, setCrop] = useState<{ src: string; name: string } | null>(null)
@@ -52,6 +53,12 @@ export function CoverField(props: CoverFieldProps) {
     },
     [cropRef],
   )
+
+  useLayoutEffect(() => {
+    if (uploading === null) return
+    const node = slotRef.current
+    if (node && node.ownerDocument.activeElement !== node) node.focus()
+  }, [uploading])
 
   const chooseFile = (index: number) => {
     setSlot(index)
@@ -84,9 +91,15 @@ export function CoverField(props: CoverFieldProps) {
     const url = cover.urls[index]
     if (uploading === index) {
       return (
-        <div key={index} className="ex-pub-cover__slot is-uploading" aria-busy="true">
+        <button
+          key={index}
+          ref={slotRef}
+          type="button"
+          className="ex-pub-cover__slot is-uploading"
+          aria-busy="true"
+        >
           {p.cover.uploading}
-        </div>
+        </button>
       )
     }
     if (url) {
