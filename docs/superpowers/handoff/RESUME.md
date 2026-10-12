@@ -10,7 +10,8 @@
 | 4 | `<PublishPanel />` / `<PublishModal />`（`@editorx/publish`） | 已完成（develop，09154c1..36196eb，未 push），浏览器验证通过（macOS）；mac 参考图对齐已完成 |
 | 5 | 富文本（CKEditor 5 GPL）：`<RichTextEditor />` | 已完成（develop，代码 HEAD `c17676f`），见 `phase6-notes-from-5.md` |
 | 6 | `<CsdnEditor />`：顶栏、组合、切换、自动保存 | 已完成（develop），见 `phase7-notes-from-6.md` |
-| 7–8 | csdn-extensions、发布准备 | 未开始 |
+| 7 | `@editorx/csdn-extensions`：AI 助手、投票、视频、资源绑定、InsCode、模板 | 已完成（develop），见 `phase8-notes-from-7.md` |
+| 8 | 发布准备：Changesets、文档/README、npm 发布流程 | 未开始 |
 
 阶段 3/4 参考图对齐（业主 2026-10-10 macOS 2× 截图）已完成。代码止于 `9770135`；交接提交补上可选验收 spec 与本文档。未 push。
 
@@ -40,6 +41,7 @@
 
 ## 交接材料（本目录）
 
+- `phase8-notes-from-7.md`：阶段 8 必读，含六个扩展、adapter 转发、嵌入属性和明确没做的反馈 tab。
 - `phase6-notes-from-5.md`：阶段 6 必读，含富文本公开 API、滚动与底栏宿主、字数口径、darwin 基线。
 - `phase5-notes-from-4.md`：阶段 5 必读，含发布面板公开 API、性能实测、/compare 结论、遗留项、phase 8 清单。
 - `phase4-notes-from-3.md`：阶段 3 → 4 的笔记（仍有效，除非被 phase5 笔记取代）。
@@ -130,4 +132,4 @@ pingfang（'PingFang SC'）：56.5 / 33 / 67.5
 
 ## 下一步
 
-阶段 7（`csdn-extensions`：AI 助手、投票、视频、资源绑定、InsCode、模板）：先读 `phase7-notes-from-6.md`。顶栏已经在编辑器外面，高度 56。切换和自动保存已在 `<CsdnEditor />` 里。反馈 tab 与这些扩展的真实行为仍未做。
+阶段 8（Changesets、文档/README、npm 发布）：先读 `phase8-notes-from-7.md`。反馈 tab 和历史版本不在阶段 7 里，仍然没做。
