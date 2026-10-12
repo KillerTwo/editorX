@@ -34,6 +34,7 @@ export async function submitPublish(input: {
     categories: [...input.settings.categories],
     cover: { ...input.settings.cover, urls: [...input.settings.cover.urls] },
   }
+  delete settings.scheduledAt
   const template = resolveTemplate(settings.template, doc.editorType)
   if (template !== settings.template) settings.template = template
   if (countChars(doc.title.trim()) === 0) {

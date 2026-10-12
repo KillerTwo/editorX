@@ -95,6 +95,25 @@ describe('submitPublish', () => {
     expect(ctx.onPublish).toHaveBeenCalledWith(expect.objectContaining({ template: 'default', markdown: undefined }))
   })
 
+  it('设置里带 scheduledAt 时，立即发布的 payload 不含该字段', async () => {
+    const settings = createSettings({ tags: ['jvm'], scheduledAt: '2099-01-01T00:00:00.000Z' })
+    const onPublish = vi.fn(async () => undefined)
+    const notify = vi.fn()
+    const ok = await submitPublish({
+      document: ready,
+      settings,
+      adapters: { onPublish },
+      notify,
+      messages,
+    })
+    expect(ok).toBe(true)
+    expect(onPublish).toHaveBeenCalledTimes(1)
+    expect(onPublish.mock.calls[0]?.[0]).not.toHaveProperty('scheduledAt')
+    expect(onPublish.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ tags: ['jvm'], title: '足够长的标题' }))
+    expect(settings.scheduledAt).toBe('2099-01-01T00:00:00.000Z')
+    expect(notify).toHaveBeenCalledWith('发布成功', 'success')
+  })
+
   it('没有 onPublish 时直接返回 false，不提示', async () => {
     const notify = vi.fn()
     const ok = await submitPublish({

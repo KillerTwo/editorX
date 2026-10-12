@@ -203,6 +203,83 @@ describe('自动保存与本地备份', () => {
     expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toContain('足够长的标题甲乙')
   })
 
+  it('富文本底栏保存失败仍留下备份，并保持未保存', async () => {
+    const user = userEvent.setup()
+    let fail = true
+    const onSaveDraft = vi.fn(async () => {
+      if (fail) throw new Error('offline')
+    })
+    const { container } = render(
+      <StrictMode>
+        <CsdnEditor
+          defaultTheme="light"
+          defaultEditor="richtext"
+          autoSaveInterval={0}
+          initialDocument={{ editorType: 'richtext', title: '足够长的标题', html: '<p>Hello</p>' }}
+          adapters={{ onSaveDraft }}
+        />
+      </StrictMode>,
+    )
+    await user.type(screen.getByRole('textbox', { name: '文章标题' }), '呀')
+    expect(container.querySelector('.ex-csdn')).toHaveAttribute('data-dirty', 'true')
+    const draft = await waitFor(() => {
+      const button = container.querySelector('.ex-pub-bar [data-action="draft"]')
+      expect(button).toBeInstanceOf(HTMLButtonElement)
+      return button as HTMLButtonElement
+    })
+    await user.click(draft)
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText('保存草稿失败：offline')).toBeInTheDocument()
+    expect(screen.getAllByText('保存草稿失败：offline')).toHaveLength(1)
+    expect(screen.queryByText(/draft save failed/)).toBeNull()
+    expect(screen.queryByText('草稿已保存')).toBeNull()
+    expect(container.querySelector('.ex-csdn')).toHaveAttribute('data-dirty', 'true')
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toContain('足够长的标题呀')
+    expect(onSaveDraft.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({ editorType: 'richtext', title: '足够长的标题呀' }),
+    )
+    fail = false
+    await user.click(draft)
+    await waitFor(() => expect(container.querySelector('.ex-csdn')).toHaveAttribute('data-dirty', 'false'))
+    expect(onSaveDraft).toHaveBeenCalledTimes(2)
+    expect(screen.getAllByText('草稿已保存')).toHaveLength(1)
+  })
+
+  it('localStorage 写入失败仍调用 onSaveDraft，保持未保存，并且不拒绝保存', async () => {
+    const user = userEvent.setup()
+    const onSaveDraft = vi.fn<(doc: EditorDocument, settings?: PublishSettings) => Promise<void>>(async () => undefined)
+    const previous = '{"keep":"previous"}'
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, previous)
+    const original = Storage.prototype.setItem
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === DRAFT_STORAGE_KEY) throw new Error('quota')
+      return original.call(this, key, value)
+    })
+    const ref = createRef<CsdnEditorHandle>()
+    const { container } = render(
+      <StrictMode>
+        <CsdnEditor
+          ref={ref}
+          defaultTheme="light"
+          autoSaveInterval={0}
+          initialDocument={{ editorType: 'markdown', title: '足够长的标题', markdown: 'Hello', html: '' }}
+          adapters={{ onSaveDraft }}
+        />
+      </StrictMode>,
+    )
+    await user.type(screen.getByRole('textbox', { name: '文章标题' }), '呀')
+    await expect(ref.current!.saveDraft()).resolves.toBe(false)
+    expect(onSaveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ title: '足够长的标题呀' }),
+      expect.anything(),
+    )
+    expect(await screen.findByText('保存草稿失败：quota')).toBeInTheDocument()
+    expect(screen.getAllByText('保存草稿失败：quota')).toHaveLength(1)
+    expect(screen.queryByText('草稿已保存')).toBeNull()
+    expect(container.querySelector('.ex-csdn')).toHaveAttribute('data-dirty', 'true')
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toBe(previous)
+  })
+
   it.each([Infinity, 2 ** 31])('超出范围的间隔（%s）不调用 onSaveDraft', async (autoSaveInterval) => {
     const onSaveDraft = vi.fn(async () => undefined)
     render(

@@ -33,6 +33,10 @@ import type { CsdnEditorProps } from './types'
 const NO_EXTENSIONS: readonly EditorExtension[] = []
 const EMPTY_ADAPTERS: EditorAdapters = {}
 
+function reportedDraftFailure(error: unknown): Error {
+  return Object.assign(new Error(errorMessage(error)), { draftSaveReported: true })
+}
+
 function subscribeDraftStore(): () => void {
   return () => {}
 }
@@ -129,6 +133,7 @@ function CsdnEditorShell({
   const flight = useRef<Promise<boolean> | null>(null)
   const trailing = useRef<Promise<boolean> | null>(null)
   const trailingForce = useRef(false)
+  const trailingToastSuccess = useRef(false)
   const [saveVersion, setSaveVersion] = useState(0)
   const [words, setWords] = useState(0)
   const publishing = useRef(false)
@@ -145,9 +150,10 @@ function CsdnEditorShell({
   const live = useRef({ readDocument, settings, adapters, notify, messages, offer, draftKey })
   live.current = { readDocument, settings, adapters, notify, messages, offer, draftKey }
 
-  const persist = useCallback((force: boolean): Promise<boolean> => {
+  const persist = useCallback((force: boolean, toastSuccess = force): Promise<boolean> => {
     if (flight.current) {
       trailingForce.current ||= force
+      trailingToastSuccess.current ||= toastSuccess
       trailing.current ??= flight.current.then(follow, follow)
       return trailing.current
     }
@@ -164,7 +170,7 @@ function CsdnEditorShell({
     flight.current = settled
     void (async () => {
       try {
-        resolve(await saveOnce(force))
+        resolve(await saveOnce(force, toastSuccess))
       } catch (error) {
         reject(error)
       }
@@ -173,24 +179,38 @@ function CsdnEditorShell({
 
     function follow(): Promise<boolean> {
       const nextForce = trailingForce.current
+      const nextToastSuccess = trailingToastSuccess.current
       trailing.current = null
       trailingForce.current = false
-      return persist(nextForce)
+      trailingToastSuccess.current = false
+      return persist(nextForce, nextToastSuccess)
     }
 
-    async function saveOnce(nextForce: boolean): Promise<boolean> {
+    async function saveOnce(nextForce: boolean, announceSuccess: boolean): Promise<boolean> {
       const current = live.current
       if (current.offer) return false
       const doc = current.readDocument()
       const fingerprint = draftFingerprint(doc, current.settings)
       if (!nextForce && fingerprint === savedFingerprint.current) return true
-      writeDraftBackup(
-        window.localStorage,
-        { document: doc, settings: current.settings, updatedAt: Date.now() },
-        current.draftKey,
-      )
+      let backupError: unknown
+      try {
+        writeDraftBackup(
+          window.localStorage,
+          { document: doc, settings: current.settings, updatedAt: Date.now() },
+          current.draftKey,
+        )
+      } catch (error) {
+        backupError = error
+        if (nextForce || !errorShown.current) {
+          current.notify(formatMessage(current.messages.publish.errors.saveDraft, { message: errorMessage(error) }), 'error')
+          errorShown.current = true
+        }
+      }
       const adapter = current.adapters.onSaveDraft
-      if (!adapter) return false
+      if (!adapter) {
+        if (backupError) setSaveVersion((version) => version + 1)
+        return false
+      }
       try {
         await adapter(doc, current.settings)
       } catch (error) {
@@ -201,13 +221,24 @@ function CsdnEditorShell({
         setSaveVersion((version) => version + 1)
         return false
       }
+      if (backupError) {
+        setSaveVersion((version) => version + 1)
+        return false
+      }
       savedFingerprint.current = fingerprint
       errorShown.current = false
       setSaveVersion((version) => version + 1)
-      if (nextForce) current.notify(current.messages.publish.status.draftSaved, 'success')
+      if (nextForce && announceSuccess) current.notify(current.messages.publish.status.draftSaved, 'success')
       return true
     }
   }, [])
+
+  // 底栏保存走 persist（备份、单飞、清 dirty），成功提示留给面板，避免两条「草稿已保存」。
+  // 失败已经在 persist 里提示过，再抛已标记的错误让面板不要弹第二条。
+  const saveFromPanel = useCallback(async () => {
+    const saved = await persist(true, false)
+    if (!saved) throw reportedDraftFailure(new Error('draft save failed'))
+  }, [persist])
 
   useEffect(() => {
     const interval = autoSaveInterval
@@ -306,7 +337,9 @@ function CsdnEditorShell({
                   value={settings}
                   onChange={setSettings}
                   document={readDocument()}
-                  adapters={adapters}
+                  adapters={
+                    adapters.onSaveDraft ? { ...adapters, onSaveDraft: () => saveFromPanel() } : adapters
+                  }
                   barPosition="fixed"
                   slots={{
                     barStart: (

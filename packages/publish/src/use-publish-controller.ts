@@ -59,6 +59,16 @@ export interface PublishController {
   saveDraft(): Promise<boolean>
 }
 
+/** 外壳已经提示过这次失败（例如本地备份写失败）时，面板不再弹第二条 toast */
+function isReportedDraftFailure(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'draftSaveReported' in error &&
+    (error as { draftSaveReported?: unknown }).draftSaveReported === true
+  )
+}
+
 const ERROR_FIELD: Partial<Record<keyof PublishSettings, PublishField>> = {
   tags: 'tags',
   cover: 'cover',
@@ -176,7 +186,9 @@ export function usePublishController(options: PublishControllerOptions): Publish
     try {
       await adapters.onSaveDraft(doc ?? FALLBACK_DOC, pending.current)
     } catch (error) {
-      notify(formatMessage(messages.errors.saveDraft, { message: errorMessage(error) }), 'error')
+      if (!isReportedDraftFailure(error)) {
+        notify(formatMessage(messages.errors.saveDraft, { message: errorMessage(error) }), 'error')
+      }
       return false
     } finally {
       busyRef.current = false
