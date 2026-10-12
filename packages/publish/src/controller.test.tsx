@@ -229,6 +229,7 @@ describe('usePublishController', () => {
     })
     expect(onPublish).not.toHaveBeenCalled()
     expect(notify).toHaveBeenCalledWith('正文不能为空', 'error')
+    expect(result.current.errors).toEqual({ html: '正文不能为空' })
   })
 
   it('富文本已选墨衍：发布前改回 default', async () => {

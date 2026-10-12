@@ -23,7 +23,8 @@ export interface RuleContext {
 export type PublishRule = (settings: PublishSettings, ctx: RuleContext) => string | undefined
 /** 函数替换内置规则，false 关闭；未列出的字段沿用内置规则 */
 export type PublishRules = Partial<Record<PublishField, PublishRule | false>>
-export type PublishErrors = Partial<Record<PublishField, string>>
+/** html 只表示正文为空，表单没有对应控件，用来让定时弹窗把它当成非时间错误并关闭 */
+export type PublishErrors = Partial<Record<PublishField, string>> & { html?: string }
 
 export const countChars = (text: string): number => Array.from(text).length
 export const sliceChars = (text: string, max: number): string => Array.from(text).slice(0, max).join('')

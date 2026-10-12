@@ -129,7 +129,7 @@ export function usePublishController(options: PublishControllerOptions): Publish
         const message = titleEmpty
           ? formatMessage(messages.errors.title, { min: TITLE_MIN, max: TITLE_MAX })
           : messages.errors.emptyHtml
-        setErrors(titleEmpty ? { title: message } : {})
+        setErrors(titleEmpty ? { title: message } : { html: message })
         setFailedAttempts((n) => n + 1)
         notify(message, 'error')
         return false

@@ -481,6 +481,23 @@ describe('定时发布', () => {
     await waitFor(() => expect(a.onPublish).toHaveBeenCalledTimes(2))
   })
 
+  it('正文为空时确认定时发布：关闭弹窗、提示正文不能为空、不发布', async () => {
+    const a = adapters()
+    renderWithProviders(
+      <PublishPanel
+        document={{ editorType: 'markdown', title: '足够长的标题', html: '<p>&nbsp;</p>' }}
+        adapters={a}
+        defaultValue={{ tags: ['React'] }}
+      />,
+    )
+    const dialog = await openSchedule()
+    await pickSchedule(dialog, '2026-10-10', '10:00')
+    await userEvent.click(within(dialog).getByRole('button', { name: '定时发布' }))
+    expect(await screen.findByText('正文不能为空')).toBeInTheDocument()
+    await waitFor(() => expect(dialog).not.toBeInTheDocument())
+    expect(a.onPublish).not.toHaveBeenCalled()
+  })
+
   it('其他字段校验失败时关闭弹窗并聚焦首个错误字段', async () => {
     const a = adapters()
     renderWithProviders(<PublishPanel document={doc} adapters={a} />)
