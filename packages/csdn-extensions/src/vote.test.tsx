@@ -68,6 +68,31 @@ describe('csdn:vote', () => {
     expect(screen.queryByRole('dialog', { name: '投票' })).toBeNull()
   })
 
+  it('进行中按 Escape 关闭后不插入', async () => {
+    const user = userEvent.setup()
+    let resolveVote: (value: { id: string }) => void = () => {}
+    const createVote = vi.fn(
+      () =>
+        new Promise<{ id: string }>((resolve) => {
+          resolveVote = resolve
+        }),
+    )
+    const ctx = extensionCtx({ adapters: { createVote } })
+    renderExtension([csdnVoteExtension], ctx, [['csdn:vote']])
+    await user.click(screen.getByRole('button', { name: '投票' }))
+    const dialog = await screen.findByRole('dialog', { name: '投票' })
+    await user.type(within(dialog).getByRole('textbox', { name: '投票标题' }), '午饭')
+    await user.type(within(dialog).getByRole('textbox', { name: '选项 1' }), '面')
+    await user.type(within(dialog).getByRole('textbox', { name: '选项 2' }), '饭')
+    await user.click(within(dialog).getByRole('button', { name: '确定' }))
+    const started = createVote.mock.results[0]?.value as Promise<unknown>
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: '投票' })).toBeNull()
+    resolveVote({ id: 'v1' })
+    await started
+    expect(ctx.insertEmbed).not.toHaveBeenCalled()
+  })
+
   it('没有 createVote 时隐藏按钮', () => {
     renderExtension([csdnVoteExtension], extensionCtx(), [['csdn:vote']])
     expect(screen.queryByRole('button', { name: '投票' })).toBeNull()

@@ -12,6 +12,7 @@ import {
   useStableArray,
   type EditorAdapters,
   type EditorExtension,
+  type EmbedDef,
   type ExtensionContext,
   type InsertContent,
   type Messages,
@@ -288,6 +289,8 @@ function EditorShell({
 
   const allExtensions = useStableArray(useMemo(() => [...coreExtensions, ...extensions], [coreExtensions, extensions]))
   const active = useMemo(() => activeExtensions(allExtensions, 'richtext'), [allExtensions])
+  const embedsRef = useRef<readonly EmbedDef[]>([])
+  embedsRef.current = active.flatMap((extension) => extension.embeds ?? [])
   useExtensionSetup(active, ctx, reportError)
   const resolveOptions = useMemo(
     () => ({ editorType: 'richtext' as const, adapters, missingAdapter }),
@@ -307,7 +310,11 @@ function EditorShell({
     let current: MountedEditor | undefined
     let stop = () => {}
     const passedHtml = initialHtmlRef.current
-    mountEditor(element, createEditorConfig({ uploadImage: liveRef.current.adapters.uploadImage }), passedHtml)
+    mountEditor(
+      element,
+      createEditorConfig({ uploadImage: liveRef.current.adapters.uploadImage, embeds: embedsRef.current }),
+      passedHtml,
+    )
       .then((editor) => {
         if (cancelled) {
           void editor.destroy()

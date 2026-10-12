@@ -31,7 +31,6 @@ export function extensionCtx(over: Partial<ExtensionContext> = {}): ExtensionCon
     replaceDocument: vi.fn(),
     getDocument: () => ({ editorType: 'markdown', title: '', markdown: '', html: '' }),
     commands: { has: () => true, run: vi.fn(() => true), list: () => [] },
-    adapters: {},
     openPanel: vi.fn(),
     closePanel: vi.fn(),
     togglePanel: vi.fn(),

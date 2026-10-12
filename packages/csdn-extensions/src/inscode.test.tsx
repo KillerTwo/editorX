@@ -62,6 +62,27 @@ describe('csdn:inscode', () => {
     )
   })
 
+  it('进行中按 Escape 关闭后不插入', async () => {
+    const user = userEvent.setup()
+    let resolveRun: (value: { url: string }) => void = () => {}
+    const runCode = vi.fn(
+      () =>
+        new Promise<{ url: string }>((resolve) => {
+          resolveRun = resolve
+        }),
+    )
+    const ctx = extensionCtx({ adapters: { runCode } })
+    renderExtension([csdnInscodeExtension], ctx, [['csdn:inscode']])
+    const dialog = await fill(user)
+    await user.click(within(dialog).getByRole('button', { name: '确定' }))
+    const started = runCode.mock.results[0]?.value as Promise<unknown>
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'InsCode' })).toBeNull()
+    resolveRun({ url: 'https://inscode.example/run' })
+    await started
+    expect(ctx.insertEmbed).not.toHaveBeenCalled()
+  })
+
   it('没有 runCode 时隐藏', () => {
     renderExtension([csdnInscodeExtension], extensionCtx(), [['csdn:inscode']])
     expect(screen.queryByRole('button', { name: 'InsCode' })).toBeNull()

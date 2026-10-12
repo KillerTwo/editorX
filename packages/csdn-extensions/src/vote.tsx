@@ -1,7 +1,7 @@
 import { formatMessage, type EditorExtension, type ExtensionContext, type VoteInput } from '@editorx/toolbar'
 import { Button, Checkbox } from '@editorx/ui'
 import { ListChecks } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { escapeHtml } from './embed-html'
 import { ExtField, reportFailure } from './form'
 
@@ -30,6 +30,13 @@ function VoteDialog({ ctx, close }: { ctx: ExtensionContext; close: () => void }
   const [multiple, setMultiple] = useState(false)
   const [deadline, setDeadline] = useState('')
   const [pending, setPending] = useState(false)
+  const open = useRef(true)
+  useEffect(() => {
+    open.current = true
+    return () => {
+      open.current = false
+    }
+  }, [])
   const cleaned = options.map((option) => option.trim()).filter((option) => option !== '')
   const deadlineDate = deadline === '' ? null : new Date(deadline)
   const deadlineOk = deadline === '' || (deadlineDate !== null && !Number.isNaN(deadlineDate.getTime()))
@@ -45,12 +52,14 @@ function VoteDialog({ ctx, close }: { ctx: ExtensionContext; close: () => void }
     setPending(true)
     createVote(input).then(
       (result) => {
+        if (!open.current) return
         const payload: VoteEmbed = { id: result.id, title: input.title, options: input.options, multiple: input.multiple }
         if (input.deadline) payload.deadline = input.deadline
         close()
         ctx.insertEmbed('vote', payload)
       },
       (error: unknown) => {
+        if (!open.current) return
         setPending(false)
         reportFailure(ctx, copy.voteFailed, error)
       },
@@ -98,7 +107,13 @@ function VoteDialog({ ctx, close }: { ctx: ExtensionContext; close: () => void }
         )}
       </ExtField>
       <div className="ex-csdn-ext-actions">
-        <Button type="button" onClick={close}>
+        <Button
+          type="button"
+          onClick={() => {
+            open.current = false
+            close()
+          }}
+        >
           {ctx.locale.dialog.cancel}
         </Button>
         <Button type="submit" variant="primary" disabled={!canSubmit} loading={pending}>

@@ -1,4 +1,4 @@
-import type { EditorAdapters } from '@editorx/toolbar'
+import type { EditorAdapters, EmbedDef } from '@editorx/toolbar'
 import {
   Alignment,
   BlockQuote,
@@ -38,7 +38,7 @@ import { createUploadAdapter } from './upload-adapter'
 
 const CODE_LANGUAGES = ['plaintext', 'javascript', 'typescript', 'python', 'java', 'go', 'bash', 'json'] as const
 
-function createExBridgePlugin(uploadImage?: EditorAdapters['uploadImage']) {
+function createExBridgePlugin(uploadImage?: EditorAdapters['uploadImage'], embeds: readonly EmbedDef[] = []) {
   return class ExBridgePlugin extends Plugin {
     static get pluginName() {
       return 'ExBridge' as const
@@ -55,12 +55,15 @@ function createExBridgePlugin(uploadImage?: EditorAdapters['uploadImage']) {
         }
         repository.createUploadAdapter = (loader) => createUploadAdapter(loader.file, uploadImage)
       }
-      registerExEmbed(this.editor)
+      registerExEmbed(this.editor, embeds)
     }
   }
 }
 
-export function createEditorConfig(options: { uploadImage?: EditorAdapters['uploadImage'] }): {
+export function createEditorConfig(options: {
+  uploadImage?: EditorAdapters['uploadImage']
+  embeds?: readonly EmbedDef[]
+}): {
   licenseKey: 'GPL'
   toolbar: { items: [] }
   plugins: unknown[]
@@ -105,7 +108,7 @@ export function createEditorConfig(options: { uploadImage?: EditorAdapters['uplo
       GeneralHtmlSupport,
       Undo,
     ],
-    extraPlugins: [createExBridgePlugin(options.uploadImage)],
+    extraPlugins: [createExBridgePlugin(options.uploadImage, options.embeds)],
     codeBlock: {
       languages: CODE_LANGUAGES.map((language) => ({ language, label: language })),
     },

@@ -1,7 +1,7 @@
 import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
 import { Button } from '@editorx/ui'
 import { SquareCode } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { escapeHtml, httpUrl } from './embed-html'
 import { ExtField, reportFailure } from './form'
 
@@ -20,6 +20,13 @@ function InsCodeDialog({ ctx, close }: { ctx: ExtensionContext; close: () => voi
   const [lang, setLang] = useState('javascript')
   const [code, setCode] = useState('')
   const [pending, setPending] = useState(false)
+  const open = useRef(true)
+  useEffect(() => {
+    open.current = true
+    return () => {
+      open.current = false
+    }
+  }, [])
   const canSubmit = lang.trim() !== '' && code.trim() !== '' && !pending
 
   const submit = (event: FormEvent) => {
@@ -31,6 +38,7 @@ function InsCodeDialog({ ctx, close }: { ctx: ExtensionContext; close: () => voi
     setPending(true)
     runCode(language, source).then(
       (result) => {
+        if (!open.current) return
         const url = httpUrl(result.url)
         if (!url) {
           setPending(false)
@@ -41,6 +49,7 @@ function InsCodeDialog({ ctx, close }: { ctx: ExtensionContext; close: () => voi
         ctx.insertEmbed('inscode', { url, lang: language })
       },
       (error: unknown) => {
+        if (!open.current) return
         setPending(false)
         reportFailure(ctx, copy.inscodeFailed, error)
       },
@@ -60,7 +69,13 @@ function InsCodeDialog({ ctx, close }: { ctx: ExtensionContext; close: () => voi
         )}
       </ExtField>
       <div className="ex-csdn-ext-actions">
-        <Button type="button" onClick={close}>
+        <Button
+          type="button"
+          onClick={() => {
+            open.current = false
+            close()
+          }}
+        >
           {ctx.locale.dialog.cancel}
         </Button>
         <Button type="submit" variant="primary" disabled={!canSubmit} loading={pending}>
