@@ -14,6 +14,7 @@
     "@editorx/markdown": "workspace:*",
     "@editorx/markdown-core": "workspace:*",
     "@editorx/publish": "workspace:*",
+    "@editorx/rich-text": "workspace:*",
     "@editorx/theme": "workspace:*",
     "@editorx/toolbar": "workspace:*",
     "@editorx/ui": "workspace:*",
