@@ -65,6 +65,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@editorx/csdn':
+        specifier: workspace:*
+        version: link:../../packages/csdn
       '@editorx/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
@@ -117,6 +120,40 @@ importers:
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
+
+  packages/csdn:
+    dependencies:
+      '@editorx/markdown':
+        specifier: workspace:*
+        version: link:../markdown
+      '@editorx/markdown-core':
+        specifier: workspace:*
+        version: link:../markdown-core
+      '@editorx/publish':
+        specifier: workspace:*
+        version: link:../publish
+      '@editorx/rich-text':
+        specifier: workspace:*
+        version: link:../rich-text
+      '@editorx/theme':
+        specifier: workspace:*
+        version: link:../theme
+      '@editorx/toolbar':
+        specifier: workspace:*
+        version: link:../toolbar
+      '@editorx/ui':
+        specifier: workspace:*
+        version: link:../ui
+      lucide-react:
+        specifier: ^1.53.0
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
+    devDependencies:
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
 
   packages/markdown:
     dependencies:
