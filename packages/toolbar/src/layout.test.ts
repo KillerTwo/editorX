@@ -174,4 +174,13 @@ describe('resolvePanels', () => {
       ['toc', 'd'],
     ])
   })
+
+  it('保留 position 为 left 的面板', () => {
+    const render = () => null
+    const panels = resolvePanels(
+      [{ name: 'toc', panels: [{ id: 'toc', title: '目录', position: 'left', render }] }],
+      { editorType: 'richtext', adapters: {} },
+    )
+    expect(panels.map((item) => item.panel.position)).toEqual(['left'])
+  })
 })

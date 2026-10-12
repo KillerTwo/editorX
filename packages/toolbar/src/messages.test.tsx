@@ -123,4 +123,19 @@ describe('参考图对齐文案', () => {
     )
     expect(zhCN.editor.syncScroll).toBe('同步滚动')
   })
+
+  it('富文本工具栏用撤消和模版', () => {
+    expect(zhCN.toolbar.undo).toBe('撤消')
+    expect(zhCN.toolbar.template).toBe('模版')
+    expect(zhCN.toolbar.switchEditor).toBe('使用 MD 编辑器')
+    expect(zhCN.richText.titleNeed).toBe('还需输入{n}个字')
+    expect(zhCN.richText.placeholder.split('\n')).toEqual([
+      '#创作灵感#',
+      '• 记录工作实践、项目复盘',
+      '• 写技术笔记巩固知识要点',
+      '• 发表职场感悟心得',
+      '• 搬运自己的原创文章到这',
+    ])
+    expect(zhCN.panels.tocEmptyAfter).toContain('@[TOC]')
+  })
 })

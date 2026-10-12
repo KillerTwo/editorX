@@ -70,8 +70,8 @@ export interface PanelDef {
   title: MessageText
   /** 右侧图标栏中的图标 */
   icon?: ReactNode
-  /** 只有 right 面板出现在右侧图标栏中；bottom 面板没有图标栏入口，只能经 ctx.openPanel / togglePanel 打开 */
-  position: 'right' | 'bottom'
+  /** left 不进入 Markdown 右侧图标栏。只有 right 面板出现在右侧图标栏中；bottom 面板没有图标栏入口，只能经 ctx.openPanel / togglePanel 打开 */
+  position: 'left' | 'right' | 'bottom'
   order?: number
   render(ctx: ExtensionContext): ReactNode
 }
