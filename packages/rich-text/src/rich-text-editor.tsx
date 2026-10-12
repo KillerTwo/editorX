@@ -21,6 +21,7 @@ import { richTextCoreExtensions } from './core-extensions'
 import { createEditorConfig } from './ck-config'
 import { RICH_TEXT_TOOLBAR_LAYOUT } from './layout'
 import { mountEditor, type MountedEditor } from './mount-editor'
+import { PaperChrome } from './paper'
 import type { RichTextEditorProps } from './types'
 
 const EMPTY_ADAPTERS: EditorAdapters = {}
@@ -29,6 +30,13 @@ const EMPTY_FORMATS: ReadonlySet<string> = new Set()
 
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
+}
+
+/** CKEditor 空文档常是 `<p>&nbsp;</p>`，这种 getData 仍应显示占位。有可见文字或媒体时隐藏。 */
+function isEmptyDocument(html: string): boolean {
+  if (/data-ex-embed=|<(img|video|iframe|audio|svg|table|hr|canvas|object)\b/i.test(html)) return false
+  const text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;|&#160;/gi, '').replace(/\u00a0/g, '').trim()
+  return text.length === 0
 }
 
 function LocalizedToasts({ children }: { children: ReactNode }) {
@@ -164,6 +172,7 @@ function EditorShell({
   onChange,
   title,
   defaultTitle,
+  onTitleChange,
   adapters = EMPTY_ADAPTERS,
   extensions = EMPTY_EXTENSIONS,
   coreExtensions = richTextCoreExtensions,
@@ -182,6 +191,9 @@ function EditorShell({
   const [wide, setWide] = useState(false)
   const [panel, setPanel] = useState<string | null>(null)
   const [, setMounted] = useState<MountedEditor | null>(null)
+  const [ownTitle, setOwnTitle] = useState(defaultTitle ?? '')
+  const [documentHtml, setDocumentHtml] = useState(() => value ?? defaultValue ?? '')
+  const currentTitle = title ?? ownTitle
   const editableRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MountedEditor | null>(null)
   const silentRef = useRef(false)
@@ -190,7 +202,7 @@ function EditorShell({
   const panelRef = useRef(panel)
   const liveRef = useRef({
     adapters,
-    title: title ?? defaultTitle ?? '',
+    title: currentTitle,
     theme: resolved,
     readOnly,
     messages,
@@ -200,7 +212,7 @@ function EditorShell({
   panelRef.current = panel
   liveRef.current = {
     adapters,
-    title: title ?? defaultTitle ?? '',
+    title: currentTitle,
     theme: resolved,
     readOnly,
     messages,
@@ -252,8 +264,11 @@ function EditorShell({
         editorRef.current = editor
         stop = editor.onChange(() => {
           if (cancelled || silentRef.current) return
-          onChangeRef.current?.(editor.getData())
+          const html = editor.getData()
+          onChangeRef.current?.(html)
+          setDocumentHtml(html)
         })
+        setDocumentHtml(editor.getData())
         setMounted(editor)
       })
       .catch((error: unknown) => {
@@ -281,6 +296,7 @@ function EditorShell({
         return editorRef.current?.getData() ?? initialHtmlRef.current
       },
       setValue(html: string) {
+        setDocumentHtml(html)
         const editor = editorRef.current
         if (!editor) {
           initialHtmlRef.current = html
@@ -308,6 +324,14 @@ function EditorShell({
     [ctx],
   )
 
+  const handleTitleChange = (next: string) => {
+    if (title === undefined) {
+      setOwnTitle(next)
+      liveRef.current.title = next
+    }
+    onTitleChange?.(next)
+  }
+
   return (
     <div className={cx('ex-rte', className)} data-editor="rich-text" data-wide={wide || undefined} style={{ height }}>
       <div className="ex-rte__band">
@@ -315,13 +339,20 @@ function EditorShell({
       </div>
       <div className="ex-rte__scroll">
         <article className="ex-rte-paper">
-          <div
-            className="ex-rte-body"
-            ref={editableRef}
-            role="textbox"
-            aria-multiline="true"
-            aria-label={ariaLabel ?? messages.richText.editable}
-          />
+          <PaperChrome
+            title={currentTitle}
+            onTitleChange={handleTitleChange}
+            empty={isEmptyDocument(documentHtml)}
+            titleActions={slots?.titleActions}
+          >
+            <div
+              className="ex-rte-body"
+              ref={editableRef}
+              role="textbox"
+              aria-multiline="true"
+              aria-label={ariaLabel ?? messages.richText.editable}
+            />
+          </PaperChrome>
         </article>
         <div className="ex-rte__after">{slots?.afterPaper}</div>
       </div>

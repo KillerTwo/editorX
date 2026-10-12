@@ -18,6 +18,7 @@
   height: auto;
   overflow: auto;
   overscroll-behavior: contain;
+  padding-top: 33px;
 }
 
 .ex-rte__band {
@@ -132,3 +133,71 @@
 .ex-rte-dialog__field { display: grid; gap: 4px; }
 .ex-rte-dialog__input { width: 100%; box-sizing: border-box; }
 .ex-rte-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.ex-rte-paper {
+  position: relative;
+  box-sizing: border-box;
+  width: 816px;
+  min-height: 812px;
+  margin: 0 auto;
+  padding: 32px 64px 64px;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  background: var(--ex-color-rte-paper);
+}
+.ex-rte-title { display: flex; align-items: center; min-height: 32px; }
+.ex-rte-title__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ex-color-rte-title);
+  font-family: var(--ex-font-family);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+.ex-rte-title__input::placeholder { color: var(--ex-color-rte-title-placeholder); font-weight: 600; }
+.ex-rte-title__count { flex: none; color: var(--ex-color-rte-chrome); font-size: 12px; line-height: 17px; }
+.ex-rte-title__count.is-over { color: var(--ex-color-error); }
+.ex-rte-title__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+}
+.ex-rte-title.is-ready .ex-rte-title__actions { margin-right: 8px; }
+.ex-rte-title__wand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ex-color-rte-wand);
+  color: var(--ex-color-rte-chrome);
+}
+.ex-rte-paper__rule { height: 1px; margin: 23px 0 0; border: 0; background: var(--ex-color-rte-divider); }
+.ex-rte-stage { position: relative; }
+.ex-rte-body { margin-top: 24px; }
+.ex-rte-placeholder {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  margin: 24px 0 0;
+  color: var(--ex-color-rte-placeholder);
+  font-size: 16px;
+  line-height: 32px;
+  white-space: pre-wrap;
+  pointer-events: none;
+}
+.ex-rte[data-wide='true'] .ex-rte-paper { width: calc(100% - 240px); min-width: 816px; }

@@ -42,6 +42,15 @@ describe('rich-text styles', () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|light-dark\(/)
   })
 
+  it('稿纸、标题计数和占位用 token', () => {
+    expect(css).toMatch(/\.ex-rte-paper \{[^}]*min-height: 812px/)
+    expect(css).toMatch(/\.ex-rte-paper \{[^}]*padding: 32px 64px 64px/)
+    expect(css).toMatch(/\.ex-rte-title__input \{[^}]*color: var\(--ex-color-rte-title\)/)
+    expect(css).toMatch(/\.ex-rte-title__count\.is-over \{[^}]*color: var\(--ex-color-error\)/)
+    expect(css).toMatch(/\.ex-rte-placeholder \{[^}]*line-height: 32px/)
+    expect(css).not.toMatch(/\.ex-rte-placeholder[^,{]*ul/)
+  })
+
   it('图标在文字上方，且只作用于 .ex-rte', () => {
     expect(css).toMatch(/\.ex-rte \.ex-toolbar__item\.has-label \{[^}]*grid-template-areas: 'icon caret' 'label label'/)
     expect(css).toMatch(/\.ex-rte \.ex-toolbar__item:disabled \{[^}]*color: var\(--ex-color-rte-ink\)/)
