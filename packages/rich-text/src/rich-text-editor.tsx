@@ -19,9 +19,11 @@ import { ToastProvider, useToast } from '@editorx/ui'
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react'
 import { richTextCoreExtensions } from './core-extensions'
 import { createEditorConfig } from './ck-config'
+import { scrollHeadingIntoView } from './headings'
 import { RICH_TEXT_TOOLBAR_LAYOUT } from './layout'
 import { mountEditor, type MountedEditor } from './mount-editor'
 import { PaperChrome } from './paper'
+import { ExpandGlyph, TocPanel } from './toc-panel'
 import type { RichTextEditorProps } from './types'
 
 const EMPTY_ADAPTERS: EditorAdapters = {}
@@ -181,6 +183,7 @@ function EditorShell({
   readOnly = false,
   ariaLabel,
   height = '100%',
+  defaultTocOpen = true,
   slots,
   className,
   ref,
@@ -189,12 +192,14 @@ function EditorShell({
   const { resolved } = useTheme()
   const { notify } = useToast()
   const [wide, setWide] = useState(false)
-  const [panel, setPanel] = useState<string | null>(null)
+  const [panel, setPanel] = useState<string | null>(defaultTocOpen ? 'toc' : null)
+  const [tocOverlay, setTocOverlay] = useState(false)
   const [, setMounted] = useState<MountedEditor | null>(null)
   const [ownTitle, setOwnTitle] = useState(defaultTitle ?? '')
   const [documentHtml, setDocumentHtml] = useState(() => value ?? defaultValue ?? '')
   const currentTitle = title ?? ownTitle
   const editableRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MountedEditor | null>(null)
   const silentRef = useRef(false)
   const initialHtmlRef = useRef(value ?? defaultValue ?? '')
@@ -337,7 +342,7 @@ function EditorShell({
       <div className="ex-rte__band">
         <Toolbar groups={groups} ctx={ctx} readOnly={readOnly} stateKey={`${wide}|${panel ?? ''}`} onError={reportError} />
       </div>
-      <div className="ex-rte__scroll">
+      <div className="ex-rte__scroll" ref={scrollRef}>
         <article className="ex-rte-paper">
           <PaperChrome
             title={currentTitle}
@@ -356,6 +361,30 @@ function EditorShell({
         </article>
         <div className="ex-rte__after">{slots?.afterPaper}</div>
       </div>
+      <aside
+        className={cx('ex-rte-toc', panel !== 'toc' && 'is-collapsed', tocOverlay && 'is-open')}
+        aria-label={messages.panels.toc}
+      >
+        <TocPanel
+          html={documentHtml}
+          onCollapse={() => setPanel((current) => (current === 'toc' ? null : current))}
+          onSelect={(id, index) => {
+            const scroll = scrollRef.current
+            if (scroll) scrollHeadingIntoView(scroll, id, index)
+          }}
+        />
+      </aside>
+      <button
+        type="button"
+        className="ex-rte-toc__expand"
+        aria-label={messages.panels.expand}
+        onClick={() => {
+          setPanel('toc')
+          setTocOverlay(true)
+        }}
+      >
+        <ExpandGlyph />
+      </button>
     </div>
   )
 }

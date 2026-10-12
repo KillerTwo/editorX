@@ -51,6 +51,33 @@ describe('rich-text styles', () => {
     expect(css).not.toMatch(/\.ex-rte-placeholder[^,{]*ul/)
   })
 
+  it('左侧目录浮在稿纸上，窄屏默认藏起', () => {
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*position:\s*absolute/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*z-index:\s*4/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*top:\s*84px/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*bottom:\s*37px/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*left:\s*23px/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*width:\s*280px/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*background:\s*var\(--ex-color-rte-paper\)/)
+    expect(css).toMatch(/\.ex-rte-toc\s*\{[^}]*box-shadow:\s*0 0 20px var\(--ex-color-rte-toc-shadow\)/)
+    expect(css).toMatch(/\.ex-rte-toc__empty\s*\{[^}]*margin:\s*auto/)
+    expect(css).toMatch(/\.ex-rte-toc__empty\s*\{[^}]*color:\s*var\(--ex-color-rte-ink\)/)
+    expect(css).toMatch(/\.ex-rte-toc__empty\s*\{[^}]*text-align:\s*center/)
+    expect(css).toMatch(/\.ex-rte-toc__title\s*\{[^}]*color:\s*var\(--ex-color-rte-toc-title\)/)
+    expect(css).toMatch(/\.ex-rte-toc__rule\s*\{[^}]*background:\s*var\(--ex-color-rte-divider\)/)
+    const tocMedia = `@media (max-width: 1199px) {
+  .ex-rte-toc { visibility: hidden; }
+  .ex-rte-toc.is-open { visibility: visible; }
+}`
+    expect(css).toMatch(new RegExp(tocMedia.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    expect(css.indexOf('.ex-rte-toc.is-collapsed')).toBeGreaterThan(css.indexOf(tocMedia))
+    expect(css).toMatch(/\.ex-rte\s*\{[^}]*position:\s*relative/)
+    const scroll = css.match(/\.ex-rte__scroll\s*\{[^}]*\}/)?.[0] ?? ''
+    expect(scroll).toContain('flex: 1 1 auto')
+    expect(scroll).toContain('height: auto')
+    expect(scroll).not.toContain('height: 100%')
+  })
+
   it('图标在文字上方，且只作用于 .ex-rte', () => {
     expect(css).toMatch(/\.ex-rte \.ex-toolbar__item\.has-label \{[^}]*grid-template-areas: 'icon caret' 'label label'/)
     expect(css).toMatch(/\.ex-rte \.ex-toolbar__item:disabled \{[^}]*color: var\(--ex-color-rte-ink\)/)

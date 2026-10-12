@@ -1,4 +1,5 @@
 import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
+import { TocPanel } from './toc-panel'
 import { Button, cropImage, ImageCropper, type CropArea } from '@editorx/ui'
 import {
   AlignCenter,
@@ -416,6 +417,14 @@ export const richTextCoreExtensions: readonly EditorExtension[] = [
         label: (m) => m.toolbar.wide,
         icon: <Maximize2 size={ICON} />,
         run: run('wide'),
+      },
+    ],
+    panels: [
+      {
+        id: 'toc',
+        title: (m) => m.panels.toc,
+        position: 'left',
+        render: (ctx) => <TocPanel html={ctx.getDocument().html} />,
       },
     ],
   },
