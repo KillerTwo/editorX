@@ -155,6 +155,28 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
 
+  packages/csdn-extensions:
+    dependencies:
+      '@editorx/theme':
+        specifier: workspace:*
+        version: link:../theme
+      '@editorx/toolbar':
+        specifier: workspace:*
+        version: link:../toolbar
+      '@editorx/ui':
+        specifier: workspace:*
+        version: link:../ui
+      lucide-react:
+        specifier: ^1.53.0
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
+    devDependencies:
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
+
   packages/markdown:
     dependencies:
       '@editorx/markdown-core':
