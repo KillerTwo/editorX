@@ -9,6 +9,7 @@ export default function Home() {
         <li><Link href="/compare">还原度对照 /compare</Link></li>
         <li><Link href="/markdown-core">编辑引擎 /markdown-core</Link></li>
         <li><Link href="/markdown">Markdown 编辑器 /markdown</Link></li>
+        <li><Link href="/rich-text">富文本编辑器 /rich-text</Link></li>
         <li><Link href="/publish">发布设置 /publish</Link></li>
       </ul>
     </main>
