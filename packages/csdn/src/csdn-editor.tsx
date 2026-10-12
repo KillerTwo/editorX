@@ -11,10 +11,11 @@ import {
   type EditorExtension,
   type EditorType,
 } from '@editorx/toolbar'
-import { ToastProvider, useToast } from '@editorx/ui'
+import { Button, Modal, ToastProvider, useToast } from '@editorx/ui'
 import { useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { cx } from './cx'
 import { submitPublish } from './submit-publish'
+import { switchedDocument } from './switch-document'
 import { TopBar } from './top-bar'
 import type { CsdnEditorProps } from './types'
 
@@ -49,12 +50,15 @@ function CsdnEditorShell({
   toolbarLayout,
   defaultRightOpen,
   defaultTocOpen,
+  onEditorTypeChange,
   adapters: adaptersProp,
   initialSettings,
   slots,
   ref,
 }: CsdnEditorProps) {
-  const editorType: EditorType = defaultEditor ?? initialDocument?.editorType ?? 'markdown'
+  const [editorType, setEditorType] = useState<EditorType>(defaultEditor ?? initialDocument?.editorType ?? 'markdown')
+  const [mountKey, setMountKey] = useState(0)
+  const [switchOpen, setSwitchOpen] = useState(false)
   const [title, setTitle] = useState(initialDocument?.title ?? '')
   const [markdown, setMarkdown] = useState(initialDocument?.markdown ?? '')
   const [html, setHtml] = useState(initialDocument?.html ?? '')
@@ -75,6 +79,17 @@ function CsdnEditorShell({
     }
     return { editorType: 'richtext', title, html, markdown: undefined }
   }, [editorType, title, markdown, html])
+
+  const confirmSwitch = () => {
+    const next = switchedDocument(readDocument())
+    setTitle(next.title)
+    setMarkdown(next.markdown ?? '')
+    setHtml(next.html)
+    setEditorType(next.editorType)
+    setMountKey((key) => key + 1)
+    setSwitchOpen(false)
+    onEditorTypeChange?.(next.editorType)
+  }
 
   useImperativeHandle(ref, () => ({ getDocument: readDocument }), [readDocument])
 
@@ -101,12 +116,13 @@ function CsdnEditorShell({
         onBack={onBack}
         showThemeToggle={showThemeToggle}
         onSaveDraft={() => undefined}
-        onSwitch={() => undefined}
+        onSwitch={() => setSwitchOpen(true)}
         onPublish={publish}
       />
       <div className="ex-csdn__editor">
         {editorType === 'markdown' ? (
           <MarkdownEditor
+            key={`${editorType}:${mountKey}`}
             ref={markdownRef}
             defaultValue={markdown}
             title={title}
@@ -120,6 +136,7 @@ function CsdnEditorShell({
           />
         ) : (
           <RichTextEditor
+            key={`${editorType}:${mountKey}`}
             ref={richRef}
             defaultValue={html}
             title={title}
@@ -153,6 +170,25 @@ function CsdnEditorShell({
           />
         )}
       </div>
+      <Modal
+        open={switchOpen}
+        onClose={() => setSwitchOpen(false)}
+        title="切换编辑器"
+        footer={
+          <>
+            <Button type="button" onClick={() => setSwitchOpen(false)}>
+              {messages.dialog.cancel}
+            </Button>
+            <Button type="button" variant="primary" onClick={confirmSwitch}>
+              {messages.dialog.confirm}
+            </Button>
+          </>
+        }
+      >
+        {editorType === 'markdown'
+          ? '切换后将用当前 HTML 打开富文本编辑器。'
+          : '切换后将把 HTML 转成 Markdown，部分格式会丢失。'}
+      </Modal>
     </div>
   )
 }
