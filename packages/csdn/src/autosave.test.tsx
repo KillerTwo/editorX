@@ -2,6 +2,7 @@ import { createSettings } from '@editorx/publish'
 import type { EditorDocument, PublishSettings } from '@editorx/toolbar'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { renderToString } from 'react-dom/server'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CsdnEditor } from './csdn-editor'
@@ -133,6 +134,73 @@ describe('自动保存与本地备份', () => {
     expect(await screen.findByText('草稿已保存')).toBeInTheDocument()
     expect(onSaveDraft.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ title: '足够长的标题' }))
     expect(onSaveDraft.mock.calls[0]?.[1]).toEqual(expect.objectContaining({ tags: [] }))
+  })
+
+  it('服务端 HTML 不含恢复对话框，客户端再询问较新备份', async () => {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        document: { editorType: 'markdown', title: '本地更新的标题啊', markdown: 'Local', html: '<p>Local</p>' },
+        settings: createSettings(),
+        updatedAt: 50,
+      }),
+    )
+    const props = {
+      defaultTheme: 'light' as const,
+      initialUpdatedAt: 10,
+      initialDocument: { editorType: 'markdown' as const, title: '足够长的标题', markdown: 'Hello', html: '' },
+    }
+    const html = renderToString(<CsdnEditor {...props} />)
+    expect(html).not.toContain('恢复本地草稿')
+    for (const className of ['ex-csdn__draft', 'ex-csdn__switch', 'ex-csdn__publish']) {
+      const tag = html.match(new RegExp(`<button[^>]*${className}[^>]*>`))?.[0]
+      expect(tag).toBeTruthy()
+      expect(tag).not.toContain('disabled')
+    }
+    render(
+      <StrictMode>
+        <CsdnEditor {...props} />
+      </StrictMode>,
+    )
+    expect(await screen.findByRole('dialog', { name: '恢复本地草稿' })).toBeInTheDocument()
+  })
+
+  it('进行中的保存不写较新的备份，结束后再保存一次最新正文', async () => {
+    const user = userEvent.setup()
+    let release: () => void = () => {}
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const onSaveDraft = vi.fn<(doc: EditorDocument, settings?: PublishSettings) => Promise<void>>(async () => {
+      if (onSaveDraft.mock.calls.length === 1) await gate
+    })
+    const ref = createRef<CsdnEditorHandle>()
+    render(
+      <StrictMode>
+        <CsdnEditor
+          ref={ref}
+          defaultTheme="light"
+          autoSaveInterval={0}
+          initialDocument={{ editorType: 'markdown', title: '足够长的标题', markdown: 'Hello', html: '' }}
+          adapters={{ onSaveDraft }}
+        />
+      </StrictMode>,
+    )
+    const input = screen.getByRole('textbox', { name: '文章标题' })
+    await user.type(input, '甲')
+    const first = ref.current!.saveDraft()
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledTimes(1))
+    await user.type(input, '乙')
+    const second = ref.current!.saveDraft()
+    await new Promise((resolve) => setTimeout(resolve, 40))
+    expect(onSaveDraft).toHaveBeenCalledTimes(1)
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).not.toContain('乙')
+    release()
+    await first
+    await second
+    expect(onSaveDraft).toHaveBeenCalledTimes(2)
+    expect(onSaveDraft.mock.calls[1]?.[0]).toEqual(expect.objectContaining({ title: '足够长的标题甲乙' }))
+    expect(window.localStorage.getItem(DRAFT_STORAGE_KEY)).toContain('足够长的标题甲乙')
   })
 
   it.each([Infinity, 2 ** 31])('超出范围的间隔（%s）不调用 onSaveDraft', async (autoSaveInterval) => {
