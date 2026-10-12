@@ -122,6 +122,29 @@
   --ex-color-pub-picker-category: light-dark(#777888, #a3a6ad);
   --ex-color-pub-picker-active: light-dark(#4e7a9a, #8fb4cf);
   --ex-color-pub-picker-option-bg: light-dark(#eaf2f6, #24303a);
+  --ex-color-rte-canvas: var(--ex-color-bg);
+  --ex-color-rte-paper: var(--ex-color-surface);
+  --ex-color-rte-ink: var(--ex-color-text-secondary);
+  --ex-color-rte-toc-title: var(--ex-color-text);
+  --ex-color-rte-chrome: var(--ex-color-mde-chrome-text);
+  --ex-color-rte-body: var(--ex-color-mde-body-text);
+  --ex-color-rte-placeholder: var(--ex-color-mde-disabled-text);
+  --ex-color-rte-title-placeholder: var(--ex-color-pub-placeholder);
+  --ex-color-rte-title: var(--ex-color-pub-label);
+  --ex-color-rte-band-border: var(--ex-color-pub-bar-border);
+  --ex-color-rte-wand: var(--ex-color-mde-divider);
+  --ex-color-rte-heading: var(--ex-color-mde-heading-text);
+  --ex-color-rte-list: var(--ex-color-mde-list-text);
+  --ex-color-rte-link: var(--ex-color-mde-preview-link);
+  --ex-color-rte-rule: var(--ex-color-mde-preview-rule);
+  --ex-color-rte-band: light-dark(#f5f5f5, #1d1e22);
+  --ex-color-rte-icon-disabled: light-dark(#b5b5bc, #6c6e72);
+  --ex-color-rte-caret: light-dark(#484848, #a3a6ad);
+  --ex-color-rte-separator: light-dark(#dbdbdb, #3a3b41);
+  --ex-color-rte-divider: light-dark(#e8e7e8, #2e2f34);
+  --ex-color-rte-hover: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.06));
+  --ex-color-rte-toc-shadow: light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.4));
+  --ex-color-rte-drawer-shadow: light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.45));
 
   --ex-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'SF UI Text', Arial, sans-serif;
   --ex-font-family-mono: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
@@ -306,6 +329,29 @@
     --ex-color-pub-picker-category: #777888;
     --ex-color-pub-picker-active: #4e7a9a;
     --ex-color-pub-picker-option-bg: #eaf2f6;
+    --ex-color-rte-canvas: var(--ex-color-bg);
+    --ex-color-rte-paper: var(--ex-color-surface);
+    --ex-color-rte-ink: var(--ex-color-text-secondary);
+    --ex-color-rte-toc-title: var(--ex-color-text);
+    --ex-color-rte-chrome: var(--ex-color-mde-chrome-text);
+    --ex-color-rte-body: var(--ex-color-mde-body-text);
+    --ex-color-rte-placeholder: var(--ex-color-mde-disabled-text);
+    --ex-color-rte-title-placeholder: var(--ex-color-pub-placeholder);
+    --ex-color-rte-title: var(--ex-color-pub-label);
+    --ex-color-rte-band-border: var(--ex-color-pub-bar-border);
+    --ex-color-rte-wand: var(--ex-color-mde-divider);
+    --ex-color-rte-heading: var(--ex-color-mde-heading-text);
+    --ex-color-rte-list: var(--ex-color-mde-list-text);
+    --ex-color-rte-link: var(--ex-color-mde-preview-link);
+    --ex-color-rte-rule: var(--ex-color-mde-preview-rule);
+    --ex-color-rte-band: #f5f5f5;
+    --ex-color-rte-icon-disabled: #b5b5bc;
+    --ex-color-rte-caret: #484848;
+    --ex-color-rte-separator: #dbdbdb;
+    --ex-color-rte-divider: #e8e7e8;
+    --ex-color-rte-hover: rgba(0, 0, 0, 0.04);
+    --ex-color-rte-toc-shadow: rgba(0, 0, 0, 0.05);
+    --ex-color-rte-drawer-shadow: rgba(0, 0, 0, 0.06);
   }
 
   .ex-root[data-ex-theme='dark'] {
@@ -432,6 +478,29 @@
     --ex-color-pub-picker-category: #a3a6ad;
     --ex-color-pub-picker-active: #8fb4cf;
     --ex-color-pub-picker-option-bg: #24303a;
+    --ex-color-rte-canvas: var(--ex-color-bg);
+    --ex-color-rte-paper: var(--ex-color-surface);
+    --ex-color-rte-ink: var(--ex-color-text-secondary);
+    --ex-color-rte-toc-title: var(--ex-color-text);
+    --ex-color-rte-chrome: var(--ex-color-mde-chrome-text);
+    --ex-color-rte-body: var(--ex-color-mde-body-text);
+    --ex-color-rte-placeholder: var(--ex-color-mde-disabled-text);
+    --ex-color-rte-title-placeholder: var(--ex-color-pub-placeholder);
+    --ex-color-rte-title: var(--ex-color-pub-label);
+    --ex-color-rte-band-border: var(--ex-color-pub-bar-border);
+    --ex-color-rte-wand: var(--ex-color-mde-divider);
+    --ex-color-rte-heading: var(--ex-color-mde-heading-text);
+    --ex-color-rte-list: var(--ex-color-mde-list-text);
+    --ex-color-rte-link: var(--ex-color-mde-preview-link);
+    --ex-color-rte-rule: var(--ex-color-mde-preview-rule);
+    --ex-color-rte-band: #1d1e22;
+    --ex-color-rte-icon-disabled: #6c6e72;
+    --ex-color-rte-caret: #a3a6ad;
+    --ex-color-rte-separator: #3a3b41;
+    --ex-color-rte-divider: #2e2f34;
+    --ex-color-rte-hover: rgba(255, 255, 255, 0.06);
+    --ex-color-rte-toc-shadow: rgba(0, 0, 0, 0.4);
+    --ex-color-rte-drawer-shadow: rgba(0, 0, 0, 0.45);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -559,6 +628,29 @@
       --ex-color-pub-picker-category: #a3a6ad;
       --ex-color-pub-picker-active: #8fb4cf;
       --ex-color-pub-picker-option-bg: #24303a;
+      --ex-color-rte-canvas: var(--ex-color-bg);
+      --ex-color-rte-paper: var(--ex-color-surface);
+      --ex-color-rte-ink: var(--ex-color-text-secondary);
+      --ex-color-rte-toc-title: var(--ex-color-text);
+      --ex-color-rte-chrome: var(--ex-color-mde-chrome-text);
+      --ex-color-rte-body: var(--ex-color-mde-body-text);
+      --ex-color-rte-placeholder: var(--ex-color-mde-disabled-text);
+      --ex-color-rte-title-placeholder: var(--ex-color-pub-placeholder);
+      --ex-color-rte-title: var(--ex-color-pub-label);
+      --ex-color-rte-band-border: var(--ex-color-pub-bar-border);
+      --ex-color-rte-wand: var(--ex-color-mde-divider);
+      --ex-color-rte-heading: var(--ex-color-mde-heading-text);
+      --ex-color-rte-list: var(--ex-color-mde-list-text);
+      --ex-color-rte-link: var(--ex-color-mde-preview-link);
+      --ex-color-rte-rule: var(--ex-color-mde-preview-rule);
+      --ex-color-rte-band: #1d1e22;
+      --ex-color-rte-icon-disabled: #6c6e72;
+      --ex-color-rte-caret: #a3a6ad;
+      --ex-color-rte-separator: #3a3b41;
+      --ex-color-rte-divider: #2e2f34;
+      --ex-color-rte-hover: rgba(255, 255, 255, 0.06);
+      --ex-color-rte-toc-shadow: rgba(0, 0, 0, 0.4);
+      --ex-color-rte-drawer-shadow: rgba(0, 0, 0, 0.45);
     }
   }
 }

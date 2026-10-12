@@ -20,6 +20,7 @@ function parseColorTokens(source: string): TokenMap {
 }
 
 function splitLightDark(value: string): [string, string] {
+  if (value.startsWith('var(')) return [value, value]
   const inner = value.slice('light-dark('.length, -1)
   let depth = 0
   for (let i = 0; i < inner.length; i++) {
@@ -58,7 +59,7 @@ describe('styles.css 主块', () => {
   it('每个 --ex-color-* 定义的值都以 light-dark( 开头', () => {
     expect(mainTokens.size).toBeGreaterThan(0)
     for (const [name, value] of mainTokens) {
-      expect(value, name).toMatch(/^light-dark\(/)
+      expect(value, name).toMatch(/^(?:light-dark\(|var\(--ex-color-)/)
     }
   })
 })
@@ -251,5 +252,42 @@ describe('参考图对齐新增 token（mac 参考图实测亮色；暗色为推
       "--ex-font-family-helvetica: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;",
     )
     expect(fallbackCss).not.toContain('--ex-font-family-helvetica')
+  })
+})
+
+const RTE_ALIAS: Array<[string, string]> = [
+  ['--ex-color-rte-canvas', 'var(--ex-color-bg)'],
+  ['--ex-color-rte-paper', 'var(--ex-color-surface)'],
+  ['--ex-color-rte-ink', 'var(--ex-color-text-secondary)'],
+  ['--ex-color-rte-toc-title', 'var(--ex-color-text)'],
+  ['--ex-color-rte-chrome', 'var(--ex-color-mde-chrome-text)'],
+  ['--ex-color-rte-body', 'var(--ex-color-mde-body-text)'],
+  ['--ex-color-rte-placeholder', 'var(--ex-color-mde-disabled-text)'],
+  ['--ex-color-rte-title-placeholder', 'var(--ex-color-pub-placeholder)'],
+  ['--ex-color-rte-title', 'var(--ex-color-pub-label)'],
+  ['--ex-color-rte-band-border', 'var(--ex-color-pub-bar-border)'],
+  ['--ex-color-rte-wand', 'var(--ex-color-mde-divider)'],
+  ['--ex-color-rte-heading', 'var(--ex-color-mde-heading-text)'],
+  ['--ex-color-rte-list', 'var(--ex-color-mde-list-text)'],
+  ['--ex-color-rte-link', 'var(--ex-color-mde-preview-link)'],
+  ['--ex-color-rte-rule', 'var(--ex-color-mde-preview-rule)'],
+]
+
+describe('富文本 token', () => {
+  it.each(RTE_ALIAS)('%s 别名已有颜色', (name, value) => {
+    expect(mainTokens.get(name)).toBe(value)
+  })
+
+  it('新测到的颜色有亮色字面量，暗色为推断值', () => {
+    expect(expected.get('--ex-color-rte-band')?.[0]).toBe('#f5f5f5')
+    expect(expected.get('--ex-color-rte-icon-disabled')?.[0]).toBe('#b5b5bc')
+    expect(expected.get('--ex-color-rte-caret')?.[0]).toBe('#484848')
+    expect(expected.get('--ex-color-rte-separator')?.[0]).toBe('#dbdbdb')
+    expect(expected.get('--ex-color-rte-divider')?.[0]).toBe('#e8e7e8')
+    expect(expected.get('--ex-color-rte-hover')?.[0]).toBe('rgba(0, 0, 0, 0.04)')
+    expect(expected.get('--ex-color-rte-toc-shadow')?.[0]).toBe('rgba(0, 0, 0, 0.05)')
+    expect(expected.get('--ex-color-rte-drawer-shadow')?.[0]).toBe('rgba(0, 0, 0, 0.06)')
+    expect(expected.get('--ex-color-rte-band')?.[1]).toBe('#1d1e22')
+    expect(expected.get('--ex-color-rte-hover')?.[1]).toBe('rgba(255, 255, 255, 0.06)')
   })
 })
