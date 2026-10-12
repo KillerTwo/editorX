@@ -1,4 +1,5 @@
 import type { EditorExtension } from '@editorx/toolbar'
+import { csdnAiExtension } from './ai'
 import { csdnInscodeExtension } from './inscode'
 import { csdnResourceExtension } from './resource'
 import { csdnTemplateExtension } from './template'
@@ -6,11 +7,19 @@ import { csdnVideoExtension } from './video'
 import { csdnVoteExtension } from './vote'
 
 export const csdnExtensions: readonly EditorExtension[] = [
+  csdnAiExtension,
   csdnVoteExtension,
-  csdnTemplateExtension,
   csdnVideoExtension,
   csdnResourceExtension,
   csdnInscodeExtension,
+  csdnTemplateExtension,
 ]
 
-export { csdnInscodeExtension, csdnResourceExtension, csdnTemplateExtension, csdnVideoExtension, csdnVoteExtension }
+export {
+  csdnAiExtension,
+  csdnInscodeExtension,
+  csdnResourceExtension,
+  csdnTemplateExtension,
+  csdnVideoExtension,
+  csdnVoteExtension,
+}
