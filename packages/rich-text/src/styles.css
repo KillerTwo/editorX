@@ -1,5 +1,8 @@
 .ex-rte-theme { display: contents; }
 
+/* 固定底栏的宿主：不生成盒子，栏才能以视口为包含块，不被 .ex-rte 裁切。 */
+.ex-rte-bar-host { display: contents; }
+
 .ex-rte {
   display: flex;
   flex-direction: column;

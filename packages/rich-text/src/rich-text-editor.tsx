@@ -17,7 +17,7 @@ import {
   type Messages,
 } from '@editorx/toolbar'
 import { ToastProvider, useToast } from '@editorx/ui'
-import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createEditorConfig } from './ck-config'
 import { countRichTextChars } from './count'
 import { richTextCoreExtensions } from './core-extensions'
@@ -214,6 +214,7 @@ function EditorShell({
   const currentTitle = title ?? ownTitle
   const editableRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const barHostRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MountedEditor | null>(null)
   const silentRef = useRef(false)
   const initialHtmlRef = useRef(value ?? defaultValue ?? '')
@@ -364,7 +365,26 @@ function EditorShell({
     onTitleChange?.(next)
   }
 
+  // 固定栏留在 .ex-rte（transform + overflow:hidden）里时，布局盒可以宽过内容区，绘制仍被裁回内容边。
+  // 移到同级宿主后包含块才是视口。宽度取 innerWidth：滚动条占位与否都等于视口宽，而不是写死 +15px。
+  useLayoutEffect(() => {
+    const host = barHostRef.current
+    const scope = host?.parentElement
+    if (!host || !scope) return
+    const fit = () => {
+      const bar = scope.querySelector('.ex-pub-bar.is-fixed')
+      if (!(bar instanceof HTMLElement)) return
+      if (bar.parentElement !== host) host.appendChild(bar)
+      bar.style.right = 'auto'
+      bar.style.width = `${window.innerWidth}px`
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  })
+
   return (
+    <>
     <div className={cx('ex-rte', className)} data-editor="rich-text" data-wide={wide || undefined} style={{ height }}>
       <div className="ex-rte__band">
         <Toolbar groups={groups} ctx={ctx} readOnly={readOnly} stateKey={`${wide}|${panel ?? ''}`} onError={reportError} />
@@ -425,6 +445,8 @@ function EditorShell({
         <div className="ex-rte-collapsed">{slots.rightCollapsed}</div>
       ) : null}
     </div>
+    <div className="ex-rte-bar-host" ref={barHostRef} />
+    </>
   )
 }
 
