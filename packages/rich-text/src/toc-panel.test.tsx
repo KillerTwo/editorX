@@ -19,6 +19,8 @@ function createMounted(initial = '') {
     setData: vi.fn(),
     setReadOnly: vi.fn(),
     insertHtml: vi.fn(),
+    replaceHtml: vi.fn(),
+    getSelectionText: () => '',
     execute: vi.fn(),
     focus: vi.fn(),
     destroy: vi.fn(async () => undefined),
@@ -68,6 +70,68 @@ describe('左侧目录', () => {
     await userEvent.click(screen.getByRole('button', { name: '展开' }))
     expect(container.querySelector('.ex-rte-toc')).not.toHaveClass('is-collapsed')
     expect(container.querySelector('.ex-rte-toc')).toHaveClass('is-open')
+  })
+
+  it('工具栏打开目录才加上 is-open，收起和再次点击会清掉', async () => {
+    const { container } = render(
+      <StrictMode>
+        <RichTextEditor defaultValue="<h2>安装</h2>" />
+      </StrictMode>,
+    )
+    const toc = () => container.querySelector('.ex-rte-toc')
+    const toolbarToc = () => container.querySelector<HTMLButtonElement>('[data-item-id="toc"]')
+    expect(toc()).not.toHaveClass('is-open')
+    expect(toc()).not.toHaveClass('is-collapsed')
+
+    await userEvent.click(toolbarToc()!)
+    expect(toc()).toHaveClass('is-collapsed')
+    expect(toc()).not.toHaveClass('is-open')
+
+    await userEvent.click(toolbarToc()!)
+    expect(toc()).not.toHaveClass('is-collapsed')
+    expect(toc()).toHaveClass('is-open')
+
+    await userEvent.click(toolbarToc()!)
+    expect(toc()).toHaveClass('is-collapsed')
+    expect(toc()).not.toHaveClass('is-open')
+
+    await userEvent.click(screen.getByRole('button', { name: '展开' }))
+    expect(toc()).toHaveClass('is-open')
+    expect(toc()).not.toHaveClass('is-collapsed')
+
+    await userEvent.click(screen.getByRole('button', { name: '收起' }))
+    expect(toc()).toHaveClass('is-collapsed')
+    expect(toc()).not.toHaveClass('is-open')
+  })
+
+  it('openPanel 打开目录带 is-open，closePanel 清掉', async () => {
+    const { container } = render(
+      <StrictMode>
+        <RichTextEditor
+          defaultTocOpen={false}
+          extensions={[
+            {
+              name: 'probe-toc',
+              editors: ['richtext'],
+              toolbar: [
+                { type: 'button' as const, id: 'open-toc', title: '打开目录', run: (ctx) => ctx.openPanel('toc') },
+                { type: 'button' as const, id: 'close-toc', title: '关闭目录', run: (ctx) => ctx.closePanel('toc') },
+              ],
+            },
+          ]}
+          toolbarLayout={[['open-toc', 'close-toc']]}
+        />
+      </StrictMode>,
+    )
+    const toc = () => container.querySelector('.ex-rte-toc')
+    expect(toc()).not.toHaveClass('is-open')
+    expect(toc()).toHaveClass('is-collapsed')
+    await userEvent.click(screen.getByRole('button', { name: '打开目录' }))
+    expect(toc()).toHaveClass('is-open')
+    expect(toc()).not.toHaveClass('is-collapsed')
+    await userEvent.click(screen.getByRole('button', { name: '关闭目录' }))
+    expect(toc()).not.toHaveClass('is-open')
+    expect(toc()).toHaveClass('is-collapsed')
   })
 
   it('defaultTocOpen 为 false 时目录收起', () => {

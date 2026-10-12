@@ -117,6 +117,34 @@
   border-top: 1px solid var(--ex-color-rte-rule);
 }
 
+.ex-rte .ck-content pre {
+  color: var(--ex-color-rte-body);
+  background: var(--ex-color-rte-band);
+  border: 1px solid var(--ex-color-rte-separator);
+}
+
+.ex-rte .ck-content code {
+  color: var(--ex-color-rte-body);
+  background: var(--ex-color-rte-band);
+  border: 1px solid var(--ex-color-rte-separator);
+}
+
+.ex-rte .ck-content pre code {
+  color: inherit;
+  background: transparent;
+  border: 0;
+}
+
+.ex-rte .ck-content blockquote {
+  color: var(--ex-color-rte-ink);
+  background: var(--ex-color-rte-band);
+  border-left: 5px solid var(--ex-color-rte-separator);
+}
+
+.ex-rte .ck-content[dir='rtl'] blockquote {
+  border-right: 5px solid var(--ex-color-rte-separator);
+}
+
 .ex-rte-colors {
   display: grid;
   grid-template-columns: repeat(4, 20px);

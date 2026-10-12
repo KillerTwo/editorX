@@ -18,6 +18,8 @@ function createMounted(initial = '') {
     setData: vi.fn(),
     setReadOnly: vi.fn(),
     insertHtml: vi.fn(),
+    replaceHtml: vi.fn(),
+    getSelectionText: () => '',
     execute: vi.fn(),
     focus: vi.fn(),
     destroy: vi.fn(async () => undefined),

@@ -3,7 +3,11 @@ import type { createEditorConfig } from './ck-config'
 export interface MountedEditor {
   getData(): string
   setData(html: string): void
+  /** 插在选区末尾，不删除选中文本 */
   insertHtml(html: string): void
+  /** 删掉当前选区后再插入 */
+  replaceHtml(html: string): void
+  getSelectionText(): string
   execute(name: string, args?: unknown): void
   focus(): void
   destroy(): Promise<void>
@@ -25,12 +29,25 @@ type EditorLike = {
   }
   model: {
     change(callback: () => void): void
-    insertContent(content: never): void
+    insertContent(content: never, selectable?: unknown): void
+    deleteContent(selection: ModelSelectionLike): void
     document: {
+      selection: ModelSelectionLike
       on(event: 'change:data', listener: () => void): void
       off(event: 'change:data', listener: () => void): void
     }
   }
+}
+
+type ModelItemLike = {
+  is(type: string): boolean
+  data?: string
+}
+
+type ModelSelectionLike = {
+  isCollapsed: boolean
+  getRanges(): Iterable<{ getItems(): Iterable<ModelItemLike> }>
+  getLastPosition(): unknown
 }
 
 const READ_ONLY_LOCK = 'ex-rte'
@@ -55,10 +72,28 @@ export async function mountEditor(
     },
     insertHtml(html) {
       editor.model.change(() => {
-        const viewFragment = editor.data.processor.toView(html)
-        const modelFragment = editor.data.toModel(viewFragment)
-        editor.model.insertContent(modelFragment)
+        const fragment = toModelFragment(editor, html)
+        const position = editor.model.document.selection.getLastPosition()
+        if (position) editor.model.insertContent(fragment, position)
+        else editor.model.insertContent(fragment)
       })
+    },
+    replaceHtml(html) {
+      editor.model.change(() => {
+        editor.model.deleteContent(editor.model.document.selection)
+        editor.model.insertContent(toModelFragment(editor, html))
+      })
+    },
+    getSelectionText() {
+      const selection = editor.model.document.selection
+      if (selection.isCollapsed) return ''
+      let text = ''
+      for (const range of selection.getRanges()) {
+        for (const item of range.getItems()) {
+          if (item.is('$textProxy') || item.is('$text')) text += item.data ?? ''
+        }
+      }
+      return text
     },
     execute(name, args) {
       if (name === 'heading' && isHeadingArgs(args)) {
@@ -87,6 +122,10 @@ export async function mountEditor(
 function loadEditorCss(): Promise<unknown> {
   // @ts-expect-error ckeditor5 的样式入口没有类型声明
   return import('ckeditor5/ckeditor5.css')
+}
+
+function toModelFragment(editor: EditorLike, html: string) {
+  return editor.data.toModel(editor.data.processor.toView(html))
 }
 
 function isHeadingArgs(args: unknown): args is { heading: string } {

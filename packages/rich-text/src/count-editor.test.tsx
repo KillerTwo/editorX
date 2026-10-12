@@ -23,6 +23,8 @@ function createMounted(initial = '<p></p>') {
       data = html
     },
     setReadOnly: vi.fn(),
+    replaceHtml() {},
+    getSelectionText: () => '',
     insertHtml(html: string) {
       data += html
       emit()

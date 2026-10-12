@@ -1,4 +1,4 @@
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
+import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@editorx/toolbar'
 import { TocPanel } from './toc-panel'
 import { Button, cropImage, ImageCropper, type CropArea } from '@editorx/ui'
 import {
@@ -179,6 +179,8 @@ function ImageDialog({ ctx, close }: DialogProps) {
       const { url } = await ctx.adapters.uploadImage(file)
       ctx.insert({ html: `<figure class="image"><img src="${escapeHtml(url)}" alt=""></figure>` })
       close()
+    } catch (error) {
+      ctx.notify(formatMessage(ctx.locale.upload.error, { name: fileName, message: errorMessage(error) }), 'error')
     } finally {
       setBusy(false)
     }

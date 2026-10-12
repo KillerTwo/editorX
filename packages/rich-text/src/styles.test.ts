@@ -38,6 +38,18 @@ describe('rich-text styles', () => {
     )
   })
 
+  it('代码、行内代码和引用压过 CKEditor 的浅色', () => {
+    expect(css).toMatch(
+      /\.ex-rte \.ck-content pre \{[^}]*color:\s*var\(--ex-color-rte-body\);[^}]*background:\s*var\(--ex-color-rte-band\);[^}]*border:\s*1px solid var\(--ex-color-rte-separator\)/,
+    )
+    expect(css).toMatch(
+      /\.ex-rte \.ck-content code \{[^}]*color:\s*var\(--ex-color-rte-body\);[^}]*background:\s*var\(--ex-color-rte-band\);[^}]*border:\s*1px solid var\(--ex-color-rte-separator\)/,
+    )
+    expect(css).toMatch(
+      /\.ex-rte \.ck-content blockquote \{[^}]*color:\s*var\(--ex-color-rte-ink\);[^}]*background:\s*var\(--ex-color-rte-band\);[^}]*border-left:\s*5px solid var\(--ex-color-rte-separator\)/,
+    )
+  })
+
   it('不写死颜色值', () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|light-dark\(/)
   })

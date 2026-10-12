@@ -29,6 +29,11 @@ function createMounted(initial = '<p></p>') {
       data += html
       emit()
     },
+    replaceHtml(html: string) {
+      data = html
+      emit()
+    },
+    getSelectionText: () => '',
     execute: vi.fn(),
     focus: vi.fn(),
     destroy: vi.fn(async () => {
@@ -90,6 +95,65 @@ describe('RichTextEditor CKEditor 桥', () => {
       for (const finish of pending) finish()
     })
     expect(ref.current!.getValue()).toBe('<p>late</p>')
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('挂载后 value 变化走静默 setData，不触发 onChange', async () => {
+    const editors: Array<ReturnType<typeof createMounted>> = []
+    vi.mocked(mountEditor).mockImplementation(async (_element, _config, html: string) => {
+      const editor = createMounted(html)
+      editors.push(editor)
+      return editor
+    })
+    const onChange = vi.fn()
+    const onWordCount = vi.fn()
+    const { rerender } = render(
+      <StrictMode>
+        <RichTextEditor value="<p>a</p>" onChange={onChange} onWordCount={onWordCount} />
+      </StrictMode>,
+    )
+    await waitFor(() => expect(onWordCount).toHaveBeenCalled())
+    const editor = editors[editors.length - 1]!
+    const setData = vi.spyOn(editor, 'setData')
+    expect(setData).not.toHaveBeenCalled()
+    rerender(
+      <StrictMode>
+        <RichTextEditor value="<p>b</p>" onChange={onChange} onWordCount={onWordCount} />
+      </StrictMode>,
+    )
+    await waitFor(() => expect(setData).toHaveBeenCalledWith('<p>b</p>'))
+    expect(onChange).not.toHaveBeenCalled()
+    expect(editor.getData()).toBe('<p>b</p>')
+  })
+
+  it('回写编辑器刚发出的 HTML 不再次 setData', async () => {
+    const editors: Array<ReturnType<typeof createMounted>> = []
+    vi.mocked(mountEditor).mockImplementation(async (_element, _config, html: string) => {
+      const editor = createMounted(html)
+      editors.push(editor)
+      return editor
+    })
+    const onChange = vi.fn()
+    const onWordCount = vi.fn()
+    const ref = createRef<RichTextEditorHandle>()
+    const { rerender } = render(
+      <StrictMode>
+        <RichTextEditor ref={ref} value="<p>a</p>" onChange={onChange} onWordCount={onWordCount} />
+      </StrictMode>,
+    )
+    await waitFor(() => expect(onWordCount).toHaveBeenCalled())
+    const editor = editors[editors.length - 1]!
+    act(() => ref.current!.insert({ html: '<p>b</p>' }))
+    const emitted = onChange.mock.calls.at(-1)?.[0] as string
+    expect(emitted).toContain('<p>b</p>')
+    const setData = vi.spyOn(editor, 'setData')
+    onChange.mockClear()
+    rerender(
+      <StrictMode>
+        <RichTextEditor ref={ref} value={emitted} onChange={onChange} onWordCount={onWordCount} />
+      </StrictMode>,
+    )
+    expect(setData).not.toHaveBeenCalled()
     expect(onChange).not.toHaveBeenCalled()
   })
 

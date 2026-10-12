@@ -106,8 +106,15 @@ function createContext(deps: EditorDeps): ExtensionContext {
       const html = `<div data-ex-embed="${escapeAttr(type)}" data-payload="${escapeAttr(JSON.stringify(payload ?? null))}"></div>`
       writeHtml({ html }, 'insert')
     },
-    getSelectionText: () => '',
-    replaceSelection: (content) => writeHtml(content, 'insert'),
+    getSelectionText() {
+      return deps.getEditor()?.getSelectionText() ?? ''
+    },
+    replaceSelection(content) {
+      if (deps.getLive().readOnly) return
+      const editor = deps.getEditor()
+      if (!editor || content.html === undefined) return
+      editor.replaceHtml(content.html)
+    },
     replaceDocument: (content) => writeHtml(content, 'replace'),
     getDocument() {
       const editor = deps.getEditor()
@@ -142,12 +149,22 @@ function createContext(deps: EditorDeps): ExtensionContext {
       return deps.getPanel()
     },
     async uploadImages(files) {
-      const upload = deps.getLive().adapters.uploadImage
+      const live = deps.getLive()
+      const upload = live.adapters.uploadImage
       const editor = deps.getEditor()
-      if (!upload || !editor || deps.getLive().readOnly) return
+      if (!upload || !editor || live.readOnly) return
       for (const file of files) {
-        const { url } = await upload(file)
-        editor.insertHtml(`<figure class="image"><img src="${escapeAttr(url)}" alt=""></figure>`)
+        try {
+          const uploaded = await upload(file)
+          const url = uploaded?.url
+          if (typeof url !== 'string' || url === '') throw new TypeError('uploadImage must resolve to { url: string }')
+          const current = deps.getEditor()
+          if (!current || deps.getLive().readOnly) return
+          current.insertHtml(`<figure class="image"><img src="${escapeAttr(url)}" alt=""></figure>`)
+        } catch (error) {
+          const next = deps.getLive()
+          next.notify(formatMessage(next.messages.upload.error, { name: file.name, message: errorMessage(error) }), 'error')
+        }
       }
     },
     focus() {
@@ -218,6 +235,7 @@ function EditorShell({
   const editorRef = useRef<MountedEditor | null>(null)
   const silentRef = useRef(false)
   const initialHtmlRef = useRef(value ?? defaultValue ?? '')
+  const emittedHtmlRef = useRef(value ?? defaultValue ?? '')
   const onChangeRef = useRef(onChange)
   const onWordCountRef = useRef(onWordCount)
   const panelRef = useRef(panel)
@@ -246,9 +264,19 @@ function EditorShell({
       getEditor: () => editorRef.current,
       getLive: () => liveRef.current,
       toggleWide: () => setWide((current) => !current),
-      openPanel: (id) => setPanel(id),
-      closePanel: (id) => setPanel((current) => (current === id ? null : current)),
-      togglePanel: (id) => setPanel((current) => (current === id ? null : id)),
+      openPanel: (id) => {
+        setPanel(id)
+        setTocOverlay(id === 'toc')
+      },
+      closePanel: (id) => {
+        if (id === 'toc') setTocOverlay(false)
+        setPanel((current) => (current === id ? null : current))
+      },
+      togglePanel: (id) => {
+        const next = panelRef.current === id ? null : id
+        setPanel(next)
+        if (id === 'toc') setTocOverlay(next === 'toc')
+      },
       getPanel: () => panelRef.current,
     }),
   )
@@ -293,11 +321,13 @@ function EditorShell({
         stop = editor.onChange(() => {
           if (cancelled || silentRef.current) return
           const html = editor.getData()
+          emittedHtmlRef.current = html
           onChangeRef.current?.(html)
           onWordCountRef.current?.(countRichTextChars(html))
           setDocumentHtml(html)
         })
         const html = editor.getData()
+        emittedHtmlRef.current = html
         onWordCountRef.current?.(countRichTextChars(html))
         setDocumentHtml(html)
         setMounted(editor)
@@ -317,6 +347,37 @@ function EditorShell({
     editorRef.current?.setReadOnly(readOnly)
   }, [readOnly])
 
+  const applySilentHtml = (html: string) => {
+    const editor = editorRef.current
+    if (!editor) {
+      initialHtmlRef.current = html
+      emittedHtmlRef.current = html
+      onWordCountRef.current?.(countRichTextChars(html))
+      return
+    }
+    if (editor.getData() === html) {
+      emittedHtmlRef.current = html
+      return
+    }
+    silentRef.current = true
+    try {
+      editor.setData(html)
+    } finally {
+      silentRef.current = false
+    }
+    const next = editor.getData()
+    emittedHtmlRef.current = next
+    onWordCountRef.current?.(countRichTextChars(next))
+  }
+  const applySilentHtmlRef = useRef(applySilentHtml)
+  applySilentHtmlRef.current = applySilentHtml
+
+  useEffect(() => {
+    if (value === undefined) return
+    if (value === emittedHtmlRef.current) return
+    applySilentHtmlRef.current(value)
+  }, [value])
+
   useImperativeHandle(
     ref,
     () => ({
@@ -328,19 +389,7 @@ function EditorShell({
       },
       setValue(html: string) {
         setDocumentHtml(html)
-        const editor = editorRef.current
-        if (!editor) {
-          initialHtmlRef.current = html
-          onWordCountRef.current?.(countRichTextChars(html))
-          return
-        }
-        silentRef.current = true
-        try {
-          editor.setData(html)
-        } finally {
-          silentRef.current = false
-        }
-        onWordCountRef.current?.(countRichTextChars(editor.getData()))
+        applySilentHtmlRef.current(html)
       },
       getDocument() {
         return {
@@ -365,24 +414,40 @@ function EditorShell({
     onTitleChange?.(next)
   }
 
+  const shownHtml = value ?? documentHtml
+
   // 固定栏留在 .ex-rte（transform + overflow:hidden）里时，布局盒可以宽过内容区，绘制仍被裁回内容边。
   // 移到同级宿主后包含块才是视口。宽度取 innerWidth：滚动条占位与否都等于视口宽，而不是写死 +15px。
   // 宿主带 .ex-pub：栏离开发布区后，主按钮与 Helvetica 仍走 .ex-pub 后代选择器。
+  // 只在宿主挂载时移动。卸载前放回原父节点，React 才能从仍拥有 fiber 的父节点 removeChild。
   useLayoutEffect(() => {
     const host = barHostRef.current
     const scope = host?.parentElement
     if (!host || !scope) return
+    let bar: HTMLElement | null = null
+    let home: ParentNode | null = null
+    let next: ChildNode | null = null
     const fit = () => {
-      const bar = scope.querySelector('.ex-pub-bar.is-fixed')
-      if (!(bar instanceof HTMLElement)) return
-      if (bar.parentElement !== host) host.appendChild(bar)
-      bar.style.right = 'auto'
-      bar.style.width = `${window.innerWidth}px`
+      const found = scope.querySelector('.ex-pub-bar.is-fixed')
+      if (!(found instanceof HTMLElement)) return
+      if (found.parentElement !== host) {
+        home = found.parentElement
+        next = found.nextSibling
+        host.appendChild(found)
+      }
+      bar = found
+      found.style.right = 'auto'
+      found.style.width = `${window.innerWidth}px`
     }
     fit()
     window.addEventListener('resize', fit)
-    return () => window.removeEventListener('resize', fit)
-  })
+    return () => {
+      window.removeEventListener('resize', fit)
+      if (!bar || !home || bar.parentElement !== host) return
+      if (next && next.parentNode === home) home.insertBefore(bar, next)
+      else home.appendChild(bar)
+    }
+  }, [])
 
   return (
     <>
@@ -395,7 +460,7 @@ function EditorShell({
           <PaperChrome
             title={currentTitle}
             onTitleChange={handleTitleChange}
-            empty={isEmptyDocument(documentHtml)}
+            empty={isEmptyDocument(shownHtml)}
             titleActions={slots?.titleActions}
           >
             <div
@@ -414,8 +479,11 @@ function EditorShell({
         aria-label={messages.panels.toc}
       >
         <TocPanel
-          html={documentHtml}
-          onCollapse={() => setPanel((current) => (current === 'toc' ? null : current))}
+          html={shownHtml}
+          onCollapse={() => {
+            setTocOverlay(false)
+            setPanel((current) => (current === 'toc' ? null : current))
+          }}
           onSelect={(id, index) => {
             const scroll = scrollRef.current
             if (scroll) scrollHeadingIntoView(scroll, id, index)
