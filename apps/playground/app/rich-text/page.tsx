@@ -1,3 +1,4 @@
+import '@editorx/toolbar/styles.css'
 import { RichTextPlayground } from './rich-text-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>

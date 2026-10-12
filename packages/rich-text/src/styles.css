@@ -254,10 +254,15 @@
   cursor: pointer;
 }
 .ex-rte-toc__empty {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
   margin: auto;
   color: var(--ex-color-rte-ink);
   font-size: 14px;
   text-align: center;
+  transform: translateY(-50%);
 }
 .ex-rte-toc__title { margin: 0; padding: 16px 16px 0; color: var(--ex-color-rte-toc-title); font-size: 14px; }
 .ex-rte-toc__rule { height: 1px; margin: 12px 16px 0; background: var(--ex-color-rte-divider); }

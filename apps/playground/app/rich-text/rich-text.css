@@ -1,7 +1,22 @@
-html:has(.pg-rte),
+html:has(.pg-rte) {
+  height: 100%;
+  /* 常驻 15px 滚动条，使布局视口比 1727 视口窄一截（内容宽 1712）。 */
+  overflow-y: scroll;
+}
+
 html:has(.pg-rte) body {
   height: 100%;
   overflow: hidden;
+}
+
+/* 正文在内部滚动。滚动条不占布局，稿纸才能按内容宽居中，窗口 scrollY 保持 0。 */
+.pg-rte .ex-rte__scroll {
+  scrollbar-width: none;
+}
+
+.pg-rte .ex-rte__scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .pg-rte {
