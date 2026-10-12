@@ -1,6 +1,6 @@
 .ex-rte-theme { display: contents; }
 
-/* 固定底栏的宿主：不生成盒子，栏才能以视口为包含块，不被 .ex-rte 裁切。 */
+/* 固定底栏的宿主：不生成盒子，栏才能以视口为包含块，不被 .ex-rte 裁切。类名仍含 .ex-pub，发布按钮选择器才匹配。 */
 .ex-rte-bar-host { display: contents; }
 
 .ex-rte {

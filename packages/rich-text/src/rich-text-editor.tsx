@@ -367,6 +367,7 @@ function EditorShell({
 
   // 固定栏留在 .ex-rte（transform + overflow:hidden）里时，布局盒可以宽过内容区，绘制仍被裁回内容边。
   // 移到同级宿主后包含块才是视口。宽度取 innerWidth：滚动条占位与否都等于视口宽，而不是写死 +15px。
+  // 宿主带 .ex-pub：栏离开发布区后，主按钮与 Helvetica 仍走 .ex-pub 后代选择器。
   useLayoutEffect(() => {
     const host = barHostRef.current
     const scope = host?.parentElement
@@ -445,7 +446,7 @@ function EditorShell({
         <div className="ex-rte-collapsed">{slots.rightCollapsed}</div>
       ) : null}
     </div>
-    <div className="ex-rte-bar-host" ref={barHostRef} />
+    <div className="ex-rte-bar-host ex-pub" ref={barHostRef} />
     </>
   )
 }
