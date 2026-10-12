@@ -74,6 +74,9 @@ importers:
       '@editorx/publish':
         specifier: workspace:*
         version: link:../../packages/publish
+      '@editorx/rich-text':
+        specifier: workspace:*
+        version: link:../../packages/rich-text
       '@editorx/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -196,6 +199,28 @@ importers:
         version: 5.0.6
 
   packages/publish:
+    dependencies:
+      lucide-react:
+        specifier: ^1.53.0
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
+    devDependencies:
+      '@editorx/theme':
+        specifier: workspace:*
+        version: link:../theme
+      '@editorx/toolbar':
+        specifier: workspace:*
+        version: link:../toolbar
+      '@editorx/ui':
+        specifier: workspace:*
+        version: link:../ui
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
+
+  packages/rich-text:
     dependencies:
       lucide-react:
         specifier: ^1.53.0
