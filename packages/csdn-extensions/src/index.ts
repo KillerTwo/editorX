@@ -1,3 +1,3 @@
 import './styles.css'
 
-export { csdnExtensions, csdnTemplateExtension, csdnVoteExtension } from './extensions'
+export { csdnExtensions, csdnTemplateExtension, csdnVideoExtension, csdnVoteExtension } from './extensions'
