@@ -12,6 +12,7 @@ export interface ImageCropperProps {
   zoomLabel?: string
   areaLabel?: string
   className?: string
+  errorText?: string
 }
 
 const KEY_STEP = 10
@@ -24,12 +25,14 @@ export function ImageCropper({
   zoomLabel = '缩放',
   areaLabel = '裁剪区域',
   className,
+  errorText = '图片无法显示',
 }: ImageCropperProps) {
   const height = Math.round(width / aspect)
   const [natural, setNatural] = useState<CropSize | null>(null)
   const [area, setArea] = useState<CropArea | null>(null)
   const [zoom, setZoom] = useState(1)
-  const drag = useRef<{ x: number; y: number; area: CropArea } | null>(null)
+  const [failed, setFailed] = useState(false)
+  const drag = useRef<{ pointerId: number; x: number; y: number; area: CropArea } | null>(null)
   const scale = area ? width / area.width : 1
 
   const commit = (next: CropArea) => {
@@ -38,22 +41,35 @@ export function ImageCropper({
   }
   const onLoad = (e: SyntheticEvent<HTMLImageElement>) => {
     const size = { width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight }
+    if (size.width === 0 || size.height === 0) {
+      setFailed(true)
+      setNatural(null)
+      setArea(null)
+      return
+    }
+    setFailed(false)
     setNatural(size)
     setZoom(1)
     commit(initialCrop(size, aspect))
   }
+  const onImageError = () => {
+    setFailed(true)
+    setNatural(null)
+    setArea(null)
+  }
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (!area) return
+    if (e.button !== 0 || !area) return
     e.currentTarget.setPointerCapture?.(e.pointerId)
-    drag.current = { x: e.clientX, y: e.clientY, area }
+    drag.current = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, area }
   }
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     const start = drag.current
-    if (!start || !natural) return
+    if (!start || start.pointerId !== e.pointerId || !natural) return
     const s = width / start.area.width
     commit(moveCrop(start.area, (start.x - e.clientX) / s, (start.y - e.clientY) / s, natural))
   }
-  const endDrag = () => {
+  const endDrag = (e: PointerEvent<HTMLDivElement>) => {
+    if (drag.current && drag.current.pointerId !== e.pointerId) return
     drag.current = null
   }
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -94,6 +110,7 @@ export function ImageCropper({
           className={cx('ex-cropper__image', !area && 'is-loading')}
           src={src}
           alt=""
+          crossOrigin={/^https?:/i.test(src) ? 'anonymous' : undefined}
           draggable={false}
           style={
             area && natural
@@ -105,8 +122,10 @@ export function ImageCropper({
               : undefined
           }
           onLoad={onLoad}
+          onError={onImageError}
         />
       </div>
+      {failed ? <p className="ex-cropper__error" role="alert">{errorText}</p> : null}
       <input
         className="ex-cropper__zoom"
         type="range"

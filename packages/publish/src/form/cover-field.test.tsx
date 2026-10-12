@@ -207,4 +207,13 @@ describe('CoverField', () => {
     expect(group).toHaveAttribute('tabindex', '-1')
     expect(group).toHaveAttribute('aria-describedby', 'cv-error')
   })
+
+  it('裁剪图加载失败时显示提示，确定保持禁用', async () => {
+    const { container } = renderWithProviders(<Cover />)
+    chooseFile(container)
+    await screen.findByRole('dialog', { name: '裁剪封面' })
+    fireEvent.error(document.querySelector('.ex-cropper__image')!)
+    expect(screen.getByRole('alert')).toHaveTextContent('图片无法显示')
+    expect(screen.getByRole('button', { name: '确定' })).toBeDisabled()
+  })
 })
