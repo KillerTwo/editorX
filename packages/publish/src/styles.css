@@ -88,7 +88,17 @@
 }
 .ex-pub-item__text { order: 0; }
 .ex-pub-item__required { order: 1; color: var(--ex-color-primary); }
-.ex-pub-item__help { order: 2; display: inline-flex; color: var(--ex-color-pub-label); cursor: help; }
+.ex-pub-item__help {
+  order: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ex-color-pub-label);
+  cursor: help;
+}
 .ex-pub-item__suffix { order: 3; }
 /* 内联参考图：小号「*」上标式紧贴文字，占位不计入与帮助图标的间距 */
 .ex-pub-card .ex-pub-item__required {

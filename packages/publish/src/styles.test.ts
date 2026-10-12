@@ -57,7 +57,9 @@ describe('publish styles.css', () => {
     expect(css).toMatch(/\.ex-pub--modal \.ex-pub-textarea \{[^}]*padding: 7px 8px;/)
     expect(css).toMatch(/\.ex-pub--modal \.ex-pub-item__label \{ letter-spacing: 0\.5px; \}/)
     expect(css).toMatch(/\.ex-pub-item__required \{[^}]*color: var\(--ex-color-primary\);/)
-    expect(css).toMatch(/\.ex-pub-item__help \{[^}]*color: var\(--ex-color-pub-label\);/)
+    expect(css).toMatch(
+      /\.ex-pub-item__help \{[^}]*padding: 0;[^}]*border: 0;[^}]*background: transparent;[^}]*color: var\(--ex-color-pub-label\);/,
+    )
     expect(css).toMatch(/\.ex-pub--modal \.ex-pub-select--declaration \{ border-color: var\(--ex-color-pub-select-border-modal\); \}/)
     expect(css).toMatch(/\.ex-pub-modal \.ex-modal__footer \{[^}]*box-shadow: 0 -3px 3px var\(--ex-color-pub-footer-shadow\);/)
     expect(css).toMatch(/\.ex-pub-card \.ex-radio \{ gap: 8px; \}/)
