@@ -75,3 +75,46 @@
 .ex-rte .ex-toolbar__item.is-active .ex-toolbar__icon { color: var(--ex-color-primary); }
 .ex-rte .ex-toolbar__item:disabled { color: var(--ex-color-rte-ink); }
 .ex-rte .ex-toolbar__item:disabled .ex-toolbar__icon { color: var(--ex-color-rte-icon-disabled); }
+
+.ex-rte .ck-content {
+  font-family: var(--ex-font-family);
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--ex-color-rte-body);
+}
+
+.ex-rte .ck-content :is(h1, h2, h3, h4, h5, h6) {
+  margin: 24px 0 8px;
+  color: var(--ex-color-rte-heading);
+  font-weight: 600;
+}
+
+.ex-rte .ck-content h1 { font-size: 22px; line-height: 32px; }
+.ex-rte .ck-content h2 { font-size: 20px; line-height: 30px; }
+.ex-rte .ck-content h3 { font-size: 18px; line-height: 28px; }
+.ex-rte .ck-content :is(h4, h5, h6) { font-size: 16px; line-height: 26px; }
+.ex-rte .ck-content :is(p, ul, ol) { margin: 0 0 24px; }
+.ex-rte .ck-content :is(ul, ol) { padding-left: 31px; }
+.ex-rte .ck-content li { color: var(--ex-color-rte-list); }
+.ex-rte .ck-content a { color: var(--ex-color-rte-link); }
+.ex-rte .ck-content hr { border: 0; border-top: 1px solid var(--ex-color-rte-rule); }
+
+.ex-rte-colors {
+  display: grid;
+  grid-template-columns: repeat(4, 20px);
+  gap: 8px;
+  padding: 8px;
+}
+
+.ex-rte-colors__swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+}
+
+.ex-rte-dialog { display: grid; gap: 12px; }
+.ex-rte-dialog__field { display: grid; gap: 4px; }
+.ex-rte-dialog__input { width: 100%; box-sizing: border-box; }
+.ex-rte-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; }

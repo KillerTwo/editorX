@@ -1,3 +1,4 @@
+export { richTextCoreExtensions } from './core-extensions'
 export { RICH_TEXT_TOOLBAR_LAYOUT } from './layout'
 export { RichTextEditor } from './rich-text-editor'
 export type { RichTextEditorHandle, RichTextEditorProps, RichTextEditorSlots } from './types'

@@ -12,6 +12,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   banner: { js: "'use client';" },
+  external: ['ckeditor5', '@ckeditor/ckeditor5-react', 'react', 'react-dom'],
   // tsup's string onSuccess cannot pass arguments on Windows, so spawn node directly
   onSuccess: async () => {
     execFileSync(process.execPath, [copyCssScript], { cwd: packageDir, stdio: 'inherit' })
