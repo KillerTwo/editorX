@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@editorx/csdn": "workspace:*",
+    "@editorx/csdn-extensions": "workspace:*",
     "@editorx/markdown": "workspace:*",
     "@editorx/markdown-core": "workspace:*",
     "@editorx/publish": "workspace:*",

@@ -23,6 +23,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@editorx/csdn-extensions": "workspace:*",
     "@editorx/markdown": "workspace:*",
     "@editorx/markdown-core": "workspace:*",
     "@editorx/publish": "workspace:*",
@@ -34,6 +35,7 @@
     "react-dom": "^19.3.0"
   },
   "dependencies": {
+    "@editorx/csdn-extensions": "workspace:*",
     "@editorx/markdown": "workspace:*",
     "@editorx/markdown-core": "workspace:*",
     "@editorx/publish": "workspace:*",

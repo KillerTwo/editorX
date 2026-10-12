@@ -68,6 +68,9 @@ importers:
       '@editorx/csdn':
         specifier: workspace:*
         version: link:../../packages/csdn
+      '@editorx/csdn-extensions':
+        specifier: workspace:*
+        version: link:../../packages/csdn-extensions
       '@editorx/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
@@ -123,6 +126,9 @@ importers:
 
   packages/csdn:
     dependencies:
+      '@editorx/csdn-extensions':
+        specifier: workspace:*
+        version: link:../csdn-extensions
       '@editorx/markdown':
         specifier: workspace:*
         version: link:../markdown

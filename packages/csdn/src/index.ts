@@ -1,3 +1,4 @@
+import '@editorx/csdn-extensions/styles.css'
 import { RichTextEditor } from '@editorx/rich-text'
 import './styles.css'
 

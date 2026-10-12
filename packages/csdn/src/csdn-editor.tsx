@@ -1,3 +1,4 @@
+import { csdnExtensions } from '@editorx/csdn-extensions'
 import { MarkdownEditor, type MarkdownEditorHandle } from '@editorx/markdown'
 import { createSettings, PublishPanel } from '@editorx/publish'
 import { RichTextEditor, type RichTextEditorHandle } from '@editorx/rich-text'
@@ -9,7 +10,6 @@ import {
   useMessages,
   type EditorAdapters,
   type EditorDocument,
-  type EditorExtension,
   type EditorType,
   type PublishSettings,
 } from '@editorx/toolbar'
@@ -30,7 +30,6 @@ import { switchedDocument } from './switch-document'
 import { TopBar } from './top-bar'
 import type { CsdnEditorProps } from './types'
 
-const NO_EXTENSIONS: readonly EditorExtension[] = []
 const EMPTY_ADAPTERS: EditorAdapters = {}
 
 function reportedDraftFailure(error: unknown): Error {
@@ -69,7 +68,7 @@ function CsdnEditorShell({
   showThemeToggle = true,
   initialDocument,
   defaultEditor,
-  extensions = NO_EXTENSIONS,
+  extensions = csdnExtensions,
   toolbarLayout,
   defaultRightOpen,
   defaultTocOpen,
@@ -310,6 +309,7 @@ function CsdnEditorShell({
             defaultValue={markdown}
             title={title}
             extensions={extensions}
+            adapters={adapters}
             toolbarLayout={toolbarLayout}
             height="100%"
             onChange={(nextMarkdown, nextHtml) => {
@@ -325,6 +325,7 @@ function CsdnEditorShell({
             title={title}
             onTitleChange={setTitle}
             extensions={extensions}
+            adapters={adapters}
             toolbarLayout={toolbarLayout}
             defaultRightOpen={defaultRightOpen}
             defaultTocOpen={defaultTocOpen}

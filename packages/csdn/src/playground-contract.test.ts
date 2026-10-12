@@ -12,7 +12,7 @@ describe('/csdn 页面契约', () => {
     expect(page).toContain("editorParam === 'richtext'")
     expect(playground).toContain('CsdnEditor')
     expect(playground).toContain('onEditorTypeChange')
-    expect(playground).toContain('csdnDemoExtensions')
+    expect(playground).toContain('csdnExtensions')
     expect(playground).toContain('csdnHistoryExtension')
     expect(playground).not.toContain('csdnSwitchEditorExtension')
     expect(playground).not.toContain('阶段 6 接入')

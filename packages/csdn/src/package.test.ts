@@ -26,5 +26,8 @@ describe('@editorx/csdn package', () => {
     const publishText = JSON.stringify(publish)
     expect(publishText).not.toContain('@editorx/csdn')
     expect(publishText).not.toContain('@editorx/rich-text')
+    expect(csdn.dependencies?.['@editorx/csdn-extensions']).toBe('workspace:*')
+    expect(JSON.stringify(rich)).not.toContain('@editorx/csdn-extensions')
+    expect(JSON.stringify(readJson('../../markdown/package.json'))).not.toContain('@editorx/csdn-extensions')
   })
 })

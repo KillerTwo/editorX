@@ -24,6 +24,7 @@ export default defineConfig({
     '@editorx/theme',
     '@editorx/toolbar',
     '@editorx/ui',
+    '@editorx/csdn-extensions',
   ],
   onSuccess: async () => {
     execFileSync(process.execPath, [copyCssScript], { cwd: packageDir, stdio: 'inherit' })
