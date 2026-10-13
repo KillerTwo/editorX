@@ -43,7 +43,12 @@ export interface PublishBaseProps {
   scheduleRange?: ScheduleRange
   /** 可选封面模式；默认 ['single']（CSDN 截图无模式切换），多于一项时显示单选 */
   coverModes?: readonly CoverMode[]
-  /** 文章模板选项；默认 默认模板 / 简洁模板 / 墨衍模板。未传 document 时按 FALLBACK_DOC（markdown）墨衍可选；editorType 不是 markdown 时墨衍禁用。传入 templates 则整表替换默认列表。 */
+  /**
+   * 文章模板选项；默认 默认模板 / 简洁模板 / 墨衍模板。
+   * 未传 document 时按 FALLBACK_DOC（markdown）墨衍可选；editorType 不是 markdown 时墨衍禁用。
+   * 这个属性替换默认文章模板列表。
+   * 这不是工具栏内容 Template（`toolbar.template`，插入内容模版）。
+   */
   templates?: readonly PublishOption[]
   /** GitCode 协议链接；未提供时渲染为纯文本 */
   agreementLinks?: AgreementLinks
