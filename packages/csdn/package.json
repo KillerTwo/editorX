@@ -1,6 +1,9 @@
 {
   "name": "@editorx/csdn",
   "version": "0.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": ["*.css"],
   "exports": {

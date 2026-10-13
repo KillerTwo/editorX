@@ -1,6 +1,9 @@
 {
   "name": "@editorx/toolbar",
   "version": "0.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": [
     "*.css"
