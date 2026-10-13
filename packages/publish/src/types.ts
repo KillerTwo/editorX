@@ -16,6 +16,8 @@ import type { PublishRules } from './validate'
 
 export type PublishVariant = 'inline' | 'modal'
 
+export type PublishHiddenField = 'declaration' | 'backup' | 'template' | 'multiPlatform' | 'schedule'
+
 export interface AgreementLinks {
   terms?: string
   privacy?: string
@@ -66,6 +68,10 @@ export interface PublishBaseProps {
   onThemeChange?(mode: ThemeMode): void
   themeStorageKey?: string | false
   className?: string
+  /** 不渲染的表单项与操作；默认全部显示 */
+  hiddenFields?: readonly PublishHiddenField[]
+  /** 分类专栏选择方式，默认 multiple */
+  categorySelection?: 'multiple' | 'single'
 }
 
 export interface PublishPanelSlots {

@@ -15,10 +15,12 @@ export interface PublishActionsProps {
   onPublish(): void
   /** 仅模态呈现 */
   onCancel?(): void
+  showSchedule?: boolean
 }
 
 export function PublishActions(props: PublishActionsProps) {
-  const { variant, busy, draftState, publishState, onSaveDraft, onSchedule, onPublish, onCancel } = props
+  const { variant, busy, draftState, publishState, onSaveDraft, onSchedule, onPublish, onCancel, showSchedule = true } =
+    props
   const a = useMessages().publish.actions
   const modal = variant === 'modal'
   return (
@@ -48,15 +50,17 @@ export function PublishActions(props: PublishActionsProps) {
       )}
       {publishState !== 'hidden' && (
         <>
-          <Button
-            className="ex-pub-action"
-            data-action="schedule"
-            disabled={publishState === 'disabled' || busy !== null}
-            onClick={onSchedule}
-          >
-            {a.schedule}
-            {!modal && <ChevronRightIcon className="ex-pub-action__chevron" />}
-          </Button>
+          {showSchedule && (
+            <Button
+              className="ex-pub-action"
+              data-action="schedule"
+              disabled={publishState === 'disabled' || busy !== null}
+              onClick={onSchedule}
+            >
+              {a.schedule}
+              {!modal && <ChevronRightIcon className="ex-pub-action__chevron" />}
+            </Button>
+          )}
           <Button
             variant="primary"
             className="ex-pub-action"

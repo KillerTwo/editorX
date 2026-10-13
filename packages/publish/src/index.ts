@@ -41,5 +41,6 @@ export type {
   PublishPanelProps,
   PublishPanelSlots,
   PublishVariant,
+  PublishHiddenField,
 } from './types'
 export { PublishModal, PublishPanel } from './publish-panel'

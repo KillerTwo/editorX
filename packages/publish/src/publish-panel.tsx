@@ -21,6 +21,13 @@ import { usePublishController } from './use-publish-controller'
 const EMPTY_ADAPTERS: EditorAdapters = {}
 const DEFAULT_COVER_MODES: readonly CoverMode[] = ['single']
 
+function isHiddenField(
+  hiddenFields: PublishBaseProps['hiddenFields'],
+  field: NonNullable<PublishBaseProps['hiddenFields']>[number],
+): boolean {
+  return hiddenFields?.includes(field) ?? false
+}
+
 function LocalizedToasts({ children }: { children: ReactNode }) {
   const m = useMessages()
   return <ToastProvider closeLabel={m.dialog.close}>{children}</ToastProvider>
@@ -138,6 +145,8 @@ function usePublishParts(
       notify={notify}
       focusedFailures={focusedFailures}
       onFailuresFocused={setFocusedFailures}
+      hiddenFields={props.hiddenFields}
+      categorySelection={props.categorySelection}
     />
   )
   const actions = (
@@ -150,6 +159,7 @@ function usePublishParts(
       onSchedule={() => setSchedule({ attempts: ctl.failedAttempts, showError: false })}
       onPublish={() => publish()}
       onCancel={onCancel}
+      showSchedule={!isHiddenField(props.hiddenFields, 'schedule')}
     />
   )
   const scheduleDialog = schedule && (

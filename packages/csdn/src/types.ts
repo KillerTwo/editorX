@@ -9,6 +9,7 @@ import type {
   PublishSettings,
   ToolbarLayout,
 } from '@editorx/toolbar'
+import type { PublishHiddenField } from '@editorx/publish'
 import type { ReactNode, Ref } from 'react'
 
 export interface CsdnEditorHandle {
@@ -39,4 +40,6 @@ export interface CsdnEditorProps {
   draftStorageKey?: string
   slots?: { publishBarStart?: ReactNode; rightCollapsed?: ReactNode }
   ref?: Ref<CsdnEditorHandle>
+  hiddenFields?: readonly PublishHiddenField[]
+  categorySelection?: 'multiple' | 'single'
 }

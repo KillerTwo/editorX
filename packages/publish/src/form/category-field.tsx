@@ -12,9 +12,18 @@ export interface CategoryFieldProps {
   categories: Category[] | null
   state: AdapterState
   variant: PublishVariant
+  selection?: 'multiple' | 'single'
 }
 
-export function CategoryField({ id, value, onChange, categories, state, variant }: CategoryFieldProps) {
+export function CategoryField({
+  id,
+  value,
+  onChange,
+  categories,
+  state,
+  variant,
+  selection = 'multiple',
+}: CategoryFieldProps) {
   const p = useMessages().publish
   if (categories === null) return <span className="ex-pub-hint">{p.categories.loading}</span>
   if (state !== 'enabled' || categories.length === 0) {
@@ -26,7 +35,13 @@ export function CategoryField({ id, value, onChange, categories, state, variant 
         <Checkbox
           key={category.id}
           checked={value.includes(category.id)}
-          onChange={(on) => onChange(on ? [...value, category.id] : value.filter((v) => v !== category.id))}
+          onChange={(on) => {
+            if (selection === 'single') {
+              onChange(on ? [category.id] : [])
+              return
+            }
+            onChange(on ? [...value, category.id] : value.filter((v) => v !== category.id))
+          }}
         >
           {category.name}
         </Checkbox>

@@ -80,6 +80,8 @@ function CsdnEditorShell({
   draftStorageKey,
   slots,
   ref,
+  hiddenFields,
+  categorySelection,
 }: CsdnEditorProps) {
   const [editorType, setEditorType] = useState<EditorType>(defaultEditor ?? initialDocument?.editorType ?? 'markdown')
   const [mountKey, setMountKey] = useState(0)
@@ -341,6 +343,8 @@ function CsdnEditorShell({
                   adapters={
                     adapters.onSaveDraft ? { ...adapters, onSaveDraft: () => saveFromPanel() } : adapters
                   }
+                  hiddenFields={hiddenFields}
+                  categorySelection={categorySelection}
                   barPosition="fixed"
                   slots={{
                     barStart: (

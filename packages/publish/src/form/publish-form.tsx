@@ -15,7 +15,7 @@ import { useEffect, useId, useMemo, useRef } from 'react'
 import { adapterState } from '../adapter-state'
 import { extractImages, extractSummary } from '../extract'
 import { FALLBACK_DOC } from '../settings'
-import type { AgreementLinks, PublishVariant } from '../types'
+import type { AgreementLinks, PublishHiddenField, PublishVariant } from '../types'
 import type { PublishController } from '../use-publish-controller'
 import { CategoryField } from './category-field'
 import { CoverField } from './cover-field'
@@ -45,13 +45,32 @@ export interface PublishFormProps {
   /** 已聚焦过的失败次数；由常驻的父组件保存，表单重新挂载（弹窗重开）时不会为旧的失败抢焦点 */
   focusedFailures: number
   onFailuresFocused(count: number): void
+  hiddenFields?: readonly PublishHiddenField[]
+  categorySelection?: 'multiple' | 'single'
+}
+
+function fieldHidden(hiddenFields: readonly PublishHiddenField[] | undefined, field: PublishHiddenField): boolean {
+  return hiddenFields?.includes(field) ?? false
 }
 
 const VISIBILITIES = ['public', 'private', 'fans', 'vip'] as const
 const DECLARATIONS = ['none', 'ai', 'network', 'personal'] as const
 
 export function PublishForm(props: PublishFormProps) {
-  const { ctl, variant, document: doc, adapters, missingAdapter, coverModes, templates, agreementLinks, lists, notify } = props
+  const {
+    ctl,
+    variant,
+    document: doc,
+    adapters,
+    missingAdapter,
+    coverModes,
+    templates,
+    agreementLinks,
+    lists,
+    notify,
+    hiddenFields,
+    categorySelection = 'multiple',
+  } = props
   const { focusedFailures, onFailuresFocused } = props
   const p = useMessages().publish
   const { settings, errors, update, failedAttempts } = ctl
@@ -151,6 +170,7 @@ export function PublishForm(props: PublishFormProps) {
             categories={categories}
             state={categoriesState}
             variant={variant}
+            selection={categorySelection}
           />
         </FormItem>
       )}
@@ -164,25 +184,29 @@ export function PublishForm(props: PublishFormProps) {
           sourceUrlInvalid={!!errors.sourceUrl}
         />
       </FormItem>
-      <FormItem field="declaration" id={fid('decl')} label={p.fields.declaration}>
-        <Select
-          className="ex-pub-select ex-pub-select--declaration"
-          offset={12}
-          popperArrow
-          listClassName="ex-pub-select-list"
-          labelledBy={labelId(fid('decl'))}
-          value={settings.declaration}
-          options={DECLARATIONS.map((value) => ({ value, label: p.declaration[value] }))}
-          onChange={(value) => update('declaration', value)}
-        />
-      </FormItem>
-      <FormItem field="backup" id={fid('backup')} label={p.fields.backup}>
-        <BackupField
-          checked={settings.backupToGitCode}
-          onChange={(checked) => update('backupToGitCode', checked)}
-          links={agreementLinks}
-        />
-      </FormItem>
+      {!fieldHidden(hiddenFields, 'declaration') && (
+        <FormItem field="declaration" id={fid('decl')} label={p.fields.declaration}>
+          <Select
+            className="ex-pub-select ex-pub-select--declaration"
+            offset={12}
+            popperArrow
+            listClassName="ex-pub-select-list"
+            labelledBy={labelId(fid('decl'))}
+            value={settings.declaration}
+            options={DECLARATIONS.map((value) => ({ value, label: p.declaration[value] }))}
+            onChange={(value) => update('declaration', value)}
+          />
+        </FormItem>
+      )}
+      {!fieldHidden(hiddenFields, 'backup') && (
+        <FormItem field="backup" id={fid('backup')} label={p.fields.backup}>
+          <BackupField
+            checked={settings.backupToGitCode}
+            onChange={(checked) => update('backupToGitCode', checked)}
+            links={agreementLinks}
+          />
+        </FormItem>
+      )}
       <FormItem field="visibility" id={fid('vis')} label={p.fields.visibility} help={p.help.visibility}>
         <RadioGroup
           className="ex-pub-line"
@@ -192,27 +216,31 @@ export function PublishForm(props: PublishFormProps) {
           onChange={(value) => update('visibility', value)}
         />
       </FormItem>
-      <FormItem field="template" id={fid('tpl')} label={p.fields.template} help={p.help.template}>
-        <RadioGroup
-          className="ex-pub-line"
-          labelledBy={labelId(fid('tpl'))}
-          value={settings.template}
-          options={templateOptions}
-          onChange={(value) => update('template', value)}
-        />
-      </FormItem>
-      <FormItem field="multiPlatform" id={fid('multi')} label={p.fields.multiPlatform}>
-        <RadioGroup<'no' | 'yes'>
-          className="ex-pub-line"
-          labelledBy={labelId(fid('multi'))}
-          value={settings.multiPlatform ? 'yes' : 'no'}
-          options={[
-            { value: 'no', label: p.multiPlatform.no },
-            { value: 'yes', label: p.multiPlatform.yes },
-          ]}
-          onChange={(value) => update('multiPlatform', value === 'yes')}
-        />
-      </FormItem>
+      {!fieldHidden(hiddenFields, 'template') && (
+        <FormItem field="template" id={fid('tpl')} label={p.fields.template} help={p.help.template}>
+          <RadioGroup
+            className="ex-pub-line"
+            labelledBy={labelId(fid('tpl'))}
+            value={settings.template}
+            options={templateOptions}
+            onChange={(value) => update('template', value)}
+          />
+        </FormItem>
+      )}
+      {!fieldHidden(hiddenFields, 'multiPlatform') && (
+        <FormItem field="multiPlatform" id={fid('multi')} label={p.fields.multiPlatform}>
+          <RadioGroup<'no' | 'yes'>
+            className="ex-pub-line"
+            labelledBy={labelId(fid('multi'))}
+            value={settings.multiPlatform ? 'yes' : 'no'}
+            options={[
+              { value: 'no', label: p.multiPlatform.no },
+              { value: 'yes', label: p.multiPlatform.yes },
+            ]}
+            onChange={(value) => update('multiPlatform', value === 'yes')}
+          />
+        </FormItem>
+      )}
       {(activityState !== 'hidden' || topicState !== 'hidden') && (
         <FormItem
           field="activity"
