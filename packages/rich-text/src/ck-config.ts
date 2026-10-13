@@ -1,44 +1,23 @@
 import type { EditorAdapters, EmbedDef } from '@editorx/toolbar'
-import {
-  Alignment,
-  BlockQuote,
-  Bold,
-  Code,
-  CodeBlock,
-  Essentials,
-  Font,
-  FontBackgroundColor,
-  FontColor,
-  GeneralHtmlSupport,
-  Heading,
-  HorizontalLine,
-  Image,
-  ImageCaption,
-  ImageInsert,
-  ImageStyle,
-  ImageToolbar,
-  ImageUpload,
-  Italic,
-  Link,
-  List,
-  Paragraph,
-  Plugin,
-  RemoveFormat,
-  Strikethrough,
-  Subscript,
-  Superscript,
-  Table,
-  TableToolbar,
-  TodoList,
-  Underline,
-  Undo,
-} from 'ckeditor5'
+import type { Editor } from 'ckeditor5'
 import { registerExEmbed } from './embed-plugin'
 import { createUploadAdapter } from './upload-adapter'
 
 const CODE_LANGUAGES = ['plaintext', 'javascript', 'typescript', 'python', 'java', 'go', 'bash', 'json'] as const
 
-function createExBridgePlugin(uploadImage?: EditorAdapters['uploadImage'], embeds: readonly EmbedDef[] = []) {
+type PluginBase = abstract new (...args: never[]) => { readonly editor: Editor }
+
+type CkRuntime = {
+  toWidget: (element: object, writer: object) => object
+  trustedHtml: (html: string) => string
+}
+
+function createExBridgePlugin(
+  Plugin: PluginBase,
+  ck: CkRuntime,
+  uploadImage?: EditorAdapters['uploadImage'],
+  embeds: readonly EmbedDef[] = [],
+) {
   return class ExBridgePlugin extends Plugin {
     static get pluginName() {
       return 'ExBridge' as const
@@ -55,15 +34,15 @@ function createExBridgePlugin(uploadImage?: EditorAdapters['uploadImage'], embed
         }
         repository.createUploadAdapter = (loader) => createUploadAdapter(loader.file, uploadImage)
       }
-      registerExEmbed(this.editor, embeds)
+      registerExEmbed(this.editor, embeds, ck)
     }
   }
 }
 
-export function createEditorConfig(options: {
+export async function createEditorConfig(options: {
   uploadImage?: EditorAdapters['uploadImage']
   embeds?: readonly EmbedDef[]
-}): {
+}): Promise<{
   licenseKey: 'GPL'
   toolbar: { items: [] }
   plugins: unknown[]
@@ -71,7 +50,44 @@ export function createEditorConfig(options: {
   codeBlock: { languages: { language: string; label: string }[] }
   htmlSupport: { allow: { name: string; attributes: { 'data-ex-math': true } }[] }
   image: { toolbar: string[] }
-} {
+}> {
+  const {
+    Alignment,
+    BlockQuote,
+    Bold,
+    Code,
+    CodeBlock,
+    Essentials,
+    Font,
+    FontBackgroundColor,
+    FontColor,
+    GeneralHtmlSupport,
+    Heading,
+    HorizontalLine,
+    Image,
+    ImageCaption,
+    ImageInsert,
+    ImageStyle,
+    ImageToolbar,
+    ImageUpload,
+    Italic,
+    Link,
+    List,
+    Paragraph,
+    Plugin,
+    RemoveFormat,
+    Strikethrough,
+    Subscript,
+    Superscript,
+    Table,
+    TableToolbar,
+    TodoList,
+    Underline,
+    Undo,
+    toWidget,
+    trustedHtml,
+  } = await import('ckeditor5')
+
   return {
     licenseKey: 'GPL' as const,
     toolbar: { items: [] as [] },
@@ -108,7 +124,7 @@ export function createEditorConfig(options: {
       GeneralHtmlSupport,
       Undo,
     ],
-    extraPlugins: [createExBridgePlugin(options.uploadImage, options.embeds)],
+    extraPlugins: [createExBridgePlugin(Plugin, { toWidget, trustedHtml }, options.uploadImage, options.embeds)],
     codeBlock: {
       languages: CODE_LANGUAGES.map((language) => ({ language, label: language })),
     },

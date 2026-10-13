@@ -55,7 +55,7 @@ const READ_ONLY_LOCK = 'ex-rte'
 /** 只在客户端调用。初始 HTML 走 initialData，避免首次 setData 触发 onChange。 */
 export async function mountEditor(
   element: HTMLElement,
-  config: ReturnType<typeof createEditorConfig>,
+  config: Awaited<ReturnType<typeof createEditorConfig>>,
   initialHtml: string,
 ): Promise<MountedEditor> {
   const { DecoupledEditor } = await import('ckeditor5')

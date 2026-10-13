@@ -6,7 +6,7 @@ describe('mountEditor readOnly', () => {
   it('锁定后编辑区不可输入，解除后恢复', async () => {
     const element = document.createElement('div')
     document.body.append(element)
-    const editor = await mountEditor(element, createEditorConfig({}), '<p>a</p>')
+    const editor = await mountEditor(element, await createEditorConfig({}), '<p>a</p>')
     editor.setReadOnly(true)
     expect(element.getAttribute('contenteditable')).toBe('false')
     editor.setReadOnly(false)
@@ -17,7 +17,7 @@ describe('mountEditor readOnly', () => {
   it('getSelectionText 返回选中文本；insert 保留选区，replace 先删再插', async () => {
     const element = document.createElement('div')
     document.body.append(element)
-    const editor = await mountEditor(element, createEditorConfig({}), '<p>hello world</p>')
+    const editor = await mountEditor(element, await createEditorConfig({}), '<p>hello world</p>')
     const instance = (element as HTMLElement & { ckeditorInstance?: CkInstance }).ckeditorInstance
     expect(instance).toBeTruthy()
     const select = (start: number, end: number) => {
@@ -47,7 +47,7 @@ describe('mountEditor readOnly', () => {
     document.body.append(element)
     const editor = await mountEditor(
       element,
-      createEditorConfig({}),
+      await createEditorConfig({}),
       '<div data-ex-embed="vote" data-ex-payload="eyJpZCI6InYxIn0="></div>',
     )
     const data = editor.getData()

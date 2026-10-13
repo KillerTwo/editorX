@@ -310,12 +310,13 @@ function EditorShell({
     let current: MountedEditor | undefined
     let stop = () => {}
     const passedHtml = initialHtmlRef.current
-    mountEditor(
-      element,
-      createEditorConfig({ uploadImage: liveRef.current.adapters.uploadImage, embeds: embedsRef.current }),
-      passedHtml,
-    )
+    createEditorConfig({ uploadImage: liveRef.current.adapters.uploadImage, embeds: embedsRef.current })
+      .then((config) => {
+        if (cancelled) return null
+        return mountEditor(element, config, passedHtml)
+      })
       .then((editor) => {
+        if (!editor) return
         if (cancelled) {
           void editor.destroy()
           return

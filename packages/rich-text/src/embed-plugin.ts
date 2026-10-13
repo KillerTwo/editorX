@@ -1,11 +1,15 @@
 import type { EmbedDef } from '@editorx/toolbar'
-import { toWidget, trustedHtml, type Editor } from 'ckeditor5'
+import type { Editor } from 'ckeditor5'
 
 type ModelElement = {
   getAttribute(name: string): unknown
 }
 
-type ViewNode = Parameters<typeof toWidget>[0]
+type ViewNode = object
+
+type ToWidget = (element: ViewNode, writer: object) => ViewNode
+
+type TrustedHtml = (html: string) => string
 
 type ViewWriter = {
   createContainerElement(name: string, attributes: Record<string, string>): ViewNode
@@ -65,7 +69,7 @@ function cardHtml(renderers: ReadonlyMap<string, RenderHtml>, element: ModelElem
   }
 }
 
-function insertCard(viewWriter: ViewWriter, element: ViewNode, html: string): void {
+function insertCard(viewWriter: ViewWriter, element: ViewNode, html: string, trustedHtml: TrustedHtml): void {
   if (!html) return
   const raw = viewWriter.createRawElement('div', {}, (domElement) => {
     domElement.innerHTML = trustedHtml(html)
@@ -74,7 +78,11 @@ function insertCard(viewWriter: ViewWriter, element: ViewNode, html: string): vo
 }
 
 /** 嵌入块模型 `exEmbed`，数据 HTML 为 `<div data-ex-embed data-payload>`，编辑态与发布 HTML 放入匹配扩展的 `renderHtml`。 */
-export function registerExEmbed(editor: Editor, embeds: readonly EmbedDef[] = []): void {
+export function registerExEmbed(
+  editor: Editor,
+  embeds: readonly EmbedDef[] = [],
+  ck: { toWidget: ToWidget; trustedHtml: TrustedHtml },
+): void {
   const renderers = new Map(embeds.map((embed) => [embed.type, embed.renderHtml]))
   editor.data.registerRawContentMatcher({
     name: 'div',
@@ -102,7 +110,7 @@ export function registerExEmbed(editor: Editor, embeds: readonly EmbedDef[] = []
     view: (modelElement, { writer }) => {
       const viewWriter = writer as ViewWriter
       const element = viewWriter.createContainerElement('div', embedAttributes(modelElement))
-      insertCard(viewWriter, element, cardHtml(renderers, modelElement))
+      insertCard(viewWriter, element, cardHtml(renderers, modelElement), ck.trustedHtml)
       return element
     },
   })
@@ -115,9 +123,9 @@ export function registerExEmbed(editor: Editor, embeds: readonly EmbedDef[] = []
         ...embedAttributes(modelElement),
         contenteditable: 'false',
       })
-      insertCard(viewWriter, element, cardHtml(renderers, modelElement))
+      insertCard(viewWriter, element, cardHtml(renderers, modelElement), ck.trustedHtml)
       viewWriter.setAttribute('contenteditable', 'false', element)
-      return toWidget(element, writer)
+      return ck.toWidget(element, writer as object)
     },
   })
 }

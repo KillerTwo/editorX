@@ -90,7 +90,7 @@ describe('RichTextEditor CKEditor 桥', () => {
       return <RichTextEditor ref={ref} defaultValue="<p>a</p>" onChange={onChange} />
     }
     render(<Parent />)
-    expect(pending.length).toBeGreaterThan(0)
+    await waitFor(() => expect(pending.length).toBeGreaterThan(0))
     await act(async () => {
       for (const finish of pending) finish()
     })
