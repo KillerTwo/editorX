@@ -12,7 +12,8 @@ export { Dropdown } from './dropdown'
 export type { DropdownItem, DropdownProps } from './dropdown'
 export { Modal } from './modal'
 export type { ModalProps } from './modal'
-export { MODAL_LAYER_CLASS, ModalLayer, useModalLayerClass } from './layer'
+// MODAL_LAYER_CLASS、ModalLayer、useModalLayerClass 不从本入口导出。
+// 写计划时检索全仓库 ts/tsx：包外没有文件 import 这三个名字。包内仍从 ./layer 使用。
 export { Tabs } from './tabs'
 export type { TabItem, TabsProps } from './tabs'
 export { ToastProvider, useToast } from './toast'
