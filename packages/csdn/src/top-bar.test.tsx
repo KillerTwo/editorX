@@ -30,6 +30,7 @@ describe('顶栏', () => {
       </StrictMode>,
     )
     expect(screen.queryByRole('button', { name: '切换到暗黑模式' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '返回' })).toBeNull()
   })
 
   it('Markdown 顶栏按码点计数，超长使用 is-over', async () => {
@@ -70,6 +71,8 @@ describe('顶栏', () => {
     expect(container.querySelector('.ex-csdn__bar input')).toBeNull()
     expect(container.querySelector('.ex-csdn-title__count')).toBeNull()
     expect(container.querySelector('.ex-csdn__publish')).toBeNull()
+    expect(container.querySelector('.ex-csdn__back')).toBeNull()
+    expect(container.querySelector('.ex-csdn__bar .ex-csdn__draft')).toBeNull()
     expect(container.querySelector('.ex-pub-bar')).not.toBeNull()
   })
 })

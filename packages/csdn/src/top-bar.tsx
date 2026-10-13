@@ -33,10 +33,12 @@ export function TopBar({
   const counter = titleCounter(length, messages.richText)
   return (
     <header className="ex-csdn__bar">
-      <Button type="button" variant="text" className="ex-csdn__back" onClick={() => onBack?.()}>
-        <ArrowLeft size={16} aria-hidden="true" />
-        返回
-      </Button>
+      {onBack ? (
+        <Button type="button" variant="text" className="ex-csdn__back" onClick={onBack}>
+          <ArrowLeft size={16} aria-hidden="true" />
+          返回
+        </Button>
+      ) : null}
       {editorType === 'markdown' ? (
         <label className="ex-csdn-title">
           <input
@@ -52,9 +54,11 @@ export function TopBar({
         <div className="ex-csdn__spacer" />
       )}
       <div className="ex-csdn__actions">
-        <Button type="button" className="ex-csdn__draft" disabled={actionsDisabled} onClick={onSaveDraft}>
-          保存草稿
-        </Button>
+        {editorType === 'markdown' ? (
+          <Button type="button" className="ex-csdn__draft" disabled={actionsDisabled} onClick={onSaveDraft}>
+            保存草稿
+          </Button>
+        ) : null}
         {showThemeToggle ? <ThemeToggle /> : null}
         <Button type="button" variant="text" className="ex-csdn__switch" disabled={actionsDisabled} onClick={onSwitch}>
           <ArrowLeftRight size={16} aria-hidden="true" />
