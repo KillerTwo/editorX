@@ -11,7 +11,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "e2e": "turbo run e2e",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "release:dry-run": "node scripts/release-dry-run.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2",
