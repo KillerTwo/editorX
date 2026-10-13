@@ -1,0 +1,26 @@
+{
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@editorx/theme",
+      "@editorx/ui",
+      "@editorx/toolbar",
+      "@editorx/markdown-core",
+      "@editorx/markdown",
+      "@editorx/rich-text",
+      "@editorx/publish",
+      "@editorx/csdn-extensions",
+      "@editorx/csdn"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@editorx/playground"],
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  }
+}
