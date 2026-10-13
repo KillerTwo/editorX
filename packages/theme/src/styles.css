@@ -55,7 +55,7 @@
   --ex-color-mde-disabled-text: light-dark(#bbbbbb, #5a5b63);
   --ex-color-on-primary: light-dark(#ffffff, #ffffff);
   --ex-color-pub-label: light-dark(#606266, #a3a6ad);
-  --ex-color-pub-text: light-dark(#1a1a1a, #e8e8ed);
+  --ex-color-pub-text: var(--ex-color-mde-chrome-text);
   --ex-color-pub-border: light-dark(#dcdfe6, #4c4d4f);
   --ex-color-pub-tag-border: light-dark(#e8e8ee, #3a3b41);
   --ex-color-pub-upload-border: light-dark(#cccccc, #4c4d4f);
@@ -71,9 +71,9 @@
   --ex-color-pub-fill: light-dark(#f2f2f2, #2e2f34);
   --ex-color-pub-check: light-dark(#006fff, #3b8eff);
   --ex-color-pub-check-modal: light-dark(#409eff, #409eff);
-  --ex-color-pub-option-modal: light-dark(#555666, #b8b9c4);
+  --ex-color-pub-option-modal: var(--ex-color-text-secondary);
   --ex-color-pub-link: light-dark(#006fff, #5aa0ff);
-  --ex-color-pub-link-modal: light-dark(#4ea1db, #6cb6ea);
+  --ex-color-pub-link-modal: var(--ex-color-mde-preview-link);
   --ex-color-pub-verified: light-dark(#73bd88, #73bd88);
   --ex-color-pub-disabled-bg: light-dark(#f5f7fa, #26272b);
   --ex-color-pub-disabled-border: light-dark(#e4e7ed, #363637);
@@ -83,7 +83,7 @@
   --ex-color-pub-sublabel: light-dark(#666666, #a3a6ad);
   --ex-color-pub-bar-border: light-dark(#e8e8e8, #2e2f34);
   --ex-color-pub-button-border: light-dark(#e5e5e5, #3a3b41);
-  --ex-color-pub-button-border-modal: light-dark(#e8e8ed, #3a3b41);
+  --ex-color-pub-button-border-modal: var(--ex-color-border);
   --ex-color-pub-chevron: light-dark(#797979, #8d9095);
   --ex-color-pub-title: light-dark(#000000, #f2f2f5);
   --ex-color-pub-close: light-dark(#8c8c8c, #8d9095);
@@ -262,7 +262,7 @@
     --ex-color-mde-disabled-text: #bbbbbb;
     --ex-color-on-primary: #ffffff;
     --ex-color-pub-label: #606266;
-    --ex-color-pub-text: #1a1a1a;
+    --ex-color-pub-text: var(--ex-color-mde-chrome-text);
     --ex-color-pub-border: #dcdfe6;
     --ex-color-pub-tag-border: #e8e8ee;
     --ex-color-pub-upload-border: #cccccc;
@@ -278,9 +278,9 @@
     --ex-color-pub-fill: #f2f2f2;
     --ex-color-pub-check: #006fff;
     --ex-color-pub-check-modal: #409eff;
-    --ex-color-pub-option-modal: #555666;
+    --ex-color-pub-option-modal: var(--ex-color-text-secondary);
     --ex-color-pub-link: #006fff;
-    --ex-color-pub-link-modal: #4ea1db;
+    --ex-color-pub-link-modal: var(--ex-color-mde-preview-link);
     --ex-color-pub-verified: #73bd88;
     --ex-color-pub-disabled-bg: #f5f7fa;
     --ex-color-pub-disabled-border: #e4e7ed;
@@ -290,7 +290,7 @@
     --ex-color-pub-sublabel: #666666;
     --ex-color-pub-bar-border: #e8e8e8;
     --ex-color-pub-button-border: #e5e5e5;
-    --ex-color-pub-button-border-modal: #e8e8ed;
+    --ex-color-pub-button-border-modal: var(--ex-color-border);
     --ex-color-pub-chevron: #797979;
     --ex-color-pub-title: #000000;
     --ex-color-pub-close: #8c8c8c;
@@ -411,7 +411,7 @@
     --ex-color-mde-disabled-text: #5a5b63;
     --ex-color-on-primary: #ffffff;
     --ex-color-pub-label: #a3a6ad;
-    --ex-color-pub-text: #e8e8ed;
+    --ex-color-pub-text: var(--ex-color-mde-chrome-text);
     --ex-color-pub-border: #4c4d4f;
     --ex-color-pub-tag-border: #3a3b41;
     --ex-color-pub-upload-border: #4c4d4f;
@@ -427,9 +427,9 @@
     --ex-color-pub-fill: #2e2f34;
     --ex-color-pub-check: #3b8eff;
     --ex-color-pub-check-modal: #409eff;
-    --ex-color-pub-option-modal: #b8b9c4;
+    --ex-color-pub-option-modal: var(--ex-color-text-secondary);
     --ex-color-pub-link: #5aa0ff;
-    --ex-color-pub-link-modal: #6cb6ea;
+    --ex-color-pub-link-modal: var(--ex-color-mde-preview-link);
     --ex-color-pub-verified: #73bd88;
     --ex-color-pub-disabled-bg: #26272b;
     --ex-color-pub-disabled-border: #363637;
@@ -439,7 +439,7 @@
     --ex-color-pub-sublabel: #a3a6ad;
     --ex-color-pub-bar-border: #2e2f34;
     --ex-color-pub-button-border: #3a3b41;
-    --ex-color-pub-button-border-modal: #3a3b41;
+    --ex-color-pub-button-border-modal: var(--ex-color-border);
     --ex-color-pub-chevron: #8d9095;
     --ex-color-pub-title: #f2f2f5;
     --ex-color-pub-close: #8d9095;
@@ -561,7 +561,7 @@
       --ex-color-mde-disabled-text: #5a5b63;
       --ex-color-on-primary: #ffffff;
       --ex-color-pub-label: #a3a6ad;
-      --ex-color-pub-text: #e8e8ed;
+      --ex-color-pub-text: var(--ex-color-mde-chrome-text);
       --ex-color-pub-border: #4c4d4f;
       --ex-color-pub-tag-border: #3a3b41;
       --ex-color-pub-upload-border: #4c4d4f;
@@ -577,9 +577,9 @@
       --ex-color-pub-fill: #2e2f34;
       --ex-color-pub-check: #3b8eff;
       --ex-color-pub-check-modal: #409eff;
-      --ex-color-pub-option-modal: #b8b9c4;
+      --ex-color-pub-option-modal: var(--ex-color-text-secondary);
       --ex-color-pub-link: #5aa0ff;
-      --ex-color-pub-link-modal: #6cb6ea;
+      --ex-color-pub-link-modal: var(--ex-color-mde-preview-link);
       --ex-color-pub-verified: #73bd88;
       --ex-color-pub-disabled-bg: #26272b;
       --ex-color-pub-disabled-border: #363637;
@@ -589,7 +589,7 @@
       --ex-color-pub-sublabel: #a3a6ad;
       --ex-color-pub-bar-border: #2e2f34;
       --ex-color-pub-button-border: #3a3b41;
-      --ex-color-pub-button-border-modal: #3a3b41;
+      --ex-color-pub-button-border-modal: var(--ex-color-border);
       --ex-color-pub-chevron: #8d9095;
       --ex-color-pub-title: #f2f2f5;
       --ex-color-pub-close: #8d9095;

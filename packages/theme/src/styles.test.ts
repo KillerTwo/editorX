@@ -165,7 +165,7 @@ describe('styles.css 主题切换', () => {
 const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-on-primary', '#ffffff', '#ffffff'],
   ['--ex-color-pub-label', '#606266', '#a3a6ad'],
-  ['--ex-color-pub-text', '#1a1a1a', '#e8e8ed'],
+  ['--ex-color-pub-text', 'var(--ex-color-mde-chrome-text)', 'var(--ex-color-mde-chrome-text)'],
   ['--ex-color-pub-border', '#dcdfe6', '#4c4d4f'],
   ['--ex-color-pub-tag-border', '#e8e8ee', '#3a3b41'],
   ['--ex-color-pub-upload-border', '#cccccc', '#4c4d4f'],
@@ -181,9 +181,9 @@ const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-pub-fill', '#f2f2f2', '#2e2f34'],
   ['--ex-color-pub-check', '#006fff', '#3b8eff'],
   ['--ex-color-pub-check-modal', '#409eff', '#409eff'],
-  ['--ex-color-pub-option-modal', '#555666', '#b8b9c4'],
+  ['--ex-color-pub-option-modal', 'var(--ex-color-text-secondary)', 'var(--ex-color-text-secondary)'],
   ['--ex-color-pub-link', '#006fff', '#5aa0ff'],
-  ['--ex-color-pub-link-modal', '#4ea1db', '#6cb6ea'],
+  ['--ex-color-pub-link-modal', 'var(--ex-color-mde-preview-link)', 'var(--ex-color-mde-preview-link)'],
   ['--ex-color-pub-verified', '#73bd88', '#73bd88'],
   ['--ex-color-pub-disabled-bg', '#f5f7fa', '#26272b'],
   ['--ex-color-pub-disabled-border', '#e4e7ed', '#363637'],
@@ -193,7 +193,7 @@ const PUB_TOKENS: Array<[name: string, light: string, dark: string]> = [
   ['--ex-color-pub-sublabel', '#666666', '#a3a6ad'],
   ['--ex-color-pub-bar-border', '#e8e8e8', '#2e2f34'],
   ['--ex-color-pub-button-border', '#e5e5e5', '#3a3b41'],
-  ['--ex-color-pub-button-border-modal', '#e8e8ed', '#3a3b41'],
+  ['--ex-color-pub-button-border-modal', 'var(--ex-color-border)', 'var(--ex-color-border)'],
   ['--ex-color-pub-chevron', '#797979', '#8d9095'],
   ['--ex-color-pub-title', '#000000', '#f2f2f5'],
   ['--ex-color-pub-close', '#8c8c8c', '#8d9095'],
@@ -289,5 +289,57 @@ describe('富文本 token', () => {
     expect(expected.get('--ex-color-rte-drawer-shadow')?.[0]).toBe('rgba(0, 0, 0, 0.06)')
     expect(expected.get('--ex-color-rte-band')?.[1]).toBe('#1d1e22')
     expect(expected.get('--ex-color-rte-hover')?.[1]).toBe('rgba(255, 255, 255, 0.06)')
+  })
+})
+
+describe('重复的发布色标是源 token 的别名', () => {
+  const aliases: Array<[string, string]> = [
+    ['--ex-color-pub-option-modal', 'var(--ex-color-text-secondary)'],
+    ['--ex-color-pub-text', 'var(--ex-color-mde-chrome-text)'],
+    ['--ex-color-pub-link-modal', 'var(--ex-color-mde-preview-link)'],
+    ['--ex-color-pub-button-border-modal', 'var(--ex-color-border)'],
+  ]
+
+  const sources: Record<string, string> = {
+    '--ex-color-text-secondary': 'light-dark(#555666, #b8b9c4)',
+    '--ex-color-mde-chrome-text': 'light-dark(#1a1a1a, #e8e8ed)',
+    '--ex-color-mde-preview-link': 'light-dark(#4ea1db, #6cb6ea)',
+    '--ex-color-border': 'light-dark(#e8e8ed, #3a3b41)',
+    '--ex-color-primary': 'light-dark(#fc5531, #fc5531)',
+    '--ex-color-pub-link': 'light-dark(#006fff, #5aa0ff)',
+    '--ex-color-pub-button-border': 'light-dark(#e5e5e5, #3a3b41)',
+    '--ex-color-rte-ink': 'var(--ex-color-text-secondary)',
+  }
+
+  it('主块把四个重复色标指到已有 token，其它抽查值不变', () => {
+    for (const [name, value] of aliases) {
+      expect(mainTokens.get(name), name).toBe(value)
+      expect(css.split(`${name}: ${value};`).length - 1, name).toBe(4)
+    }
+    for (const [name, value] of Object.entries(sources)) {
+      expect(mainTokens.get(name), name).toBe(value)
+    }
+  })
+
+  const blocks: Array<[string, string, 0 | 1]> = [
+    ['亮色', ".ex-root,\n  .ex-root[data-ex-theme='light']", 0],
+    ['暗色', ".ex-root[data-ex-theme='dark']", 1],
+    ['system 暗色', ".ex-root[data-ex-theme='system']", 1],
+  ]
+
+  it.each(blocks)('%s 兜底块里别名仍是 var()，源 token 仍是原来的十六进制', (_label, selector, index) => {
+    const scope = selector.includes('system')
+      ? ruleBody(fallbackCss, '@media (prefers-color-scheme: dark)')
+      : fallbackCss
+    const tokens = parseColorTokens(ruleBody(scope, selector))
+    for (const [name, value] of aliases) {
+      expect(tokens.get(name), name).toBe(value)
+    }
+    expect(tokens.get('--ex-color-text-secondary')).toBe(index === 0 ? '#555666' : '#b8b9c4')
+    expect(tokens.get('--ex-color-mde-chrome-text')).toBe(index === 0 ? '#1a1a1a' : '#e8e8ed')
+    expect(tokens.get('--ex-color-mde-preview-link')).toBe(index === 0 ? '#4ea1db' : '#6cb6ea')
+    expect(tokens.get('--ex-color-border')).toBe(index === 0 ? '#e8e8ed' : '#3a3b41')
+    expect(tokens.get('--ex-color-primary')).toBe('#fc5531')
+    expect(tokens.get('--ex-color-pub-button-border')).toBe(index === 0 ? '#e5e5e5' : '#3a3b41')
   })
 })
