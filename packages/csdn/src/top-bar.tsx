@@ -60,9 +60,11 @@ export function TopBar({
           <ArrowLeftRight size={16} aria-hidden="true" />
           切换编辑器
         </Button>
-        <Button type="button" variant="primary" className="ex-csdn__publish" disabled={actionsDisabled} onClick={onPublish}>
-          发布
-        </Button>
+        {editorType === 'markdown' ? (
+          <Button type="button" variant="primary" className="ex-csdn__publish" disabled={actionsDisabled} onClick={onPublish}>
+            发布
+          </Button>
+        ) : null}
       </div>
     </header>
   )

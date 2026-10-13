@@ -1,6 +1,6 @@
 import { csdnExtensions } from '@editorx/csdn-extensions'
 import { MarkdownEditor, type MarkdownEditorHandle } from '@editorx/markdown'
-import { createSettings, PublishPanel } from '@editorx/publish'
+import { createSettings, PublishModal, PublishPanel } from '@editorx/publish'
 import { RichTextEditor, type RichTextEditorHandle } from '@editorx/rich-text'
 import { ThemeProvider } from '@editorx/theme'
 import {
@@ -25,7 +25,6 @@ import {
   writeDraftBackup,
   type CsdnDraftBackup,
 } from './draft-backup'
-import { submitPublish } from './submit-publish'
 import { switchedDocument } from './switch-document'
 import { TopBar } from './top-bar'
 import type { CsdnEditorProps } from './types'
@@ -82,6 +81,7 @@ function CsdnEditorShell({
   ref,
   hiddenFields,
   categorySelection,
+  coverModes,
 }: CsdnEditorProps) {
   const [editorType, setEditorType] = useState<EditorType>(defaultEditor ?? initialDocument?.editorType ?? 'markdown')
   const [mountKey, setMountKey] = useState(0)
@@ -137,7 +137,7 @@ function CsdnEditorShell({
   const trailingToastSuccess = useRef(false)
   const [saveVersion, setSaveVersion] = useState(0)
   const [words, setWords] = useState(0)
-  const publishing = useRef(false)
+  const [publishOpen, setPublishOpen] = useState(false)
 
   const readDocument = useCallback((): EditorDocument => {
     if (editorType === 'markdown') {
@@ -271,20 +271,6 @@ function CsdnEditorShell({
     [readDocument, persist],
   )
 
-  const publish = () => {
-    if (publishing.current) return
-    publishing.current = true
-    void submitPublish({
-      document: readDocument(),
-      settings,
-      adapters,
-      notify,
-      messages: messages.publish,
-    }).finally(() => {
-      publishing.current = false
-    })
-  }
-
   void saveVersion
   const dirty = draftFingerprint(readDocument(), settings) !== savedFingerprint.current
 
@@ -301,7 +287,7 @@ function CsdnEditorShell({
           void persist(true)
         }}
         onSwitch={() => setSwitchOpen(true)}
-        onPublish={publish}
+        onPublish={() => setPublishOpen(true)}
       />
       <div className="ex-csdn__editor">
         {editorType === 'markdown' ? (
@@ -345,6 +331,7 @@ function CsdnEditorShell({
                   }
                   hiddenFields={hiddenFields}
                   categorySelection={categorySelection}
+                  coverModes={coverModes}
                   barPosition="fixed"
                   slots={{
                     barStart: (
@@ -361,6 +348,19 @@ function CsdnEditorShell({
           />
         )}
       </div>
+      {editorType === 'markdown' ? (
+        <PublishModal
+          open={publishOpen}
+          onClose={() => setPublishOpen(false)}
+          value={settings}
+          onChange={setSettings}
+          document={readDocument()}
+          adapters={adapters.onSaveDraft ? { ...adapters, onSaveDraft: () => saveFromPanel() } : adapters}
+          hiddenFields={hiddenFields}
+          categorySelection={categorySelection}
+          coverModes={coverModes}
+        />
+      ) : null}
       <Modal
         open={switchOpen}
         onClose={() => setSwitchOpen(false)}

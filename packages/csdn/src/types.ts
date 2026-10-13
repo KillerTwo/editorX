@@ -2,6 +2,7 @@ import type { ThemeMode } from '@editorx/theme'
 import type {
   DeepPartial,
   EditorAdapters,
+  CoverMode,
   EditorDocument,
   EditorExtension,
   EditorType,
@@ -42,4 +43,6 @@ export interface CsdnEditorProps {
   ref?: Ref<CsdnEditorHandle>
   hiddenFields?: readonly PublishHiddenField[]
   categorySelection?: 'multiple' | 'single'
+  /** 传给发布面板；多于一项时显示封面类型切换。默认只有单图 */
+  coverModes?: readonly CoverMode[]
 }

@@ -57,10 +57,21 @@ describe('CoverField', () => {
     Reflect.deleteProperty(URL, 'revokeObjectURL')
   })
 
+  it('点击「从本地上传」会激活文件控件', async () => {
+    renderWithProviders(<Cover />)
+    const input = screen.getByLabelText('从本地上传')
+    expect(input).toHaveAttribute('type', 'file')
+    expect(input).not.toHaveAttribute('hidden')
+    const clicked = vi.fn()
+    input.addEventListener('click', clicked)
+    await userEvent.click(screen.getByText('从本地上传'))
+    expect(clicked).toHaveBeenCalled()
+  })
+
   it('默认单图：上传框 + 无正文图片提示，不显示模式切换', () => {
     renderWithProviders(<Cover />)
     expect(screen.getByRole('group', { name: '添加封面' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '从本地上传' })).toBeEnabled()
+    expect(screen.getByLabelText('从本地上传')).toBeEnabled()
     expect(screen.getByText('暂无内容图片，请在正文中添加图片')).toBeInTheDocument()
     expect(screen.queryByRole('radiogroup', { name: '封面类型' })).toBeNull()
   })
@@ -185,18 +196,18 @@ describe('CoverField', () => {
 
   it('缺 uploadImage：hidden 不渲染上传框，disabled 禁用', () => {
     const { unmount } = renderWithProviders(<Cover uploadState="hidden" uploadImage={undefined} />)
-    expect(screen.queryByRole('button', { name: '从本地上传' })).toBeNull()
+    expect(screen.queryByLabelText('从本地上传')).toBeNull()
     unmount()
     renderWithProviders(<Cover uploadState="disabled" uploadImage={undefined} />)
-    expect(screen.getByRole('button', { name: '从本地上传' })).toBeDisabled()
+    expect(screen.getByLabelText('从本地上传')).toBeDisabled()
   })
 
   it('多模式：三图显示 3 个槽位，无封面隐藏上传行', async () => {
     renderWithProviders(<Cover modes={['single', 'triple', 'none']} bodyImages={['/a.png']} />)
     await userEvent.click(screen.getByRole('radio', { name: '三图' }))
-    expect(screen.getAllByRole('button', { name: '从本地上传' })).toHaveLength(3)
+    expect(screen.getAllByLabelText('从本地上传')).toHaveLength(3)
     await userEvent.click(screen.getByRole('radio', { name: '无封面' }))
-    expect(screen.queryByRole('button', { name: '从本地上传' })).toBeNull()
+    expect(screen.queryByLabelText('从本地上传')).toBeNull()
     expect(screen.getByTestId('cover')).toHaveTextContent(/^none:$/)
   })
 
@@ -221,7 +232,7 @@ describe('CoverField', () => {
     let release: (value: { url: string }) => void = () => {}
     const uploadImage = vi.fn(() => new Promise<{ url: string }>((resolve) => { release = resolve }))
     const { container } = renderWithProviders(<Cover uploadImage={uploadImage} />)
-    screen.getByRole('button', { name: '从本地上传' }).focus()
+    screen.getByLabelText('从本地上传').focus()
     chooseFile(container)
     loadCropImage()
     await userEvent.click(screen.getByRole('button', { name: '确定' }))

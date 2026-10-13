@@ -38,7 +38,6 @@ function pngName(name: string) {
 export function CoverField(props: CoverFieldProps) {
   const { id, cover, onChange, bodyImages, modes, uploadState, uploadImage, variant, invalid, onError } = props
   const p = useMessages().publish
-  const fileRef = useRef<HTMLInputElement>(null)
   const slotRef = useRef<HTMLButtonElement>(null)
   const coverRef = useLatest(cover)
   const [slot, setSlot] = useState(0)
@@ -60,14 +59,12 @@ export function CoverField(props: CoverFieldProps) {
     if (node && node.ownerDocument.activeElement !== node) node.focus()
   }, [uploading])
 
-  const chooseFile = (index: number) => {
+  const onFile = (event: ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
     setSlot(index)
-    fileRef.current?.click()
-  }
-  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file) setCrop({ src: URL.createObjectURL(file), name: file.name })
+    setCrop({ src: URL.createObjectURL(file), name: file.name })
   }
   const closeCrop = () => {
     if (crop) URL.revokeObjectURL(crop.src)
@@ -108,9 +105,15 @@ export function CoverField(props: CoverFieldProps) {
           <img className="ex-pub-cover__img" src={url} alt={formatMessage(p.cover.slot, { index: index + 1 })} />
           <div className="ex-pub-cover__ops">
             {uploadState === 'enabled' && (
-              <button type="button" className="ex-pub-cover__op" onClick={() => chooseFile(index)}>
+              <label className="ex-pub-cover__op">
+                <input
+                  className="ex-pub-cover__file"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => onFile(event, index)}
+                />
                 {p.cover.replace}
-              </button>
+              </label>
             )}
             <button
               type="button"
@@ -126,16 +129,17 @@ export function CoverField(props: CoverFieldProps) {
     }
     if (uploadState === 'hidden') return null
     return (
-      <button
-        key={index}
-        type="button"
-        className="ex-pub-cover__slot ex-pub-cover__upload"
-        disabled={uploadState === 'disabled'}
-        onClick={() => chooseFile(index)}
-      >
+      <label key={index} className="ex-pub-cover__slot ex-pub-cover__upload">
+        <input
+          className="ex-pub-cover__file"
+          type="file"
+          accept="image/*"
+          disabled={uploadState === 'disabled'}
+          onChange={(event) => onFile(event, index)}
+        />
         <PlusIcon size={variant === 'modal' ? 14 : 12} />
         <span className="ex-pub-cover__upload-text">{p.cover.upload}</span>
-      </button>
+      </label>
     )
   })
 
@@ -185,16 +189,6 @@ export function CoverField(props: CoverFieldProps) {
           )}
         </div>
       )}
-      <input
-        ref={fileRef}
-        className="ex-pub-cover__file"
-        type="file"
-        accept="image/*"
-        hidden
-        tabIndex={-1}
-        aria-hidden="true"
-        onChange={onFile}
-      />
       {crop && (
         <CoverCropDialog
           src={crop.src}

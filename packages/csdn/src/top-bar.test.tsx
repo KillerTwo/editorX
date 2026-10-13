@@ -69,5 +69,7 @@ describe('顶栏', () => {
     expect(container.querySelector('.ex-csdn')).toHaveAttribute('data-editor', 'richtext')
     expect(container.querySelector('.ex-csdn__bar input')).toBeNull()
     expect(container.querySelector('.ex-csdn-title__count')).toBeNull()
+    expect(container.querySelector('.ex-csdn__publish')).toBeNull()
+    expect(container.querySelector('.ex-pub-bar')).not.toBeNull()
   })
 })
