@@ -9,7 +9,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { X } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
 import { cx } from './cx'

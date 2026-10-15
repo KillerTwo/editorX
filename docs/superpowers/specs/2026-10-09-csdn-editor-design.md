@@ -10,7 +10,7 @@
 |---|---|
 | 范围 | Markdown 编辑器、富文本编辑器、发布设置面板三者统一设计，按顺序实现 |
 | 授权 | CKEditor 5 使用 `licenseKey: 'GPL'`；富文本为独立包，作为可选 peer 依赖，未安装则不打包 GPL 代码 |
-| 分发 | pnpm monorepo，发布多个 `@editorx/*` npm 包，附 Next.js playground |
+| 分发 | pnpm monorepo，发布多个 `@geekx/*` npm 包，附 Next.js playground |
 | 后端对接 | 组件零后端耦合，全部通过 `adapters` 回调注入；playground 提供 Route Handler 参考实现 |
 | 内容模型 | `{ editorType, title, markdown?, html }`；支持双向切换（MD→富文本直接灌 HTML，富文本→MD 走 turndown，有损，需确认） |
 | 样式 | 原生 CSS + `.ex-` 前缀 + `--ex-*` CSS 变量；每包输出 `styles.css`；不依赖 Tailwind |
@@ -33,15 +33,15 @@ editorx/
 ├─ apps/
 │  └─ playground/            # Next.js 16：开发、/compare 对照页、adapters 参考实现
 ├─ packages/
-│  ├─ theme/                 # @editorx/theme
-│  ├─ ui/                    # @editorx/ui
-│  ├─ toolbar/               # @editorx/toolbar
-│  ├─ markdown-core/         # @editorx/markdown-core（无 React 依赖）
-│  ├─ markdown/              # @editorx/markdown
-│  ├─ rich-text/             # @editorx/rich-text（GPL）
-│  ├─ publish/               # @editorx/publish
-│  ├─ csdn-extensions/       # @editorx/csdn-extensions
-│  └─ csdn/                  # @editorx/csdn
+│  ├─ theme/                 # @geekx/theme
+│  ├─ ui/                    # @geekx/ui
+│  ├─ toolbar/               # @geekx/toolbar
+│  ├─ markdown-core/         # @geekx/markdown-core（无 React 依赖）
+│  ├─ markdown/              # @geekx/markdown
+│  ├─ rich-text/             # @geekx/rich-text（GPL）
+│  ├─ publish/               # @geekx/publish
+│  ├─ csdn-extensions/       # @geekx/csdn-extensions
+│  └─ csdn/                  # @geekx/csdn
 └─ tooling/                  # 共享 tsconfig / eslint / tsup 配置
 ```
 
@@ -56,7 +56,7 @@ ui ────┼─→ toolbar ─┬─→ markdown ───┐
 markdown-core ──────→ markdown（以及 csdn 中的 htmlToMarkdown）
 ```
 
-- `markdown-core` 不依赖 React 及其他 `@editorx/*` 包。
+- `markdown-core` 不依赖 React 及其他 `@geekx/*` 包。
 - `csdn` 对 `rich-text` 声明为 **optional peerDependency**；运行时动态 `import()`，失败则隐藏富文本模式与「切换编辑器」按钮。
 - `markdown`、`rich-text`、`publish` 均可脱离 `csdn` 单独使用。
 
@@ -67,9 +67,9 @@ markdown-core ──────→ markdown（以及 csdn 中的 htmlToMarkdown
 - 所有组件入口文件标注 `'use client'`；CKEditor、cledit 等仅在客户端懒加载
 - Vitest（单元/组件）、Playwright（E2E + 视觉回归）
 - Changesets 管理版本发布
-- 命名：npm scope `@editorx`，CSS 类前缀 `.ex-`，CSS 变量 `--ex-*`
+- 命名：npm scope `@geekx`，CSS 类前缀 `.ex-`，CSS 变量 `--ex-*`
 
-## 4. `@editorx/markdown-core`
+## 4. `@geekx/markdown-core`
 
 ### 4.1 编辑层接口
 
@@ -131,7 +131,7 @@ interface EditorEngine {
 - 导入/导出：`.md`、`.html`。
 - `htmlToMarkdown(html)`：turndown + GFM 插件；`ex-embed` 卡片反向还原为约定代码块。
 
-## 5. `@editorx/toolbar`：扩展 API 与共享类型
+## 5. `@geekx/toolbar`：扩展 API 与共享类型
 
 ### 5.1 共享类型
 
@@ -220,7 +220,7 @@ interface ExtensionContext {
 
 ## 6. React 组件
 
-### 6.1 `<MarkdownEditor />`（`@editorx/markdown`）
+### 6.1 `<MarkdownEditor />`（`@geekx/markdown`）
 
 Props：`value` / `defaultValue` / `onChange(md, html)`、`adapters`、`extensions`、`toolbarLayout`、`viewMode: 'split' | 'edit' | 'preview'`、`theme`、`height`、`placeholder`、`autoSaveInterval`、`missingAdapter`、`locale`、`engine?: () => EditorEngine`。
 
@@ -230,7 +230,7 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 
 图片：粘贴/拖拽/工具栏上传 → 插入占位 `![上传中...](ex-uploading://<id>)` → 成功替换为真实 URL；失败标红，可重试或删除。
 
-### 6.2 `<RichTextEditor />`（`@editorx/rich-text`）
+### 6.2 `<RichTextEditor />`（`@geekx/rich-text`）
 
 - `@ckeditor/ckeditor5-react` + 自选插件集，`licenseKey: 'GPL'`；工具栏按 CSDN 富文本编辑器布局排列。
 - Props 与 `MarkdownEditor` 对齐（`value` 为 HTML，无 `viewMode` / `engine`）。
@@ -238,7 +238,7 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 - 嵌入块插件（§5.3）；CKEditor 工具栏项与扩展 API 打通（扩展的 button/dropdown/popover/modal 在 CKEditor 工具栏中渲染为自定义 UI 组件）。
 - 内容区样式通过 CKEditor CSS 变量映射到 `--ex-*`，支持暗色。
 
-### 6.3 `<PublishPanel />`（`@editorx/publish`）
+### 6.3 `<PublishPanel />`（`@geekx/publish`）
 
 `PublishSettings` 字段（还原 CSDN「发布文章」区）：
 
@@ -252,7 +252,7 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 
 底部操作：保存草稿、定时发布、发布文章。受控组件（`value` / `onChange`），内置可配置的校验规则（`rules` 可覆盖）。
 
-### 6.4 `<CsdnEditor />`（`@editorx/csdn`）
+### 6.4 `<CsdnEditor />`（`@geekx/csdn`）
 
 - 布局：顶栏（返回、标题输入 5–100 字及计数、保存草稿、主题切换、切换编辑器、发布）→ 编辑器区域 → 发布设置面板。
 - Props：`adapters`、`initialDocument`、`initialSettings`、`defaultEditor`、`extensions`（默认启用全部 `csdn-extensions`）、`toolbarLayout`、`theme` / `onThemeChange` / `showThemeToggle`、`locale`（默认 `zh-CN`，可覆盖文案字典）、`autoSaveInterval`、`onBack`。
@@ -262,7 +262,7 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 
 ### 6.5 主题
 
-- `@editorx/theme` 导出 `ThemeProvider`、`useTheme`、`tokens.css`（亮/暗两套 `--ex-*`）。
+- `@geekx/theme` 导出 `ThemeProvider`、`useTheme`、`tokens.css`（亮/暗两套 `--ex-*`）。
 - `ThemeProvider` 在组件根节点设置 `data-ex-theme="light|dark"`；`'system'` 时监听 `prefers-color-scheme`。
 - 受控：`theme` + `onThemeChange`；非受控：内部状态 + localStorage（key 可配置）。
 - 覆盖范围：外壳 UI、预览区（含 Prism）、CKEditor 内容区、弹窗/弹层、发布面板；Mermaid 在主题切换时以对应主题重新初始化并重渲染图表。
@@ -282,7 +282,7 @@ UI：工具栏；编辑区 + 预览区双栏（可拖动分隔条）；状态栏
 ## 8. 还原度保障
 
 - playground `/compare` 页：组件与 CSDN 参考截图并排 / 叠加（透明度可调）。参考截图由用户登录 CSDN 后手动截取，放入 `apps/playground/public/reference/`（由 Next.js 静态托管）；不爬取 CSDN。
-- 设计 token（颜色、间距、字号、圆角、阴影）统一定义在 `@editorx/theme`，组件中不出现硬编码视觉值。
+- 设计 token（颜色、间距、字号、圆角、阴影）统一定义在 `@geekx/theme`，组件中不出现硬编码视觉值。
 - Playwright 视觉回归覆盖：亮/暗 × 三种视图模式、所有弹窗/弹层、发布面板、富文本工具栏；像素差异阈值 0.1%。
 
 ## 9. 测试策略

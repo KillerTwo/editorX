@@ -12,7 +12,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   banner: { js: "'use client';" },
-  external: ['react', 'react-dom', '@editorx/theme', '@editorx/toolbar', '@editorx/ui'],
+  external: ['react', 'react-dom', '@geekx/theme', '@geekx/toolbar', '@geekx/ui'],
   onSuccess: async () => {
     execFileSync(process.execPath, [copyCssScript], { cwd: packageDir, stdio: 'inherit' })
   },

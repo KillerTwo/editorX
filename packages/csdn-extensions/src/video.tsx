@@ -1,4 +1,4 @@
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
+import type { EditorExtension, ExtensionContext } from '@geekx/toolbar'
 import { Video } from 'lucide-react'
 import { escapeHtml, httpUrl } from './embed-html'
 import { reportFailure } from './form'

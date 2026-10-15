@@ -1,5 +1,5 @@
 {
-  "name": "@editorx/csdn",
+  "name": "@geekx/csdn",
   "version": "0.1.0",
   "publishConfig": {
     "access": "public"
@@ -26,26 +26,26 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/csdn-extensions": "workspace:*",
-    "@editorx/markdown": "workspace:*",
-    "@editorx/markdown-core": "workspace:*",
-    "@editorx/publish": "workspace:*",
-    "@editorx/rich-text": "workspace:*",
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/csdn-extensions": "workspace:*",
+    "@geekx/markdown": "workspace:*",
+    "@geekx/markdown-core": "workspace:*",
+    "@geekx/publish": "workspace:*",
+    "@geekx/rich-text": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "dependencies": {
-    "@editorx/csdn-extensions": "workspace:*",
-    "@editorx/markdown": "workspace:*",
-    "@editorx/markdown-core": "workspace:*",
-    "@editorx/publish": "workspace:*",
-    "@editorx/rich-text": "workspace:*",
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/csdn-extensions": "workspace:*",
+    "@geekx/markdown": "workspace:*",
+    "@geekx/markdown-core": "workspace:*",
+    "@geekx/publish": "workspace:*",
+    "@geekx/rich-text": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "lucide-react": "^1.53.0"
   }
 }

@@ -1,4 +1,4 @@
-import { ThemeProvider, useOptionalTheme } from '@editorx/theme'
+import { ThemeProvider, useOptionalTheme } from '@geekx/theme'
 import {
   errorMessage,
   formatMessage,
@@ -6,8 +6,8 @@ import {
   useMessages,
   type CoverMode,
   type EditorAdapters,
-} from '@editorx/toolbar'
-import { Modal, ToastProvider, useToast, type ToastType } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { Modal, ToastProvider, useToast, type ToastType } from '@geekx/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { PublishActions } from './actions'
 import { adapterState } from './adapter-state'

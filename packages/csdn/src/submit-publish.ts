@@ -7,7 +7,7 @@ import {
   TITLE_MIN,
   toPayload,
   validatePublish,
-} from '@editorx/publish'
+} from '@geekx/publish'
 import {
   errorMessage,
   formatMessage,
@@ -15,7 +15,7 @@ import {
   type EditorDocument,
   type Messages,
   type PublishSettings,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 
 export async function submitPublish(input: {
   document: EditorDocument

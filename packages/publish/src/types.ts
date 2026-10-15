@@ -1,4 +1,4 @@
-import type { ThemeMode } from '@editorx/theme'
+import type { ThemeMode } from '@geekx/theme'
 import type {
   CoverMode,
   DeepPartial,
@@ -9,7 +9,7 @@ import type {
   PublishOption,
   PublishPayload,
   PublishSettings,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 import type { ReactNode } from 'react'
 import type { ScheduleRange } from './schedule'
 import type { PublishRules } from './validate'

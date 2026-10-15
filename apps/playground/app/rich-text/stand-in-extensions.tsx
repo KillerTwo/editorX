@@ -1,4 +1,4 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { ArrowLeftRight, FileText, History, Link2, Video } from 'lucide-react'
 
 const ICON = 16

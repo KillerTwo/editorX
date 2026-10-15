@@ -68,31 +68,31 @@ importers:
 
   apps/playground:
     dependencies:
-      '@editorx/csdn':
+      '@geekx/csdn':
         specifier: workspace:*
         version: link:../../packages/csdn
-      '@editorx/csdn-extensions':
+      '@geekx/csdn-extensions':
         specifier: workspace:*
         version: link:../../packages/csdn-extensions
-      '@editorx/markdown':
+      '@geekx/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
-      '@editorx/markdown-core':
+      '@geekx/markdown-core':
         specifier: workspace:*
         version: link:../../packages/markdown-core
-      '@editorx/publish':
+      '@geekx/publish':
         specifier: workspace:*
         version: link:../../packages/publish
-      '@editorx/rich-text':
+      '@geekx/rich-text':
         specifier: workspace:*
         version: link:../../packages/rich-text
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../../packages/theme
-      '@editorx/toolbar':
+      '@geekx/toolbar':
         specifier: workspace:*
         version: link:../../packages/toolbar
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       katex:
@@ -129,28 +129,28 @@ importers:
 
   packages/csdn:
     dependencies:
-      '@editorx/csdn-extensions':
+      '@geekx/csdn-extensions':
         specifier: workspace:*
         version: link:../csdn-extensions
-      '@editorx/markdown':
+      '@geekx/markdown':
         specifier: workspace:*
         version: link:../markdown
-      '@editorx/markdown-core':
+      '@geekx/markdown-core':
         specifier: workspace:*
         version: link:../markdown-core
-      '@editorx/publish':
+      '@geekx/publish':
         specifier: workspace:*
         version: link:../publish
-      '@editorx/rich-text':
+      '@geekx/rich-text':
         specifier: workspace:*
         version: link:../rich-text
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
-      '@editorx/toolbar':
+      '@geekx/toolbar':
         specifier: workspace:*
         version: link:../toolbar
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../ui
       lucide-react:
@@ -166,13 +166,13 @@ importers:
 
   packages/csdn-extensions:
     dependencies:
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
-      '@editorx/toolbar':
+      '@geekx/toolbar':
         specifier: workspace:*
         version: link:../toolbar
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../ui
       lucide-react:
@@ -188,20 +188,20 @@ importers:
 
   packages/markdown:
     dependencies:
-      '@editorx/markdown-core':
+      '@geekx/markdown-core':
         specifier: workspace:*
         version: link:../markdown-core
       lucide-react:
         specifier: ^1.53.0
         version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
-      '@editorx/toolbar':
+      '@geekx/toolbar':
         specifier: workspace:*
         version: link:../toolbar
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../ui
       react:
@@ -272,13 +272,13 @@ importers:
         specifier: ^1.53.0
         version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
-      '@editorx/toolbar':
+      '@geekx/toolbar':
         specifier: workspace:*
         version: link:../toolbar
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../ui
       react:
@@ -300,13 +300,13 @@ importers:
         specifier: ^1.53.0
         version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
-      '@editorx/toolbar':
+      '@geekx/toolbar':
         specifier: workspace:*
         version: link:../toolbar
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../ui
       react:
@@ -331,10 +331,10 @@ importers:
         specifier: ^1.53.0
         version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
-      '@editorx/ui':
+      '@geekx/ui':
         specifier: workspace:*
         version: link:../ui
       react:
@@ -353,7 +353,7 @@ importers:
         specifier: ^1.53.0
         version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
-      '@editorx/theme':
+      '@geekx/theme':
         specifier: workspace:*
         version: link:../theme
       react:

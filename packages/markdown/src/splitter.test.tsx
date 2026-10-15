@@ -7,8 +7,8 @@ import { clampSplit, Splitter, splitFromPointer } from './splitter'
 import { renderEditor } from './test-utils'
 
 const syncRefresh = vi.hoisted(() => ({ calls: 0 }))
-vi.mock('@editorx/markdown-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@editorx/markdown-core')>()
+vi.mock('@geekx/markdown-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@geekx/markdown-core')>()
   return {
     ...actual,
     createScrollSync: (...args: Parameters<typeof actual.createScrollSync>) => {

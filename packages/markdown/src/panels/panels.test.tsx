@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { resolvePanels, type EditorExtension } from '@editorx/toolbar'
+import { resolvePanels, type EditorExtension } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { markdownCoreExtensions } from '../core-extensions'
 import { MarkdownEditor } from '../markdown-editor'

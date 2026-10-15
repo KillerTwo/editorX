@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import { render, type RenderResult } from '@testing-library/react'
 import { StrictMode, type ReactElement, type ReactNode } from 'react'
 

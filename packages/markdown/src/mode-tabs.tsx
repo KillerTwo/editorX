@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { useRef, type ComponentType, type KeyboardEvent } from 'react'
 import { cx } from './cx'
 import { MarkdownModeIcon, PreviewModeIcon, SplitModeIcon } from './icons'

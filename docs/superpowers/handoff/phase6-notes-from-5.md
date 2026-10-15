@@ -1,10 +1,10 @@
 # 阶段 5 交给阶段 6 的笔记
 
-阶段 5 代码 HEAD：`c17676f`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交，不含代码改动。范围是 `@editorx/rich-text` 的 `<RichTextEditor />`。阶段 6 做顶栏和 `<CsdnEditor />` 时以本文为准。
+阶段 5 代码 HEAD：`c17676f`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交，不含代码改动。范围是 `@geekx/rich-text` 的 `<RichTextEditor />`。阶段 6 做顶栏和 `<CsdnEditor />` 时以本文为准。
 
 ## 代码范围
 
-`@editorx/rich-text` 交付 `<RichTextEditor />`。代码止于 `c17676f`，分支 `develop`。
+`@geekx/rich-text` 交付 `<RichTextEditor />`。代码止于 `c17676f`，分支 `develop`。
 
 ## 公开 API
 

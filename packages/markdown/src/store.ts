@@ -1,4 +1,4 @@
-import type { TocItem } from '@editorx/markdown-core'
+import type { TocItem } from '@geekx/markdown-core'
 import { useSyncExternalStore } from 'react'
 import type { PreviewStats } from './pipeline/stats-counter'
 

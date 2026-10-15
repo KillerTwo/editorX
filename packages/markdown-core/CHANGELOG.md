@@ -1,4 +1,4 @@
-# @editorx/markdown-core
+# @geekx/markdown-core
 
 ## 0.1.0
 

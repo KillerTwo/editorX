@@ -1,5 +1,5 @@
-import { useMessages } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import { useMessages } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import type { AdapterState } from './adapter-state'
 import { CaretDownIcon, ChevronRightIcon } from './icons'
 import type { PublishVariant } from './types'

@@ -1,6 +1,6 @@
-import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@editorx/toolbar'
+import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@geekx/toolbar'
 import { TocPanel } from './toc-panel'
-import { Button, cropImage, ImageCropper, type CropArea } from '@editorx/ui'
+import { Button, cropImage, ImageCropper, type CropArea } from '@geekx/ui'
 import {
   AlignCenter,
   AlignJustify,

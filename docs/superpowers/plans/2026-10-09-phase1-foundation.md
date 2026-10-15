@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 搭建 EditorX monorepo，交付可发布的 `@editorx/theme`（亮/暗主题 token + ThemeProvider）与 `@editorx/ui`（Button、Tag、ThemeToggle、Tooltip、Popover、Dropdown、Modal、Tabs、Toast），以及用于开发与还原度对照的 Next.js 16 playground。
+**Goal:** 搭建 EditorX monorepo，交付可发布的 `@geekx/theme`（亮/暗主题 token + ThemeProvider）与 `@geekx/ui`（Button、Tag、ThemeToggle、Tooltip、Popover、Dropdown、Modal、Tabs、Toast），以及用于开发与还原度对照的 Next.js 16 playground。
 
 **Architecture:** pnpm workspace + Turborepo 编排；每个包用 tsup 输出 ESM + `.d.ts`，并把 `src/styles.css` 复制为 `dist/styles.css` 供使用方显式引入。`ThemeProvider` 渲染 `.ex-root[data-ex-theme]` 根节点并在其内部提供 `.ex-portal` 挂载点，所有浮层都 portal 到这里以继承 `--ex-*` 变量。playground 消费构建产物（`dist`），用 Playwright 做 E2E 与视觉基线。
 
@@ -13,11 +13,11 @@
 ## Global Constraints
 
 - 仅支持 React 19 + Next.js 16 App Router；不兼容 React 18 / Pages Router / 非 Next 环境。
-- npm scope：`@editorx`；CSS 类前缀：`.ex-`；CSS 变量前缀：`--ex-*`。
+- npm scope：`@geekx`；CSS 类前缀：`.ex-`；CSS 变量前缀：`--ex-*`。
 - 样式：原生 CSS + CSS 变量；不使用 Tailwind / CSS Modules；每包导出 `./styles.css`。
 - `packages/*` 组件中不出现硬编码视觉值（颜色、间距、字号、圆角、阴影一律引用 `--ex-*`）；唯一例外是主按钮文字白色 `#fff`。`apps/playground` 的开发工具页（如 `/compare`）不受此限。
 - 所有组件包构建产物顶部带 `'use client';`。
-- `@editorx/theme` 在下游包中必须是 **peerDependency**（保证 ThemeContext 单例）。
+- `@geekx/theme` 在下游包中必须是 **peerDependency**（保证 ThemeContext 单例）。
 - TypeScript 固定 `~5.9.3`（tsup 的 dts 依赖 TS 5 JS API，不要升级到 7.x）。
 - 图标仅使用 lucide-react 或自绘 SVG；不使用 CSDN 素材。
 - 默认文案为简体中文，所有用户可见文案通过 props 可覆盖。
@@ -75,7 +75,7 @@ editorx/
 
 ---
 
-### Task 1: Monorepo 脚手架 + `@editorx/theme` 纯函数与主题 token
+### Task 1: Monorepo 脚手架 + `@geekx/theme` 纯函数与主题 token
 
 **Files:**
 - Create: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `eslint.config.mjs`, `.gitignore`
@@ -250,13 +250,13 @@ pnpm add -D -w turbo typescript@~5.9.3 tsup vitest jsdom @testing-library/react 
 
 Expected: 安装成功，生成 `pnpm-lock.yaml`，无 peer 依赖报错（`eslint@^9` 用于匹配 typescript-eslint 的 peer 范围）。
 
-- [ ] **Step 4: 创建 `@editorx/theme` 包配置**
+- [ ] **Step 4: 创建 `@geekx/theme` 包配置**
 
 `packages/theme/package.json`：
 
 ```json
 {
-  "name": "@editorx/theme",
+  "name": "@geekx/theme",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": ["*.css"],
@@ -352,7 +352,7 @@ describe('isThemeMode', () => {
 
 - [ ] **Step 6: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/theme test`
+Run: `pnpm --filter @geekx/theme test`
 Expected: FAIL，提示 `Failed to resolve import "./resolve-theme"`。
 
 - [ ] **Step 7: 实现纯函数与入口**
@@ -382,7 +382,7 @@ export type { ResolvedTheme, ThemeMode } from './resolve-theme'
 
 - [ ] **Step 8: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/theme test`
+Run: `pnpm --filter @geekx/theme test`
 Expected: PASS（4 个用例）。
 
 - [ ] **Step 9: 编写主题 token**
@@ -467,7 +467,7 @@ Expected: PASS（4 个用例）。
 
 - [ ] **Step 10: 验证构建与类型检查**
 
-Run: `pnpm turbo run build typecheck --filter=@editorx/theme`
+Run: `pnpm turbo run build typecheck --filter=@geekx/theme`
 Expected: 成功；`packages/theme/dist/` 下存在 `index.js`（首行为 `'use client';`）、`index.d.ts`、`styles.css`。
 
 - [ ] **Step 11: 提交**
@@ -475,7 +475,7 @@ Expected: 成功；`packages/theme/dist/` 下存在 `index.js`（首行为 `'use
 ```powershell
 git add package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json eslint.config.mjs .gitignore tooling packages/theme
 git commit -m "build(theme): 初始化 pnpm monorepo 并新增主题模式解析与亮暗 token" -m "1. 新增 pnpm workspace、Turborepo、共享 tsconfig/eslint/Vitest setup 与 CSS 复制脚本
-2. 新增 @editorx/theme 的 resolveTheme、isThemeMode 及 --ex-* 亮暗 CSS 变量
+2. 新增 @geekx/theme 的 resolveTheme、isThemeMode 及 --ex-* 亮暗 CSS 变量
 3. TypeScript 固定 ~5.9.3 以兼容 tsup 类型声明生成"
 ```
 
@@ -613,7 +613,7 @@ describe('ThemeProvider', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/theme test`
+Run: `pnpm --filter @geekx/theme test`
 Expected: FAIL，提示 `Failed to resolve import "./theme-provider"`。
 
 - [ ] **Step 3: 实现 ThemeProvider**
@@ -717,12 +717,12 @@ export type { ThemeContextValue, ThemeProviderProps } from './theme-provider'
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/theme test`
+Run: `pnpm --filter @geekx/theme test`
 Expected: PASS（resolve-theme 4 个 + theme-provider 10 个）。
 
 - [ ] **Step 5: 构建与类型检查**
 
-Run: `pnpm turbo run build typecheck --filter=@editorx/theme`
+Run: `pnpm turbo run build typecheck --filter=@geekx/theme`
 Expected: 成功。
 
 - [ ] **Step 6: 提交**
@@ -736,7 +736,7 @@ git commit -m "feat(theme): 新增 ThemeProvider 与 useTheme 支持受控/非�
 
 ---
 
-### Task 3: `@editorx/ui` 脚手架 + Button / Tag / ThemeToggle
+### Task 3: `@geekx/ui` 脚手架 + Button / Tag / ThemeToggle
 
 **Files:**
 - Create: `packages/ui/package.json`, `packages/ui/tsconfig.json`, `packages/ui/tsup.config.ts`, `packages/ui/vitest.config.ts`
@@ -758,7 +758,7 @@ git commit -m "feat(theme): 新增 ThemeProvider 与 useTheme 支持受控/非�
 
 ```json
 {
-  "name": "@editorx/ui",
+  "name": "@geekx/ui",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": ["*.css"],
@@ -774,12 +774,12 @@ git commit -m "feat(theme): 新增 ThemeProvider 与 useTheme 支持受控/非�
     "typecheck": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
-    "@editorx/theme": "workspace:^",
+    "@geekx/theme": "workspace:^",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*"
+    "@geekx/theme": "workspace:*"
   }
 }
 ```
@@ -789,7 +789,7 @@ git commit -m "feat(theme): 新增 ThemeProvider 与 useTheme 支持受控/非�
 Run:
 
 ```powershell
-pnpm --filter @editorx/ui add lucide-react
+pnpm --filter @geekx/ui add lucide-react
 pnpm install
 ```
 
@@ -809,7 +809,7 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 
 ```tsx
 import { render, type RenderOptions } from '@testing-library/react'
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import type { ReactElement, ReactNode } from 'react'
 
 function Wrapper({ children }: { children: ReactNode }) {
@@ -929,7 +929,7 @@ describe('ThemeToggle', () => {
 
 - [ ] **Step 4: 运行测试确认失败**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: FAIL，提示无法解析 `./button`、`./tag`、`./theme-toggle`。
 
 - [ ] **Step 5: 实现组件**
@@ -1017,7 +1017,7 @@ export function Tag({ children, closable = false, onClose, closeLabel = '删除�
 `packages/ui/src/theme-toggle.tsx`：
 
 ```tsx
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { Moon, Sun } from 'lucide-react'
 import { Button } from './button'
 
@@ -1121,19 +1121,19 @@ export type { ThemeToggleProps } from './theme-toggle'
 
 - [ ] **Step 6: 运行测试确认通过**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: PASS（button 5 个、tag 3 个、theme-toggle 2 个）。
 
 - [ ] **Step 7: 构建与类型检查**
 
-Run: `pnpm turbo run build typecheck --filter=@editorx/ui`
+Run: `pnpm turbo run build typecheck --filter=@geekx/ui`
 Expected: 成功；`packages/ui/dist/styles.css` 存在。
 
 - [ ] **Step 8: 提交**
 
 ```powershell
 git add packages/ui pnpm-lock.yaml
-git commit -m "feat(ui): 新增 ui 包及 Button、Tag、ThemeToggle 组件" -m "1. 新增 @editorx/ui 包，@editorx/theme 作为 peerDependency 保证主题上下文单例
+git commit -m "feat(ui): 新增 ui 包及 Button、Tag、ThemeToggle 组件" -m "1. 新增 @geekx/ui 包，@geekx/theme 作为 peerDependency 保证主题上下文单例
 2. Button 支持 primary/default/text 变体、三种尺寸、loading 与 icon；Tag 支持可关闭
 3. ThemeToggle 基于 useTheme 在亮暗之间切换，文案可覆盖"
 ```
@@ -1158,7 +1158,7 @@ git commit -m "feat(ui): 新增 ui 包及 Button、Tag、ThemeToggle 组件" -m 
 
 - [ ] **Step 1: 安装依赖**
 
-Run: `pnpm --filter @editorx/ui add @floating-ui/react`
+Run: `pnpm --filter @geekx/ui add @floating-ui/react`
 Expected: 安装成功。
 
 - [ ] **Step 2: 写失败测试**
@@ -1316,7 +1316,7 @@ describe('Dropdown', () => {
 
 - [ ] **Step 3: 运行测试确认失败**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: FAIL，无法解析 `./tooltip`、`./popover`、`./dropdown`。
 
 - [ ] **Step 4: 实现**
@@ -1338,7 +1338,7 @@ import {
   useRole,
   type Placement,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { cloneElement, useState, type ReactElement, type ReactNode } from 'react'
 
 export interface TooltipProps {
@@ -1398,7 +1398,7 @@ import {
   type OpenChangeReason,
   type Placement,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { cloneElement, useState, type ReactElement, type ReactNode } from 'react'
 import { cx } from './cx'
 
@@ -1580,12 +1580,12 @@ export type { DropdownItem, DropdownProps } from './dropdown'
 
 - [ ] **Step 5: 运行测试确认通过**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: PASS（新增 tooltip 2、popover 4、dropdown 3）。
 
 - [ ] **Step 6: 构建与类型检查**
 
-Run: `pnpm turbo run build typecheck --filter=@editorx/ui`
+Run: `pnpm turbo run build typecheck --filter=@geekx/ui`
 Expected: 成功。
 
 - [ ] **Step 7: 提交**
@@ -1736,7 +1736,7 @@ describe('Tabs', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: FAIL，无法解析 `./modal`、`./tabs`。
 
 - [ ] **Step 3: 实现**
@@ -1753,7 +1753,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { X } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
 import { cx } from './cx'
@@ -1976,12 +1976,12 @@ export type { TabItem, TabsProps } from './tabs'
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: PASS（新增 modal 6、tabs 3）。
 
 - [ ] **Step 5: 构建与类型检查**
 
-Run: `pnpm turbo run build typecheck --filter=@editorx/ui`
+Run: `pnpm turbo run build typecheck --filter=@geekx/ui`
 Expected: 成功。
 
 - [ ] **Step 6: 提交**
@@ -2017,7 +2017,7 @@ git commit -m "feat(ui): 新增 Modal 弹窗与 Tabs 标签页组件" -m "1. Mod
 
 ```tsx
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider, useToast, type ToastType } from './toast'
@@ -2093,7 +2093,7 @@ describe('Toast', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: FAIL，无法解析 `./toast`。
 
 - [ ] **Step 3: 实现**
@@ -2101,7 +2101,7 @@ Expected: FAIL，无法解析 `./toast`。
 `packages/ui/src/toast.tsx`：
 
 ```tsx
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -2217,12 +2217,12 @@ export type { ToastApi, ToastProviderProps, ToastType } from './toast'
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm turbo run test --filter=@editorx/ui`
+Run: `pnpm turbo run test --filter=@geekx/ui`
 Expected: PASS（新增 toast 7 个；ui 包合计 35 个）。
 
 - [ ] **Step 5: 构建、类型检查、lint**
 
-Run: `pnpm turbo run build typecheck --filter=@editorx/ui; pnpm lint`
+Run: `pnpm turbo run build typecheck --filter=@geekx/ui; pnpm lint`
 Expected: 全部成功，lint 无 error。
 
 - [ ] **Step 6: 提交**
@@ -2247,7 +2247,7 @@ git commit -m "feat(ui): 新增 ToastProvider 与 useToast 全局提示" -m "1. 
 - Test: `apps/playground/e2e/showcase.spec.ts`, `apps/playground/e2e/compare.spec.ts`
 
 **Interfaces:**
-- Consumes: `@editorx/theme`（`ThemeProvider`、`styles.css`）、`@editorx/ui`（全部组件与 `styles.css`）
+- Consumes: `@geekx/theme`（`ThemeProvider`、`styles.css`）、`@geekx/ui`（全部组件与 `styles.css`）
 - Produces:
   - 路由 `/showcase`：所有 ui 组件在一个 `ThemeProvider` + `ToastProvider` 下的展示页（后续阶段在此追加编辑器演示）
   - 路由 `/compare?ref=<文件名>&target=<路径>`：左右并排或叠加对比 `public/reference/<文件名>` 与 iframe 中的 `<路径>`（默认 `/showcase`），透明度可调
@@ -2259,7 +2259,7 @@ git commit -m "feat(ui): 新增 ToastProvider 与 useToast 全局提示" -m "1. 
 
 ```json
 {
-  "name": "@editorx/playground",
+  "name": "@geekx/playground",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -2271,8 +2271,8 @@ git commit -m "feat(ui): 新增 ToastProvider 与 useToast 全局提示" -m "1. 
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/ui": "workspace:*"
+    "@geekx/theme": "workspace:*",
+    "@geekx/ui": "workspace:*"
   }
 }
 ```
@@ -2280,9 +2280,9 @@ git commit -m "feat(ui): 新增 ToastProvider 与 useToast 全局提示" -m "1. 
 Run:
 
 ```powershell
-pnpm --filter @editorx/playground add next react react-dom lucide-react
-pnpm --filter @editorx/playground add -D @playwright/test @types/node @types/react @types/react-dom typescript@~5.9.3
-pnpm --filter @editorx/playground exec playwright install chromium
+pnpm --filter @geekx/playground add next react react-dom lucide-react
+pnpm --filter @geekx/playground add -D @playwright/test @types/node @types/react @types/react-dom typescript@~5.9.3
+pnpm --filter @geekx/playground exec playwright install chromium
 ```
 
 Expected: 依赖安装成功，Chromium 下载完成；`next` 版本为 16.x。
@@ -2405,7 +2405,7 @@ test('无参考图时显示放置提示', async ({ page }) => {
 
 - [ ] **Step 3: 运行 E2E 确认失败**
 
-Run: `pnpm turbo run e2e --filter=@editorx/playground`
+Run: `pnpm turbo run e2e --filter=@geekx/playground`
 Expected: FAIL（`next build` 报错找不到 `app` 目录，或页面 404）。
 
 - [ ] **Step 4: 实现应用骨架**
@@ -2504,8 +2504,8 @@ body {
 `apps/playground/app/layout.tsx`：
 
 ```tsx
-import '@editorx/theme/styles.css'
-import '@editorx/ui/styles.css'
+import '@geekx/theme/styles.css'
+import '@geekx/ui/styles.css'
 import './globals.css'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
@@ -2556,7 +2556,7 @@ export default function ShowcasePage() {
 ```tsx
 'use client'
 
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import {
   Button,
   Dropdown,
@@ -2568,7 +2568,7 @@ import {
   ToastProvider,
   Tooltip,
   useToast,
-} from '@editorx/ui'
+} from '@geekx/ui'
 import { Bold, Heading, Upload } from 'lucide-react'
 import { useState } from 'react'
 
@@ -2795,9 +2795,9 @@ export function CompareView({ references, selected, target }: CompareViewProps) 
 Run:
 
 ```powershell
-pnpm turbo run build --filter=@editorx/playground
-pnpm --filter @editorx/playground exec playwright test --update-snapshots
-pnpm turbo run e2e --filter=@editorx/playground
+pnpm turbo run build --filter=@geekx/playground
+pnpm --filter @geekx/playground exec playwright test --update-snapshots
+pnpm turbo run e2e --filter=@geekx/playground
 ```
 
 Expected:

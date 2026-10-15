@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as api from './index'
 
-describe('@editorx/markdown-core public API', () => {
+describe('@geekx/markdown-core public API', () => {
   it('exposes every phase 2a runtime export', () => {
     expect(Object.keys(api)).toEqual(
       expect.arrayContaining([

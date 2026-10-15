@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'
 
 export const SPLIT_MIN = 0.2

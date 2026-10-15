@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { extractHeadings } from './headings'
 
 function CollapseGlyph() {

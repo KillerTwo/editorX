@@ -7,7 +7,7 @@ import {
   type RenderResult,
   type ScrollSync,
   type TocItem,
-} from '@editorx/markdown-core'
+} from '@geekx/markdown-core'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { detectFormats, formatsKey } from './formats'
 import { createPreviewPipeline, type PreviewPipeline } from './pipeline/preview-pipeline'

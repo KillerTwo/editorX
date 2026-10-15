@@ -1,5 +1,5 @@
-import type { EditorEngine } from '@editorx/markdown-core'
-import type { ExtensionContext, ToolbarDialogResult } from '@editorx/toolbar'
+import type { EditorEngine } from '@geekx/markdown-core'
+import type { ExtensionContext, ToolbarDialogResult } from '@geekx/toolbar'
 import type { EditorStore } from './store'
 
 /** 内置扩展需要、但不属于公开 ExtensionContext 的能力 */

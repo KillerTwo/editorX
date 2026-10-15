@@ -1,4 +1,4 @@
-import type { EditorEngine, SectionOffset } from '@editorx/markdown-core'
+import type { EditorEngine, SectionOffset } from '@geekx/markdown-core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHeadingJumper, REALIGN_WINDOW, scrollToHeading } from './scroll-to-heading'
 

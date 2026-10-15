@@ -1,5 +1,5 @@
-import { formatMessage, type EditorExtension, type ExtensionContext, type VoteInput } from '@editorx/toolbar'
-import { Button, Checkbox } from '@editorx/ui'
+import { formatMessage, type EditorExtension, type ExtensionContext, type VoteInput } from '@geekx/toolbar'
+import { Button, Checkbox } from '@geekx/ui'
 import { ListChecks } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { escapeHtml } from './embed-html'

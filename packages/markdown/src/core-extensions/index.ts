@@ -1,4 +1,4 @@
-import type { EditorExtension, ToolbarLayout } from '@editorx/toolbar'
+import type { EditorExtension, ToolbarLayout } from '@geekx/toolbar'
 import { moreActionsExtension } from './actions'
 import { codeExtension, listExtension, moreFormatExtension } from './blocks'
 import { formatExtension } from './format'

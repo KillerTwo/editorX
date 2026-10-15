@@ -1,4 +1,4 @@
-import { useMessages, type ExtensionContext } from '@editorx/toolbar'
+import { useMessages, type ExtensionContext } from '@geekx/toolbar'
 import { getMarkdownInternals } from '../internals'
 import { createEditorStore, useEditorState } from '../store'
 import { tocMarkerSelection } from '../toc'

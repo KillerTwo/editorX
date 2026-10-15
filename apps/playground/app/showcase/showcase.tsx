@@ -1,6 +1,6 @@
 'use client'
 
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import {
   Button,
   Dropdown,
@@ -12,7 +12,7 @@ import {
   ToastProvider,
   Tooltip,
   useToast,
-} from '@editorx/ui'
+} from '@geekx/ui'
 import { Bold, Heading, Upload } from 'lucide-react'
 import { useState } from 'react'
 

@@ -1,5 +1,5 @@
-import type { ArticleType, Category, TagCategory } from '@editorx/toolbar'
-import { Modal } from '@editorx/ui'
+import type { ArticleType, Category, TagCategory } from '@geekx/toolbar'
+import { Modal } from '@geekx/ui'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'

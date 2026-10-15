@@ -1,27 +1,27 @@
-# Phase 7 `@editorx/csdn-extensions` Implementation Plan
+# Phase 7 `@geekx/csdn-extensions` Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `@editorx/csdn-extensions` so `<CsdnEditor />` can insert templates, votes, videos, resources, and InsCode cards, and stream AI text, all through the adapters that already exist.
+**Goal:** Ship `@geekx/csdn-extensions` so `<CsdnEditor />` can insert templates, votes, videos, resources, and InsCode cards, and stream AI text, all through the adapters that already exist.
 
 **Architecture:** Six `EditorExtension` values live in the new package and are re-exported as `csdnExtensions`. Toolbar `title` / `label` are `MessageText` functions. `requires` names an adapter; the editors' default `missingAdapter` of `'hide'` drops the button, and a panel with a missing adapter stays hidden even when the policy is `'disable'`. Templates call `ctx.replaceDocument` or `ctx.insert`. Votes, videos, resources, and InsCode call `ctx.insertEmbed`, which already writes a markdown `` ```ex-embed:<type> `` fence or a rich-text `<div data-ex-embed data-payload>`. The markdown renderer stores that payload as base64 on `data-ex-payload`. This phase teaches `htmlToMarkdown` to read `data-payload` when `data-ex-payload` is absent, and teaches the rich-text upcast to decode `data-ex-payload` when `data-payload` is absent. No third attribute and no second fence language. `<CsdnEditor />` today drops `adapters` on the floor: Task 8 passes the same object into both editors. Omitting `extensions` uses `csdnExtensions`. `extensions={[]}` stays empty.
 
-**Tech Stack:** React 19, Vitest + Testing Library (StrictMode), Playwright chromium, existing `@editorx/toolbar`, `@editorx/ui`, `@editorx/theme`, `@editorx/markdown-core` (`htmlToMarkdown`), `@editorx/rich-text` (embed upcast only). Native CSS, `.ex-csdn-ext-*` classes, existing `--ex-*` tokens. No Tailwind. lucide-react icons already in the repo: `FileText`, `ListChecks`, `Video`, `Link2`, `SquareCode`, `Sparkles`.
+**Tech Stack:** React 19, Vitest + Testing Library (StrictMode), Playwright chromium, existing `@geekx/toolbar`, `@geekx/ui`, `@geekx/theme`, `@geekx/markdown-core` (`htmlToMarkdown`), `@geekx/rich-text` (embed upcast only). Native CSS, `.ex-csdn-ext-*` classes, existing `--ex-*` tokens. No Tailwind. lucide-react icons already in the repo: `FileText`, `ListChecks`, `Video`, `Link2`, `SquareCode`, `Sparkles`.
 
 **Spec:** `docs/superpowers/specs/2026-10-09-csdn-editor-design.md` (§3.1, §5.1–5.3, §6.4, §10 item 7, §11). Binding notes: `docs/superpowers/handoff/phase7-notes-from-6.md`. Field names come from `packages/toolbar/src/types.ts` and `packages/toolbar/src/extension.ts`, not from the older sketch in §5.2. Base: branch `develop`, HEAD `370d496`.
 
 ## Global Constraints
 
-- React 19. Package entry is built by tsup with banner `'use client';`, ESM, and `./styles.css`. npm scope `@editorx`. CSS class prefix `.ex-`. CSS variables `--ex-*`.
-- Dependency direction from spec §3.1: `toolbar` → `csdn-extensions` → `csdn`. `csdn-extensions` runtime dependencies are `@editorx/toolbar`, `@editorx/ui`, `@editorx/theme`, and `lucide-react`. It must not depend on `@editorx/csdn`, `@editorx/markdown`, `@editorx/rich-text`, `@editorx/markdown-core`, or `@editorx/publish`. `@editorx/markdown` and `@editorx/rich-text` must not gain a dependency on `@editorx/csdn-extensions`. `@editorx/csdn` may.
+- React 19. Package entry is built by tsup with banner `'use client';`, ESM, and `./styles.css`. npm scope `@geekx`. CSS class prefix `.ex-`. CSS variables `--ex-*`.
+- Dependency direction from spec §3.1: `toolbar` → `csdn-extensions` → `csdn`. `csdn-extensions` runtime dependencies are `@geekx/toolbar`, `@geekx/ui`, `@geekx/theme`, and `lucide-react`. It must not depend on `@geekx/csdn`, `@geekx/markdown`, `@geekx/rich-text`, `@geekx/markdown-core`, or `@geekx/publish`. `@geekx/markdown` and `@geekx/rich-text` must not gain a dependency on `@geekx/csdn-extensions`. `@geekx/csdn` may.
 - Spec §10 item 7 only: AI 助手, 投票, 视频, 资源绑定, InsCode, 模板. The feedback tab stays out. History (历史 / 历史版本) stays the existing disabled or toast stand-in. Do not build real history. Do not add a toolbar button that toasts `阶段 6 接入`. Editor switch stays the `CsdnEditor` top-bar button.
 - When `CsdnEditor` omits `extensions`, the default is the package export `csdnExtensions`. An explicit `extensions={[]}` stays empty. This replaces the phase 6 `NO_EXTENSIONS` default.
 - No backend. Calls go through `EditorAdapters`: `aiAssist`, `createVote`, `uploadVideo`, `searchResources`, `runCode`, `getTemplates`. Do not call `fetch`. Missing adapter uses the existing default `missingAdapter: 'hide'`. `PanelDef` stays hidden when its extension `requires` an adapter that is missing, including when `missingAdapter` is `'disable'`.
 - Colors only through existing `--ex-*` tokens. Do not edit `packages/theme/src/styles.css`. Component CSS has no hex, `rgb(`, `hsl(`, or `light-dark(`. Do not put `transform`, `filter`, or `will-change` on `.ex-csdn` or `.ex-csdn__editor`. This package's selectors start with `.ex-csdn-ext`.
 - Copy already in the product wins. `zhCN.toolbar.template` is `模版`. `zhCN.toolbar.undo` is `撤消`. `zhCN.toolbar.resource` is `资源绑定`. `zhCN.toolbar.video` is `视频`. `zhCN.dialog.confirm` is `确定`. `zhCN.dialog.cancel` is `取消`. Do not rename those keys. New sentences live under `zhCN.csdnExt` and may use the word `模板`.
 - Embed format already in the code: markdown `insertEmbed` writes a fence `` ```ex-embed:<type> `` plus `JSON.stringify(payload, null, 2)`. `renderEmbedFence` writes `<div class="ex-embed" data-ex-embed data-ex-payload="base64">`. Rich text `insertEmbed` writes `<div data-ex-embed data-payload="json">`. Reuse `ctx.insertEmbed`. Do not invent a second embed syntax.
-- Tests: `export COREPACK_INTEGRITY_KEYS=0` then `pnpm --filter @editorx/NAME exec vitest run <files>`. The `--` form does not narrow files. Render with StrictMode. No synchronous `setState` inside an effect. Every `pnpm` command in this plan is preceded by `export COREPACK_INTEGRITY_KEYS=0`.
-- Branch `develop`. Chinese Conventional Commits with a body, passed via HEREDOC. `git add` lists explicit paths. No `git add .` / `-A`. No `pnpm install`, `pnpm add`, or `playwright install` in implementer steps. If `@editorx/csdn-extensions` is missing from the lockfile, or a later task cannot resolve it, the controller runs `pnpm install --offline` once from the repo root. The implementer does not.
+- Tests: `export COREPACK_INTEGRITY_KEYS=0` then `pnpm --filter @geekx/NAME exec vitest run <files>`. The `--` form does not narrow files. Render with StrictMode. No synchronous `setState` inside an effect. Every `pnpm` command in this plan is preceded by `export COREPACK_INTEGRITY_KEYS=0`.
+- Branch `develop`. Chinese Conventional Commits with a body, passed via HEREDOC. `git add` lists explicit paths. No `git add .` / `-A`. No `pnpm install`, `pnpm add`, or `playwright install` in implementer steps. If `@geekx/csdn-extensions` is missing from the lockfile, or a later task cannot resolve it, the controller runs `pnpm install --offline` once from the repo root. The implementer does not.
 - Playwright: kill TCP 3100 before and after (`lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true`). After CSS or package changes, `pnpm build --force` before e2e. New visual runs skip unless darwin, message `待 Windows 复测`. Do not update unrelated baselines or any win32 PNG. Do not download reference images. Mac PNGs are already in `apps/playground/public/reference/`.
 - Out of scope: phase 8 changesets, README, npm publish. Do not edit the stale win32 filename list in `RESUME.md`.
 
@@ -48,14 +48,14 @@
 - `packages/rich-text/src/embed-plugin.ts`: decode `data-ex-payload` when `data-payload` is absent. No new dependency.
 - `packages/rich-text/src/layout.ts`: one extra group `['csdn:vote', 'csdn:inscode']` of string ids. No import from this package.
 - `packages/csdn/src/csdn-editor.tsx`: default `extensions` and `adapters={adapters}` on both editors.
-- `apps/playground/app/layout.tsx`: import `@editorx/csdn-extensions/styles.css`.
+- `apps/playground/app/layout.tsx`: import `@geekx/csdn-extensions/styles.css`.
 - `apps/playground/app/csdn/csdn-playground.tsx`: swap the six stand-ins. History stand-in stays. Marketing panel stays on markdown only.
 - `apps/playground/app/markdown/csdn-demo-extensions.tsx` and `apps/playground/app/rich-text/stand-in-extensions.tsx`: leave in place. `/markdown` and `/rich-text` keep their placeholders.
 - `docs/superpowers/handoff/phase8-notes-from-7.md`, `RESUME.md`: phase 8 handoff. Phase 8 stays `未开始`.
 
 ---
 
-### Task 1: Scaffold `@editorx/csdn-extensions`
+### Task 1: Scaffold `@geekx/csdn-extensions`
 
 **Files:**
 - Create: `packages/csdn-extensions/package.json`
@@ -74,7 +74,7 @@
 
 **Interfaces:**
 - Consumes: `packages/csdn/package.json`, `packages/csdn/tsup.config.ts`, `packages/csdn/vitest.config.ts` (`keepNodeFileUrls`), `packages/csdn/tsconfig.json`. `pnpm-workspace.yaml` already includes `packages/*`. `turbo.json` does not need an edit.
-- Produces: package name `@editorx/csdn-extensions`. `csdnExtensions` is `readonly EditorExtension[]` and starts as `[]`. `renderExtension(extensions, ctx, layout, missingAdapter?)` renders `Toolbar` inside StrictMode. `extensionCtx(over?)` returns an `ExtensionContext`. `dist/index.js` first line is `'use client';`.
+- Produces: package name `@geekx/csdn-extensions`. `csdnExtensions` is `readonly EditorExtension[]` and starts as `[]`. `renderExtension(extensions, ctx, layout, missingAdapter?)` renders `Toolbar` inside StrictMode. `extensionCtx(over?)` returns an `ExtensionContext`. `dist/index.js` first line is `'use client';`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -101,23 +101,23 @@ function productSource(): string {
     .join('\n')
 }
 
-describe('@editorx/csdn-extensions package', () => {
+describe('@geekx/csdn-extensions package', () => {
   it('只依赖 toolbar、ui、theme，数组初始为空', () => {
     const own = readJson('../package.json')
     const markdown = readJson('../../markdown/package.json')
     const rich = readJson('../../rich-text/package.json')
-    expect(own.dependencies?.['@editorx/toolbar']).toBe('workspace:*')
-    expect(own.dependencies?.['@editorx/ui']).toBe('workspace:*')
-    expect(own.dependencies?.['@editorx/theme']).toBe('workspace:*')
-    expect(own.dependencies?.['@editorx/csdn']).toBeUndefined()
-    expect(own.dependencies?.['@editorx/markdown']).toBeUndefined()
-    expect(own.dependencies?.['@editorx/rich-text']).toBeUndefined()
-    expect(own.dependencies?.['@editorx/markdown-core']).toBeUndefined()
-    expect(own.devDependencies?.['@editorx/csdn']).toBeUndefined()
-    expect(own.devDependencies?.['@editorx/markdown']).toBeUndefined()
-    expect(own.devDependencies?.['@editorx/rich-text']).toBeUndefined()
-    expect(JSON.stringify(markdown)).not.toContain('@editorx/csdn-extensions')
-    expect(JSON.stringify(rich)).not.toContain('@editorx/csdn-extensions')
+    expect(own.dependencies?.['@geekx/toolbar']).toBe('workspace:*')
+    expect(own.dependencies?.['@geekx/ui']).toBe('workspace:*')
+    expect(own.dependencies?.['@geekx/theme']).toBe('workspace:*')
+    expect(own.dependencies?.['@geekx/csdn']).toBeUndefined()
+    expect(own.dependencies?.['@geekx/markdown']).toBeUndefined()
+    expect(own.dependencies?.['@geekx/rich-text']).toBeUndefined()
+    expect(own.dependencies?.['@geekx/markdown-core']).toBeUndefined()
+    expect(own.devDependencies?.['@geekx/csdn']).toBeUndefined()
+    expect(own.devDependencies?.['@geekx/markdown']).toBeUndefined()
+    expect(own.devDependencies?.['@geekx/rich-text']).toBeUndefined()
+    expect(JSON.stringify(markdown)).not.toContain('@geekx/csdn-extensions')
+    expect(JSON.stringify(rich)).not.toContain('@geekx/csdn-extensions')
     expect(csdnExtensions).toEqual([])
     expect(productSource()).not.toContain('阶段 7 接入')
     expect(productSource()).not.toContain('阶段 6 接入')
@@ -165,10 +165,10 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
 
   it('带有 styles.css，且不静态依赖 csdn 或 markdown', () => {
     const source = readFileSync(dist, 'utf8')
-    expect(source).not.toContain('@editorx/csdn\'')
-    expect(source).not.toContain('@editorx/markdown')
-    expect(source).not.toContain('@editorx/rich-text')
-    expect(source).not.toContain('@editorx/markdown-core')
+    expect(source).not.toContain('@geekx/csdn\'')
+    expect(source).not.toContain('@geekx/markdown')
+    expect(source).not.toContain('@geekx/rich-text')
+    expect(source).not.toContain('@geekx/markdown-core')
     expect(existsSync(path.join(distDir, 'styles.css'))).toBe(true)
   })
 })
@@ -177,7 +177,7 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
 `packages/csdn-extensions/src/harness.test.tsx`:
 
 ```tsx
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { render, screen } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { describe, expect, it } from 'vitest'
@@ -206,12 +206,12 @@ describe('renderExtension', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/package.test.ts src/styles.test.ts src/dist.test.ts src/harness.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/package.test.ts src/styles.test.ts src/dist.test.ts src/harness.test.tsx
 ```
 
 Expected: FAIL. The filter cannot see the package, or the test files cannot be resolved.
 
-If the output says the filter matched no project, or `@editorx/csdn-extensions` is not in `pnpm-lock.yaml`, stop. The controller runs `pnpm install --offline` once from the repo root. The implementer does not run `pnpm install`. After that install, rerun the same command. Expected still FAIL, this time because `package.json` / `styles.css` / `./index` are missing.
+If the output says the filter matched no project, or `@geekx/csdn-extensions` is not in `pnpm-lock.yaml`, stop. The controller runs `pnpm install --offline` once from the repo root. The implementer does not run `pnpm install`. After that install, rerun the same command. Expected still FAIL, this time because `package.json` / `styles.css` / `./index` are missing.
 
 - [ ] **Step 3: Write minimal implementation**
 
@@ -219,7 +219,7 @@ If the output says the filter matched no project, or `@editorx/csdn-extensions` 
 
 ```json
 {
-  "name": "@editorx/csdn-extensions",
+  "name": "@geekx/csdn-extensions",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": ["*.css"],
@@ -243,16 +243,16 @@ If the output says the filter matched no project, or `@editorx/csdn-extensions` 
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "dependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "lucide-react": "^1.53.0"
   }
 }
@@ -284,7 +284,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   banner: { js: "'use client';" },
-  external: ['react', 'react-dom', '@editorx/theme', '@editorx/toolbar', '@editorx/ui'],
+  external: ['react', 'react-dom', '@geekx/theme', '@geekx/toolbar', '@geekx/ui'],
   onSuccess: async () => {
     execFileSync(process.execPath, [copyCssScript], { cwd: packageDir, stdio: 'inherit' })
   },
@@ -331,7 +331,7 @@ export default defineConfig({
 `packages/csdn-extensions/src/extensions.ts`:
 
 ```ts
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 
 export const csdnExtensions: readonly EditorExtension[] = []
 ```
@@ -347,7 +347,7 @@ export { csdnExtensions } from './extensions'
 `packages/csdn-extensions/src/test-harness.tsx`:
 
 ```tsx
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import {
   Toolbar,
   resolveToolbar,
@@ -356,7 +356,7 @@ import {
   type ExtensionContext,
   type MissingAdapterPolicy,
   type ToolbarLayout,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 import { render } from '@testing-library/react'
 import { StrictMode, type ReactElement } from 'react'
 import { vi } from 'vitest'
@@ -425,13 +425,13 @@ export function renderStrict(ui: ReactElement): ReturnType<typeof render> {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-If `@editorx/csdn-extensions` is still absent from the lockfile, stop and let the controller run `pnpm install --offline` once. Then:
+If `@geekx/csdn-extensions` is still absent from the lockfile, stop and let the controller run `pnpm install --offline` once. Then:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/package.test.ts src/styles.test.ts src/harness.test.tsx
-pnpm --filter @editorx/csdn-extensions build
-pnpm --filter @editorx/csdn-extensions exec vitest run src/dist.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/package.test.ts src/styles.test.ts src/harness.test.tsx
+pnpm --filter @geekx/csdn-extensions build
+pnpm --filter @geekx/csdn-extensions exec vitest run src/dist.test.ts
 ```
 
 Expected: PASS. `dist/index.js` starts with `'use client';` and `dist/styles.css` exists.
@@ -617,8 +617,8 @@ describe('csdn:template', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx
-pnpm --filter @editorx/csdn-extensions exec vitest run src/template.test.tsx
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/template.test.tsx
 ```
 
 Expected: FAIL. `zhCN.csdnExt` is missing, and `csdnTemplateExtension` is not exported.
@@ -668,7 +668,7 @@ Do not change `toolbar.template`, `toolbar.undo`, `toolbar.resource`, `toolbar.v
 `packages/csdn-extensions/src/form.tsx`:
 
 ```tsx
-import { errorMessage, formatMessage, type ExtensionContext, type InsertContent, type Template } from '@editorx/toolbar'
+import { errorMessage, formatMessage, type ExtensionContext, type InsertContent, type Template } from '@geekx/toolbar'
 import { useId, type ReactNode } from 'react'
 
 export function ExtField({ label, children }: { label: string; children: (id: string) => ReactNode }) {
@@ -727,8 +727,8 @@ export function reportFailure(ctx: ExtensionContext, template: string, error: un
 `packages/csdn-extensions/src/template.tsx`:
 
 ```tsx
-import type { EditorExtension, ExtensionContext, Template } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext, Template } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { applyTemplate, reportFailure } from './form'
@@ -803,7 +803,7 @@ The `useEffect` body does not call `setState`. The promise callback does, after 
 `packages/csdn-extensions/src/extensions.ts`:
 
 ```ts
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { csdnTemplateExtension } from './template'
 
 export const csdnExtensions: readonly EditorExtension[] = [csdnTemplateExtension]
@@ -823,8 +823,8 @@ export { csdnExtensions, csdnTemplateExtension } from './extensions'
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx
-pnpm --filter @editorx/csdn-extensions exec vitest run src/template.test.tsx src/package.test.ts
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/template.test.tsx src/package.test.ts
 ```
 
 Expected: PASS.
@@ -984,7 +984,7 @@ describe('csdn:vote', () => {
 })
 ```
 
-Do not import `@editorx/markdown-core` from `packages/csdn-extensions`. The round-trip assertions are the `utils.test.ts` and `mount-editor.test.ts` cases above.
+Do not import `@geekx/markdown-core` from `packages/csdn-extensions`. The round-trip assertions are the `utils.test.ts` and `mount-editor.test.ts` cases above.
 
 Also append this test to `packages/markdown-core/src/utils/utils.test.ts` so a rendered card still round-trips after the reader change:
 
@@ -1004,9 +1004,9 @@ Also append this test to `packages/markdown-core/src/utils/utils.test.ts` so a r
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/markdown-core exec vitest run src/utils/utils.test.ts
-pnpm --filter @editorx/rich-text exec vitest run src/mount-editor.test.ts
-pnpm --filter @editorx/csdn-extensions exec vitest run src/vote.test.tsx
+pnpm --filter @geekx/markdown-core exec vitest run src/utils/utils.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/mount-editor.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/vote.test.tsx
 ```
 
 Expected: FAIL. `htmlToMarkdown` of a `data-payload` div does not produce the fence (the body is empty). Rich text `getData()` does not contain `&quot;id&quot;`. `csdnVoteExtension` is not exported.
@@ -1037,7 +1037,7 @@ becomes:
 
 Do not change the diagram branch. Do not add a new attribute name.
 
-In `packages/rich-text/src/embed-plugin.ts`, decode base64 locally. Do not import `@editorx/markdown-core`.
+In `packages/rich-text/src/embed-plugin.ts`, decode base64 locally. Do not import `@geekx/markdown-core`.
 
 ```ts
 function decodePayload(value: string | undefined): string {
@@ -1087,8 +1087,8 @@ export function httpUrl(value: unknown): string | null {
 `packages/csdn-extensions/src/vote.tsx`:
 
 ```tsx
-import { formatMessage, type EditorExtension, type ExtensionContext, type VoteInput } from '@editorx/toolbar'
-import { Button, Checkbox } from '@editorx/ui'
+import { formatMessage, type EditorExtension, type ExtensionContext, type VoteInput } from '@geekx/toolbar'
+import { Button, Checkbox } from '@geekx/ui'
 import { ListChecks } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { escapeHtml } from './embed-html'
@@ -1221,7 +1221,7 @@ export const csdnVoteExtension: EditorExtension = {
 `packages/csdn-extensions/src/extensions.ts`:
 
 ```ts
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { csdnTemplateExtension } from './template'
 import { csdnVoteExtension } from './vote'
 
@@ -1236,9 +1236,9 @@ Export `csdnVoteExtension` from `index.ts` as well.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/markdown-core exec vitest run src/utils/utils.test.ts
-pnpm --filter @editorx/rich-text exec vitest run src/mount-editor.test.ts
-pnpm --filter @editorx/csdn-extensions exec vitest run src/vote.test.tsx src/package.test.ts
+pnpm --filter @geekx/markdown-core exec vitest run src/utils/utils.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/mount-editor.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/vote.test.tsx src/package.test.ts
 ```
 
 Expected: PASS. `package.test.ts` still shows no dependency on markdown-core.
@@ -1357,7 +1357,7 @@ describe('csdn:video', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/video.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/video.test.tsx
 ```
 
 Expected: FAIL with `csdnVideoExtension` not exported.
@@ -1367,7 +1367,7 @@ Expected: FAIL with `csdnVideoExtension` not exported.
 `packages/csdn-extensions/src/video.tsx`:
 
 ```tsx
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
+import type { EditorExtension, ExtensionContext } from '@geekx/toolbar'
 import { Video } from 'lucide-react'
 import { escapeHtml, httpUrl } from './embed-html'
 import { reportFailure } from './form'
@@ -1448,7 +1448,7 @@ Add `csdnVideoExtension` to `csdnExtensions` and to the `index.ts` exports. Leav
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/video.test.tsx src/package.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/video.test.tsx src/package.test.ts
 ```
 
 Expected: PASS.
@@ -1487,7 +1487,7 @@ EOF
 `packages/csdn-extensions/src/resource.test.tsx`:
 
 ```tsx
-import type { Resource } from '@editorx/toolbar'
+import type { Resource } from '@geekx/toolbar'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -1569,7 +1569,7 @@ describe('csdn:resource', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/resource.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/resource.test.tsx
 ```
 
 Expected: FAIL with `csdnResourceExtension` not exported.
@@ -1579,8 +1579,8 @@ Expected: FAIL with `csdnResourceExtension` not exported.
 `packages/csdn-extensions/src/resource.tsx`:
 
 ```tsx
-import type { EditorExtension, ExtensionContext, Resource } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext, Resource } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { Link2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { escapeHtml, httpUrl } from './embed-html'
@@ -1691,7 +1691,7 @@ Add it to `csdnExtensions` and `index.ts`.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/resource.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/resource.test.tsx
 ```
 
 Expected: PASS.
@@ -1805,7 +1805,7 @@ describe('csdn:inscode', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/inscode.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/inscode.test.tsx
 ```
 
 Expected: FAIL with `csdnInscodeExtension` not exported.
@@ -1815,8 +1815,8 @@ Expected: FAIL with `csdnInscodeExtension` not exported.
 `packages/csdn-extensions/src/inscode.tsx`:
 
 ```tsx
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { SquareCode } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { escapeHtml, httpUrl } from './embed-html'
@@ -1914,7 +1914,7 @@ The language field's initial value is `javascript`, so `确定` stays disabled u
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/inscode.test.tsx
+pnpm --filter @geekx/csdn-extensions exec vitest run src/inscode.test.tsx
 ```
 
 Expected: PASS.
@@ -1954,7 +1954,7 @@ EOF
 `packages/csdn-extensions/src/ai.test.tsx`:
 
 ```tsx
-import { resolvePanels } from '@editorx/toolbar'
+import { resolvePanels } from '@geekx/toolbar'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -2048,7 +2048,7 @@ describe('csdnExtensions', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/ai.test.tsx src/list.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/ai.test.tsx src/list.test.ts
 ```
 
 Expected: FAIL. `csdnAiExtension` is missing, and the name list is not the six-item order.
@@ -2058,8 +2058,8 @@ Expected: FAIL. `csdnAiExtension` is missing, and the name list is not the six-i
 `packages/csdn-extensions/src/ai.tsx`:
 
 ```tsx
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { ExtField, reportFailure } from './form'
@@ -2139,7 +2139,7 @@ The effect sets `alive.current = true` and clears it on cleanup. It does not cal
 `packages/csdn-extensions/src/extensions.ts`:
 
 ```ts
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { csdnAiExtension } from './ai'
 import { csdnInscodeExtension } from './inscode'
 import { csdnResourceExtension } from './resource'
@@ -2172,7 +2172,7 @@ export {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/ai.test.tsx src/list.test.ts src/package.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/ai.test.tsx src/list.test.ts src/package.test.ts
 ```
 
 Expected: PASS.
@@ -2218,9 +2218,9 @@ EOF
 Append to the test in `packages/csdn/src/package.test.ts`:
 
 ```ts
-    expect(csdn.dependencies?.['@editorx/csdn-extensions']).toBe('workspace:*')
-    expect(JSON.stringify(rich)).not.toContain('@editorx/csdn-extensions')
-    expect(JSON.stringify(readJson('../../markdown/package.json'))).not.toContain('@editorx/csdn-extensions')
+    expect(csdn.dependencies?.['@geekx/csdn-extensions']).toBe('workspace:*')
+    expect(JSON.stringify(rich)).not.toContain('@geekx/csdn-extensions')
+    expect(JSON.stringify(readJson('../../markdown/package.json'))).not.toContain('@geekx/csdn-extensions')
 ```
 
 `packages/csdn/src/extensions-default.test.tsx`:
@@ -2314,41 +2314,41 @@ Change that test's title to `参考图分组顺序不变，投票和 InsCode 单
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/package.test.ts src/extensions-default.test.tsx
-pnpm --filter @editorx/rich-text exec vitest run src/layout.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/package.test.ts src/extensions-default.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/layout.test.ts
 ```
 
-Expected: FAIL. `package.json` has no `@editorx/csdn-extensions`. The default editor does not show `模版`. The layout array does not contain `csdn:vote`.
+Expected: FAIL. `package.json` has no `@geekx/csdn-extensions`. The default editor does not show `模版`. The layout array does not contain `csdn:vote`.
 
 - [ ] **Step 3: Write minimal implementation**
 
-Add `"@editorx/csdn-extensions": "workspace:*"` to `dependencies` and `devDependencies` in `packages/csdn/package.json`. Add the same dependency to `apps/playground/package.json` `dependencies`.
+Add `"@geekx/csdn-extensions": "workspace:*"` to `dependencies` and `devDependencies` in `packages/csdn/package.json`. Add the same dependency to `apps/playground/package.json` `dependencies`.
 
-Add `'@editorx/csdn-extensions'` to the `external` array in `packages/csdn/tsup.config.ts`.
+Add `'@geekx/csdn-extensions'` to the `external` array in `packages/csdn/tsup.config.ts`.
 
 In `packages/csdn/src/index.ts`, add:
 
 ```ts
-import '@editorx/csdn-extensions/styles.css'
+import '@geekx/csdn-extensions/styles.css'
 ```
 
 In `packages/csdn/src/csdn-editor.tsx`:
 
 ```ts
-import { csdnExtensions } from '@editorx/csdn-extensions'
+import { csdnExtensions } from '@geekx/csdn-extensions'
 ```
 
 Delete `const NO_EXTENSIONS`. Change the shell default to `extensions = csdnExtensions`. Pass `adapters={adapters}` to both `MarkdownEditor` and `RichTextEditor`. Do not pass the publish-panel wrapper that replaces `onSaveDraft`. Do not add a `missingAdapter` prop.
 
 In `packages/rich-text/src/layout.ts`, insert `['csdn:vote', 'csdn:inscode']` before `['csdn:switch-editor']`. Do not import this package.
 
-In `apps/playground/app/layout.tsx`, add `import '@editorx/csdn-extensions/styles.css'` next to the other `@editorx/*/styles.css` imports.
+In `apps/playground/app/layout.tsx`, add `import '@geekx/csdn-extensions/styles.css'` next to the other `@geekx/*/styles.css` imports.
 
 Replace the extension wiring in `apps/playground/app/csdn/csdn-playground.tsx`. Keep `createPublishAdapters` and spread the six adapters beside it. Do not edit `apps/playground/app/markdown/csdn-demo-extensions.tsx` or `apps/playground/app/rich-text/stand-in-extensions.tsx`.
 
 ```tsx
-import { csdnExtensions } from '@editorx/csdn-extensions'
-import type { EditorExtension, EditorType } from '@editorx/toolbar'
+import { csdnExtensions } from '@geekx/csdn-extensions'
+import type { EditorExtension, EditorType } from '@geekx/toolbar'
 import { csdnHistoryExtension as markdownHistory, csdnMarketingExtension } from '../markdown/csdn-demo-extensions'
 import { csdnHistoryExtension as richHistory } from '../rich-text/stand-in-extensions'
 
@@ -2388,15 +2388,15 @@ async *aiAssist(prompt: string) {
 
 Do not call `fetch` in these functions. Do not copy the strings `阶段 7 接入` or `阶段 6 接入` into the package or into this mock.
 
-If the test run cannot resolve `@editorx/csdn-extensions`, stop. The controller runs `pnpm install --offline` once. Then rerun Step 4.
+If the test run cannot resolve `@geekx/csdn-extensions`, stop. The controller runs `pnpm install --offline` once. Then rerun Step 4.
 
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/package.test.ts src/extensions-default.test.tsx
-pnpm --filter @editorx/rich-text exec vitest run src/layout.test.ts
-pnpm --filter @editorx/csdn-extensions exec vitest run src/package.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/package.test.ts src/extensions-default.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/layout.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/package.test.ts
 ```
 
 Expected: PASS. `模版` is visible only when the prop is omitted and `getTemplates` exists. The AI textbox is visible on rich text only when `aiAssist` exists. `阶段 6 接入` is absent.
@@ -2461,7 +2461,7 @@ lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
-pnpm --filter @editorx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
+pnpm --filter @geekx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
 ```
 
 Expected: FAIL on the new template assertion until the playground from Task 8 is what the server built. A failure in a spec other than these two files is not this task. On darwin, `csdn-visual.spec.ts` may also fail because the AI panel and toolbar pixels changed. On any other platform that spec is skipped with `待 Windows 复测`.
@@ -2475,7 +2475,7 @@ On darwin, after `e2e/csdn.spec.ts` passes, update only this spec's snapshots:
 ```bash
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/playground exec playwright test e2e/csdn-visual.spec.ts --project=chromium --update-snapshots
+pnpm --filter @geekx/playground exec playwright test e2e/csdn-visual.spec.ts --project=chromium --update-snapshots
 ```
 
 Do not pass any other spec file to `--update-snapshots`. Do not add or replace a win32 PNG. Do not download reference images.
@@ -2485,7 +2485,7 @@ Do not pass any other spec file to `--update-snapshots`. Do not add or replace a
 ```bash
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
+pnpm --filter @geekx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 ```
 
@@ -2564,7 +2564,7 @@ describe('阶段 8 交接', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/handoff-contract.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/handoff-contract.test.ts
 ```
 
 Expected: FAIL. `phase8-notes-from-7.md` cannot be read.
@@ -2576,7 +2576,7 @@ Write `docs/superpowers/handoff/phase8-notes-from-7.md` in Chinese. Fill the sho
 ```markdown
 # 阶段 7 交给阶段 8 的笔记
 
-阶段 7 代码 HEAD：`<short hash>`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@editorx/csdn-extensions`。阶段 8 做 Changesets、README 和 npm 发布时以本文为准。
+阶段 7 代码 HEAD：`<short hash>`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@geekx/csdn-extensions`。阶段 8 做 Changesets、README 和 npm 发布时以本文为准。
 
 ## 包
 
@@ -2621,7 +2621,7 @@ In `docs/superpowers/handoff/RESUME.md`, replace:
 with:
 
 ```markdown
-| 7 | `@editorx/csdn-extensions`：AI 助手、投票、视频、资源绑定、InsCode、模板 | 已完成（develop），见 `phase8-notes-from-7.md` |
+| 7 | `@geekx/csdn-extensions`：AI 助手、投票、视频、资源绑定、InsCode、模板 | 已完成（develop），见 `phase8-notes-from-7.md` |
 | 8 | 发布准备：Changesets、文档/README、npm 发布流程 | 未开始 |
 ```
 
@@ -2645,7 +2645,7 @@ Do not edit the stale win32 filename list. Do not mark phase 8 `已完成`.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn-extensions exec vitest run src/handoff-contract.test.ts
+pnpm --filter @geekx/csdn-extensions exec vitest run src/handoff-contract.test.ts
 test "$(git branch --show-current)" = develop
 git diff --check
 ```

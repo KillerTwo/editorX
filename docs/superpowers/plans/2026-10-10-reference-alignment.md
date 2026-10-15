@@ -32,7 +32,7 @@
 ### macOS 命令（zsh）
 - 每个新 shell：`export COREPACK_INTEGRITY_KEYS=0`。
 - 跑 Playwright 前杀端口：`lsof -ti tcp:3100 | xargs kill -9 2>/dev/null`。
-- e2e：`pnpm --filter @editorx/playground exec playwright test --project=chromium [spec]`（包名用全称 `@editorx/playground`）。
+- e2e：`pnpm --filter @geekx/playground exec playwright test --project=chromium [spec]`（包名用全称 `@geekx/playground`）。
 - 每条命令检查退出码（`echo $?`），失败即停。
 
 ### 提交
@@ -317,7 +317,7 @@ describe('参考图对齐新增 token（mac 参考图实测亮色；暗色为推
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `export COREPACK_INTEGRITY_KEYS=0; pnpm --filter @editorx/theme test`
+Run: `export COREPACK_INTEGRITY_KEYS=0; pnpm --filter @geekx/theme test`
 Expected: FAIL（新 token 未定义；select-arrow 亮色不符）。
 
 - [ ] **Step 3: 实现**
@@ -368,7 +368,7 @@ Expected: FAIL（新 token 未定义；select-arrow 亮色不符）。
 
 - [ ] **Step 4: 运行确认通过**
 
-Run: `pnpm --filter @editorx/theme test && pnpm --filter @editorx/theme build`
+Run: `pnpm --filter @geekx/theme test && pnpm --filter @geekx/theme build`
 Expected: PASS（92 + 新增用例）；回退块一致性用例自动覆盖新 token。
 
 - [ ] **Step 5: 提交**
@@ -505,7 +505,7 @@ export interface ScrollSync {
 
 - [ ] **Step 3: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core test -- utils/utils index scroll-sync`
+Run: `pnpm --filter @geekx/markdown-core test -- utils/utils index scroll-sync`
 Expected: FAIL（`chars` 未定义；`setPaused` / `syncFrom` 不是函数）。
 
 - [ ] **Step 4: 实现计数**
@@ -585,7 +585,7 @@ export interface HtmlCount {
 
 - [ ] **Step 6: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/markdown-core test && pnpm --filter @editorx/markdown-core typecheck && pnpm --filter @editorx/markdown-core build`
+Run: `pnpm --filter @geekx/markdown-core test && pnpm --filter @geekx/markdown-core typecheck && pnpm --filter @geekx/markdown-core build`
 Expected: PASS（479 + 新增，+1 skip 不变）。
 
 - [ ] **Step 7: 提交**
@@ -723,7 +723,7 @@ it('标签分类 adapter 可选', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/toolbar test && pnpm --filter @editorx/toolbar typecheck`
+Run: `pnpm --filter @geekx/toolbar test && pnpm --filter @geekx/toolbar typecheck`
 Expected: FAIL / 类型错误（键不存在）。
 
 - [ ] **Step 3: 实现**
@@ -732,7 +732,7 @@ Expected: FAIL / 类型错误（键不存在）。
 
 - [ ] **Step 4: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/toolbar test && pnpm --filter @editorx/toolbar typecheck && pnpm --filter @editorx/toolbar build`
+Run: `pnpm --filter @geekx/toolbar test && pnpm --filter @geekx/toolbar typecheck && pnpm --filter @geekx/toolbar build`
 Expected: PASS。
 
 - [ ] **Step 5: 同步下游既有用例（publish 消费 toolbar 的 dist，文案变化会让它们失败）**
@@ -747,7 +747,7 @@ Expected: PASS。
 
 （`schedule-dialog.tsx` 此时把新提示 `s.hint` 原样显示为「请选择当前时间后 {min} 至 {max} …」，没有用例断言提示文字；Task 11 重写弹窗时填入区间。）
 
-Run: `pnpm --filter @editorx/publish test && pnpm --filter @editorx/publish typecheck && pnpm --filter @editorx/markdown test`
+Run: `pnpm --filter @geekx/publish test && pnpm --filter @geekx/publish typecheck && pnpm --filter @geekx/markdown test`
 Expected: PASS（markdown 只新增键，既有用例不受影响）。
 
 - [ ] **Step 6: 提交**
@@ -880,7 +880,7 @@ describe('Select 外观选项', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/ui test -- select tag styles`
+Run: `pnpm --filter @geekx/ui test -- select tag styles`
 Expected: FAIL。
 
 - [ ] **Step 3: 实现 Select**
@@ -1005,7 +1005,7 @@ function SelectChevron() {
 
 - [ ] **Step 5: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/ui test && pnpm --filter @editorx/ui typecheck && pnpm --filter @editorx/ui build`
+Run: `pnpm --filter @geekx/ui test && pnpm --filter @geekx/ui typecheck && pnpm --filter @geekx/ui build`
 Expected: PASS（含既有 `select.test.tsx` 中「listbox 有 `ex-popover ex-select__list` 且在 `.ex-portal` 内」用例）。
 
 - [ ] **Step 6: 提交**
@@ -1372,7 +1372,7 @@ describe('TimePicker', () => {
 
 - [ ] **Step 4: 运行确认失败**
 
-Run: `pnpm --filter @editorx/ui test -- calendar date-picker time-picker styles`
+Run: `pnpm --filter @geekx/ui test -- calendar date-picker time-picker styles`
 Expected: FAIL（模块不存在）。
 
 - [ ] **Step 5: 实现 calendar.ts**
@@ -1458,7 +1458,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { addDays, addMonths, clampDateKey, isDateDisabled, monthGrid, parseDateKey, todayKey, type DateKey } from './calendar'
 import { cx } from './cx'
@@ -1865,7 +1865,7 @@ describe('InlineLayer', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/ui test -- inline-layer`
+Run: `pnpm --filter @geekx/ui test -- inline-layer`
 Expected: FAIL（模块不存在）。
 
 `inline-layer.tsx`（新建）：
@@ -1910,7 +1910,7 @@ export const InlineLayer = withFloatingTree(InlineLayerInner, 'InlineLayer')
 
 - [ ] **Step 9: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/ui test && pnpm --filter @editorx/ui typecheck && pnpm --filter @editorx/ui build && pnpm lint`
+Run: `pnpm --filter @geekx/ui test && pnpm --filter @geekx/ui typecheck && pnpm --filter @geekx/ui build && pnpm lint`
 Expected: PASS；lint 无 `react-hooks` 报错（`setFocused` 只在事件回调中调用）。
 
 - [ ] **Step 10: 提交**
@@ -2005,7 +2005,7 @@ export interface PreviewStats {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown test -- stats-counter status-bar styles`
+Run: `pnpm --filter @geekx/markdown test -- stats-counter status-bar styles`
 Expected: FAIL。
 
 - [ ] **Step 3: 实现计数**
@@ -2098,7 +2098,7 @@ function StatGroups({ className, items }: { className: string; items: readonly s
 
 - [ ] **Step 5: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown test && pnpm --filter @editorx/markdown typecheck`
+Run: `pnpm --filter @geekx/markdown test && pnpm --filter @geekx/markdown typecheck`
 Expected: PASS（234 + 新增）。
 
 - [ ] **Step 6: 提交**
@@ -2184,7 +2184,7 @@ describe('自绘图标（G27/G29/G30）', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown test -- styles markdown-editor`
+Run: `pnpm --filter @geekx/markdown test -- styles markdown-editor`
 Expected: FAIL。
 
 - [ ] **Step 3: 新建 `icons.tsx`**
@@ -2397,7 +2397,7 @@ node /tmp/glyph-check/measure.mjs
 
 - [ ] **Step 6: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown test && pnpm --filter @editorx/markdown typecheck`
+Run: `pnpm --filter @geekx/markdown test && pnpm --filter @geekx/markdown typecheck`
 Expected: PASS。
 
 - [ ] **Step 7: 提交**
@@ -2584,7 +2584,7 @@ describe('面板宽度拖柄（G23）', () => {
 
 - [ ] **Step 3: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown test -- panels panel-grip styles`
+Run: `pnpm --filter @geekx/markdown test -- panels panel-grip styles`
 Expected: FAIL。
 
 - [ ] **Step 4: 实现目录空态**
@@ -2634,7 +2634,7 @@ Expected: FAIL。
 `panels/panel-grip.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'
 
 export const PANEL_MIN_WIDTH = 300
@@ -2828,7 +2828,7 @@ export function PanelGrip({
 
 - [ ] **Step 7: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown test && pnpm --filter @editorx/markdown typecheck && pnpm lint`
+Run: `pnpm --filter @geekx/markdown test && pnpm --filter @geekx/markdown typecheck && pnpm lint`
 Expected: PASS（`panels.test.tsx` 中「侧栏」用例的按钮文字 `['展开', '目录', '语法']` 不变）。
 
 - [ ] **Step 8: 提交**
@@ -2877,8 +2877,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderEditor } from './test-utils'
 
 const spies = vi.hoisted(() => ({ syncFrom: [] as string[], paused: [] as boolean[] }))
-vi.mock('@editorx/markdown-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@editorx/markdown-core')>()
+vi.mock('@geekx/markdown-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@geekx/markdown-core')>()
   return {
     ...actual,
     createScrollSync: (...args: Parameters<typeof actual.createScrollSync>) => {
@@ -2948,7 +2948,7 @@ describe('比对模式同步按钮（G24）', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown test -- sync-controls styles`
+Run: `pnpm --filter @geekx/markdown test -- sync-controls styles`
 Expected: FAIL。
 
 - [ ] **Step 3: 实现运行时**
@@ -2973,7 +2973,7 @@ Expected: FAIL。
 `sync-controls.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { LocateIcon, SyncScrollIcon } from './icons'
 
 export function SyncControls({ enabled, onLocate, onToggle }: { enabled: boolean; onLocate(): void; onToggle(): void }) {
@@ -3044,7 +3044,7 @@ export function SyncControls({ enabled, onLocate, onToggle }: { enabled: boolean
 
 - [ ] **Step 5: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/markdown test && pnpm --filter @editorx/markdown typecheck && pnpm --filter @editorx/markdown build && pnpm lint`
+Run: `pnpm --filter @geekx/markdown test && pnpm --filter @geekx/markdown typecheck && pnpm --filter @geekx/markdown build && pnpm lint`
 Expected: PASS。
 
 - [ ] **Step 6: 提交**
@@ -3065,7 +3065,7 @@ git commit -m "feat(markdown): 比对模式新增「定位」与「同步滚动�
 - Modify: `packages/publish/src/publish-panel.tsx`、`packages/publish/src/schedule-dialog.tsx`、`packages/publish/src/publish-panel.test.tsx`（Step 6：临时默认值 now+5h 与第 214、218 行期望）
 
 **Interfaces:**
-- Consumes: Task 3 的 `publish.schedule.units`、`publish.errors.scheduledAtTooSoon / scheduledAtTooLate`；Task 5 的 `timeSlots`、`toDateKey`、`addDays`、`TimeOption`、`DateKey`（`@editorx/ui` dist）
+- Consumes: Task 3 的 `publish.schedule.units`、`publish.errors.scheduledAtTooSoon / scheduledAtTooLate`；Task 5 的 `timeSlots`、`toDateKey`、`addDays`、`TimeOption`、`DateKey`（`@geekx/ui` dist）
 - Produces:
 
 ```ts
@@ -3110,7 +3110,7 @@ scheduleRange?: ScheduleRange
 ```ts
 process.env.TZ = 'Asia/Shanghai'
 
-import { zhCN } from '@editorx/toolbar'
+import { zhCN } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import {
   combineLocal,
@@ -3264,7 +3264,7 @@ describe('定时发布 × 夏令时（America/New_York）', () => {
 
 - [ ] **Step 3: 运行确认失败**
 
-Run: `pnpm --filter @editorx/publish test -- schedule logic controller`
+Run: `pnpm --filter @geekx/publish test -- schedule logic controller`
 Expected: FAIL（导出不存在、区间错误未产生）。
 
 - [ ] **Step 4: 实现 schedule.ts**
@@ -3272,8 +3272,8 @@ Expected: FAIL（导出不存在、区间错误未产生）。
 删除 `defaultScheduleTime` 与其常量；文件顶部补 import 并追加：
 
 ```ts
-import { formatMessage, type Messages } from '@editorx/toolbar'
-import { addDays, timeSlots, toDateKey, type DateKey, type TimeOption } from '@editorx/ui'
+import { formatMessage, type Messages } from '@geekx/toolbar'
+import { addDays, timeSlots, toDateKey, type DateKey, type TimeOption } from '@geekx/ui'
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
@@ -3412,7 +3412,7 @@ export type { ScheduleRange } from './schedule'
 
    文件顶部加 `import { fromLocalInputValue, toLocalInputValue } from './schedule'`。第 224–236 行「时间早于当前」用例的 `'2000-01-01T10:00'` 不改（仍先命中 `scheduledAtPast`）；第 310 行 busy 用例直接用弹窗初始值（now+5h，区间内）。
 
-Run: `pnpm --filter @editorx/publish test && pnpm --filter @editorx/publish typecheck`
+Run: `pnpm --filter @geekx/publish test && pnpm --filter @geekx/publish typecheck`
 Expected: PASS。
 
 - [ ] **Step 7: 提交**
@@ -3638,14 +3638,14 @@ async function pickSchedule(dialog: HTMLElement, date: string, time: string) {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/publish test -- schedule-dialog publish-panel styles`
+Run: `pnpm --filter @geekx/publish test -- schedule-dialog publish-panel styles`
 Expected: FAIL。
 
 - [ ] **Step 3: 重写 `schedule-dialog.tsx`**
 
 ```tsx
-import { formatMessage, useMessages } from '@editorx/toolbar'
-import { Button, DatePicker, Modal, TimePicker } from '@editorx/ui'
+import { formatMessage, useMessages } from '@geekx/toolbar'
+import { Button, DatePicker, Modal, TimePicker } from '@geekx/ui'
 import { useState } from 'react'
 import {
   combineLocal,
@@ -3815,7 +3815,7 @@ export function ScheduleDialog({ range = DEFAULT_SCHEDULE_RANGE, error, busy = f
 
 - [ ] **Step 5: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/publish test && pnpm --filter @editorx/publish typecheck && pnpm --filter @editorx/publish build`
+Run: `pnpm --filter @geekx/publish test && pnpm --filter @geekx/publish typecheck && pnpm --filter @geekx/publish build`
 Expected: PASS。
 
 - [ ] **Step 6: 提交**
@@ -3868,7 +3868,7 @@ export interface TagPickerProps {
 `tag-picker.test.tsx`（新建）：
 
 ```tsx
-import type { TagCategory } from '@editorx/toolbar'
+import type { TagCategory } from '@geekx/toolbar'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -3982,7 +3982,7 @@ describe('TagPicker', () => {
 ```
 
 `fields.test.tsx` TagField 用例（第 39–95 行）改写：
-1. `Tags` 测试组件加 `getTagCategories?` 透传；文件头从 `@editorx/ui` 导入 `Modal`。
+1. `Tags` 测试组件加 `getTagCategories?` 透传；文件头从 `@geekx/ui` 导入 `Modal`。
 2. 第一个用例：计数文案已在 Task 3 Step 5 改为 `'还可添加7个标签'`，这里不再改；其余步骤不变（推荐分类回退后行为相同）。
 3. 第二个用例末尾追加：打开面板后点 `关闭标签面板`，断言 `screen.getByRole('button', { name: '添加文章标签' })` 获得焦点且 `aria-expanded="false"`。
 4. 第三个用例：`.ex-pub-tag-search__section` → `.ex-pub-tag-picker__body`，`.ex-pub-tag-search :disabled` → `.ex-pub-tag-picker :disabled`。
@@ -4046,14 +4046,14 @@ jsdom 里 React 根是测试容器而不是 `document`，这个用例证明的�
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/publish test -- tag-picker fields styles`
+Run: `pnpm --filter @geekx/publish test -- tag-picker fields styles`
 Expected: FAIL（模块不存在）。
 
 - [ ] **Step 3: 实现 `tag-picker.tsx`**
 
 ```tsx
-import { formatMessage, useMessages, type TagCategory } from '@editorx/toolbar'
-import { InlineLayer } from '@editorx/ui'
+import { formatMessage, useMessages, type TagCategory } from '@geekx/toolbar'
+import { InlineLayer } from '@geekx/ui'
 import { X } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { cx } from '../cx'
@@ -4249,8 +4249,8 @@ export function PlusIcon({ size, className = 'ex-pub-plus' }: { size: number; cl
 `tag-field.tsx` 整体替换为：
 
 ```tsx
-import { useMessages, type TagCategory } from '@editorx/toolbar'
-import { Tag } from '@editorx/ui'
+import { useMessages, type TagCategory } from '@geekx/toolbar'
+import { Tag } from '@geekx/ui'
 import { useRef, useState } from 'react'
 import { PlusIcon } from '../icons'
 import { MAX_TAGS } from '../validate'
@@ -4353,7 +4353,7 @@ export function TagField({ id, tags, onChange, searchTags, getTagCategories, get
           }
 ```
 
-   并从 `@editorx/toolbar` 补导入 `formatMessage`、`errorMessage`（`publish-panel.tsx` 已从同处导入 `errorMessage`）。
+   并从 `@geekx/toolbar` 补导入 `formatMessage`、`errorMessage`（`publish-panel.tsx` 已从同处导入 `errorMessage`）。
 
 - [ ] **Step 5: 样式**
 
@@ -4452,7 +4452,7 @@ export function TagField({ id, tags, onChange, searchTags, getTagCategories, get
 
 - [ ] **Step 6: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/publish test && pnpm --filter @editorx/publish typecheck && pnpm --filter @editorx/publish build`
+Run: `pnpm --filter @geekx/publish test && pnpm --filter @geekx/publish typecheck && pnpm --filter @geekx/publish build`
 Expected: PASS（`publish-panel.test.tsx:271`「缺失 searchTags：disable 策略下标签弹层同样只有输入框」不改即通过：无 adapter 时没有「推荐标签」文本）。
 
 - [ ] **Step 7: 提交**
@@ -4532,7 +4532,7 @@ export function HelpIcon(): ReactElement // svg.ex-pub-help-icon 14×14
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/publish test -- styles fields publish-panel`
+Run: `pnpm --filter @geekx/publish test -- styles fields publish-panel`
 Expected: FAIL。
 
 - [ ] **Step 3: 组件改动**
@@ -4619,7 +4619,7 @@ export function HelpIcon() {
 
 - [ ] **Step 5: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/publish test && pnpm --filter @editorx/publish typecheck && pnpm --filter @editorx/publish build`
+Run: `pnpm --filter @geekx/publish test && pnpm --filter @geekx/publish typecheck && pnpm --filter @geekx/publish build`
 Expected: PASS。
 
 - [ ] **Step 6: 提交**
@@ -4691,7 +4691,7 @@ export interface PublishPanelProps extends PublishBaseProps {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/publish test -- publish-panel styles`
+Run: `pnpm --filter @geekx/publish test -- publish-panel styles`
 Expected: FAIL。
 
 - [ ] **Step 3: 实现**
@@ -4731,7 +4731,7 @@ Expected: FAIL。
 
 - [ ] **Step 4: 运行确认通过并构建**
 
-Run: `pnpm --filter @editorx/publish test && pnpm --filter @editorx/publish typecheck && pnpm --filter @editorx/publish build`
+Run: `pnpm --filter @geekx/publish test && pnpm --filter @geekx/publish typecheck && pnpm --filter @geekx/publish build`
 Expected: PASS（98 + Task 10–14 新增）。
 
 - [ ] **Step 5: 提交**
@@ -4790,7 +4790,7 @@ Run（先构建上游）：
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/markdown.spec.ts -g "演示页外壳"
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/markdown.spec.ts -g "演示页外壳"
 ```
 
 Expected: FAIL（`.pg-quota` 不存在，`fixture=test` 未支持）。
@@ -4985,10 +4985,10 @@ function MarketingIcon() {
 - [ ] **Step 6: 运行确认通过**
 
 ```bash
-pnpm --filter @editorx/playground typecheck
-pnpm --filter @editorx/playground build
+pnpm --filter @geekx/playground typecheck
+pnpm --filter @geekx/playground build
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/markdown.spec.ts
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/markdown.spec.ts
 ```
 
 Expected: 全部 PASS（`SAMPLE` 以换行结尾、10k 文档最后一行为空串，Task 6 的行数规则下 `SAMPLE.split('\n').length` 与「10000 行数」两处断言数值不变）。
@@ -5054,7 +5054,7 @@ export type PublishMockAdapters = Required<
 
 ```bash
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/publish.spec.ts -g "标签面板：分类切换"
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/publish.spec.ts -g "标签面板：分类切换"
 ```
 
 Expected: FAIL（无分类 mock、未固定底栏）。
@@ -5140,10 +5140,10 @@ const CATEGORY_TAGS: Record<string, string[]> = { java: ['Java', 'Spring', 'Spri
 - [ ] **Step 5: 运行确认通过**
 
 ```bash
-pnpm --filter @editorx/playground typecheck
-pnpm --filter @editorx/playground build
+pnpm --filter @geekx/playground typecheck
+pnpm --filter @geekx/playground build
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/publish.spec.ts -g "标签面板：分类切换"
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/publish.spec.ts -g "标签面板：分类切换"
 ```
 
 Expected: PASS。
@@ -5284,7 +5284,7 @@ test('比对模式：同步滚动开关与定位（G24）', async ({ page }) => 
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/markdown.spec.ts e2e/publish.spec.ts
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/markdown.spec.ts e2e/publish.spec.ts
 ```
 
 Expected: 全部 PASS。失败时先判断是旧文案 / 旧几何断言（按本任务原则改写）还是行为回归（回到对应包任务修复）。
@@ -5618,7 +5618,7 @@ test.describe('darwin 内联卡片（19-13-37，1705×932，overlay 滚动条）
 
 ```bash
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/markdown-parity.spec.ts e2e/publish-parity.spec.ts
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/markdown-parity.spec.ts e2e/publish-parity.spec.ts
 ```
 
 Expected（darwin）：darwin describe 全部 PASS，win32 describe 全部 skipped（含 fixme）。这一步同时是 Task 14 操作栏 68 的验证点（Task 14 只改了断言、没有跑 publish-parity）。若 darwin 断言超差：先对照参考图复核期望值（期望来自 Global Constraints 表，约束性），再回到对应包任务修 CSS；不得为通过而放宽容差。
@@ -5655,9 +5655,9 @@ git commit -m "test(playground): parity 几何按平台拆分，darwin 以 mac �
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/markdown-visual.spec.ts --update-snapshots
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/markdown-visual.spec.ts --update-snapshots
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/publish-visual.spec.ts --update-snapshots
+pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/publish-visual.spec.ts --update-snapshots
 ```
 
 - [ ] **Step 3: 确认只改了 darwin PNG**
@@ -5675,7 +5675,7 @@ Expected: 无输出（退出码 1）。有任何 win32 PNG 出现在列表里：
 ```bash
 for i in 1 2; do
   lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-  pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/markdown-visual.spec.ts e2e/publish-visual.spec.ts e2e/showcase.spec.ts e2e/markdown-core.spec.ts || break
+  pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/markdown-visual.spec.ts e2e/publish-visual.spec.ts e2e/showcase.spec.ts e2e/markdown-core.spec.ts || break
 done
 ```
 
@@ -5803,11 +5803,11 @@ for (const c of CASES) {
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force && pnpm test && pnpm typecheck && pnpm lint
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium
+pnpm --filter @geekx/playground exec playwright test --project=chromium
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-pnpm --filter @editorx/playground exec playwright test --project=chromium-perf
+pnpm --filter @geekx/playground exec playwright test --project=chromium-perf
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null
-EX_ACCEPTANCE=1 pnpm --filter @editorx/playground exec playwright test --project=chromium e2e/reference-acceptance.spec.ts
+EX_ACCEPTANCE=1 pnpm --filter @geekx/playground exec playwright test --project=chromium e2e/reference-acceptance.spec.ts
 ```
 
 Expected：单测 theme / ui / toolbar / markdown-core / markdown / publish 均 ≥ RESUME 基线（92 / 84 / 98 / 479+1 skip / 234 / 98）且全绿；typecheck / lint 0 错误；e2e chromium 全绿（74 + 新增，win32 describe 在 darwin 上 skipped）；perf 4/4；验收 spec 5 例的不一致比例逐一记录到 RESUME（超过 0.03 的列为 Open question，不阻塞）。

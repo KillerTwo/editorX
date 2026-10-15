@@ -2,19 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `@editorx/csdn` `<CsdnEditor />` that composes one editor, a 56px top bar, publish settings, confirmed editor switching, and autosave with a local backup.
+**Goal:** Ship `@geekx/csdn` `<CsdnEditor />` that composes one editor, a 56px top bar, publish settings, confirmed editor switching, and autosave with a local backup.
 
 **Architecture:** The shell is a column: a 56px bar, then one editor region. `defaultEditor` (else `initialDocument.editorType`, else `markdown`) mounts either `MarkdownEditor` or `RichTextEditor`, never both. The article title is one string. On Markdown it is the bar input. On rich text it is the paper input already drawn by `RichTextEditor`; the bar does not draw a second input. Rich text keeps `PublishPanel` in `slots.afterPaper` with `barPosition="fixed"`, so the card scrolls inside `.ex-rte__scroll` and the fixed bar is portaled to `.ex-rte-bar-host.ex-pub`. Markdown does not stack that card under the editor; the same `settings` state is what publish sends, and the card geometry stays at G01 (bar 56, then 16px, card top 72). `CsdnEditor` owns `autoSaveInterval` and does not pass that prop into `MarkdownEditor`. Switching always opens a confirm dialog; confirm builds the next document with the current HTML or `htmlToMarkdown`. Autosave writes `localStorage` before `adapters.onSaveDraft`; a rejected save toasts, stays dirty, and leaves the backup in place.
 
-**Tech Stack:** React 19, Next.js 16 App Router playground, Vitest + Testing Library (StrictMode), Playwright chromium, existing `@editorx/markdown`, `@editorx/rich-text`, `@editorx/publish`, `@editorx/toolbar`, `@editorx/theme`, `@editorx/ui`, `@editorx/markdown-core` (`htmlToMarkdown`). Native CSS, `.ex-` classes, `--ex-*` tokens. No Tailwind.
+**Tech Stack:** React 19, Next.js 16 App Router playground, Vitest + Testing Library (StrictMode), Playwright chromium, existing `@geekx/markdown`, `@geekx/rich-text`, `@geekx/publish`, `@geekx/toolbar`, `@geekx/theme`, `@geekx/ui`, `@geekx/markdown-core` (`htmlToMarkdown`). Native CSS, `.ex-` classes, `--ex-*` tokens. No Tailwind.
 
 **Spec:** `docs/superpowers/specs/2026-10-09-csdn-editor-design.md` (§6.4, §7, §10 item 6). Binding notes: `docs/superpowers/handoff/phase6-notes-from-5.md`. Bar height source: `docs/superpowers/handoff/reference-index.md` G01 row「顶栏 | 高 56，无下边框」. Base: branch `develop`, HEAD `b899957`.
 
 ## Global Constraints
 
 - React 19 + Next.js 16 App Router only. Components that ship in the package are client components; `tsup` banner is `'use client';`.
-- Dependency direction: `@editorx/csdn` depends directly on `@editorx/markdown`, `@editorx/rich-text`, `@editorx/publish`, `@editorx/markdown-core`, `@editorx/toolbar`, `@editorx/theme`, `@editorx/ui`. `@editorx/rich-text` does not gain a dependency on `markdown`, `markdown-core`, `publish`, or `csdn`. `@editorx/publish` does not gain a dependency on `csdn` or `rich-text`. `rich-text` is a normal dependency, not an optional peer, and the shell does not dynamic-import it or hide rich text when a package is missing.
-- `@editorx/csdn-extensions` does not exist in this phase. `extensions` defaults to `[]` and is forwarded to the mounted editor. Phase 7 owns real AI, vote, video, resource, InsCode, and template behavior. Playground stand-ins may toast `阶段 7 接入`. Do not copy CSDN logo or icon art; icons are lucide.
+- Dependency direction: `@geekx/csdn` depends directly on `@geekx/markdown`, `@geekx/rich-text`, `@geekx/publish`, `@geekx/markdown-core`, `@geekx/toolbar`, `@geekx/theme`, `@geekx/ui`. `@geekx/rich-text` does not gain a dependency on `markdown`, `markdown-core`, `publish`, or `csdn`. `@geekx/publish` does not gain a dependency on `csdn` or `rich-text`. `rich-text` is a normal dependency, not an optional peer, and the shell does not dynamic-import it or hide rich text when a package is missing.
+- `@geekx/csdn-extensions` does not exist in this phase. `extensions` defaults to `[]` and is forwarded to the mounted editor. Phase 7 owns real AI, vote, video, resource, InsCode, and template behavior. Playground stand-ins may toast `阶段 7 接入`. Do not copy CSDN logo or icon art; icons are lucide.
 - Colors only through existing `--ex-*` tokens. This phase adds no tokens. Do not edit `packages/theme/src/styles.css`. Component CSS has no hex, `rgb(`, `hsl(`, or `light-dark(`.
 - The top bar is 56px tall with no bottom border (G01). Phase 5's `/rich-text` subtracted 48 from reference coordinates because that page did not draw a bar. Phase 6 draws 56, from G01, not 48.
 - Page root stays overflow hidden. Do not move scrolling back to `window`. Rich text scrolls in `.ex-rte__scroll`. Markdown scrolls in the markdown editor's own scroller. `.ex-rte` keeps `overflow: hidden` and `transform: translate(0)`. Do not put `transform`, `filter`, or `will-change` on `.ex-csdn` or `.ex-csdn__editor` (those would make the fixed publish bar's containing block the shell).
@@ -24,8 +24,8 @@
 - Publish follows `usePublishController.publish` without a schedule argument: missing `onPublish` returns false and does not toast; `countChars(title.trim()) === 0` toasts `文章标题需为 5～100 个字`; `htmlToText(html) === ''` toasts `正文不能为空`; then `validatePublish` / `firstError`; success calls `onPublish` with `toPayload(document, settings)` and toasts `发布成功`. `resolveTemplate` still turns `moyan` into `default` when `editorType !== 'markdown'`.
 - Autosave interval: off when the value is omitted, `0`, non-finite, or greater than `2147483647`. Dirty means title, editor type, markdown source (markdown mode) or html (rich text mode), or settings differ from the last successful save. The shell writes the local backup before the adapter call. Failure toasts `保存草稿失败：{message}` once per failure streak, keeps `data-dirty="true"`, and does not delete the backup. Manual save toasts `草稿已保存` on success. Autosave success does not toast.
 - Local backup key default `editorx-csdn-draft`. Shape `{ document, settings, updatedAt }`. On load, if `updatedAt` is greater than `initialUpdatedAt` (default `0`) and the fingerprint differs from the initial document plus initial settings, ask before restoring. Cancel keeps the initial document and leaves the backup stored. The restore dialog blocks autosave and disables 保存草稿, 发布, and 切换编辑器 until the user chooses. Do not `setState` synchronously inside an effect; the offer is read in the `useState` initializer.
-- Tests: `pnpm --filter @editorx/NAME exec vitest run <files>` after `export COREPACK_INTEGRITY_KEYS=0`. The `--` form does not narrow files. Render with StrictMode. Every `pnpm` command in this plan is preceded by `export COREPACK_INTEGRITY_KEYS=0`.
-- Branch `develop`. Chinese Conventional Commits with a body, passed via HEREDOC. `git add` lists explicit paths. No `git add .` / `-A`. No `pnpm install`, `pnpm add`, or `playwright install` in implementer steps. If `@editorx/csdn` is missing from the lockfile, the controller runs `pnpm install --offline` once.
+- Tests: `pnpm --filter @geekx/NAME exec vitest run <files>` after `export COREPACK_INTEGRITY_KEYS=0`. The `--` form does not narrow files. Render with StrictMode. Every `pnpm` command in this plan is preceded by `export COREPACK_INTEGRITY_KEYS=0`.
+- Branch `develop`. Chinese Conventional Commits with a body, passed via HEREDOC. `git add` lists explicit paths. No `git add .` / `-A`. No `pnpm install`, `pnpm add`, or `playwright install` in implementer steps. If `@geekx/csdn` is missing from the lockfile, the controller runs `pnpm install --offline` once.
 - Playwright: kill TCP 3100 before and after (`lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true`). `reuseExistingServer` would keep a stale server, so the kill is required. After CSS or package changes, `pnpm build --force` before e2e. Darwin is the acceptance platform. New visual specs start with `test.skip(process.platform !== 'darwin', '待 Windows 复测')`. Do not update unrelated baselines or any win32 PNG. Do not download reference images; mac PNGs are already in `apps/playground/public/reference/`.
 - Out of scope: phase 7 real AI / vote / video / resource / InsCode / template behavior, phase 8 changesets / README / npm publish, the feedback tab, CSDN logo art.
 
@@ -39,7 +39,7 @@
 
 ## File structure
 
-- `packages/csdn/package.json`, `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`: package scaffold. `tsup` externals include every `@editorx/*` package this package imports, plus `react`, `react-dom`, `ckeditor5`, `@ckeditor/ckeditor5-react`.
+- `packages/csdn/package.json`, `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`: package scaffold. `tsup` externals include every `@geekx/*` package this package imports, plus `react`, `react-dom`, `ckeditor5`, `@ckeditor/ckeditor5-react`.
 - `packages/csdn/src/types.ts`: public props and handle.
 - `packages/csdn/src/cx.ts`: class name join.
 - `packages/csdn/src/top-bar.tsx`: 56px bar. Title input only when `editorType === 'markdown'`.
@@ -50,13 +50,13 @@
 - `packages/csdn/src/index.ts`: public exports and `styles.css` import.
 - `packages/csdn/src/styles.css`: shell layout. No new theme tokens.
 - `apps/playground/app/page.tsx`: link to `/csdn`.
-- `apps/playground/app/csdn/*`: demo page. `apps/playground/app/layout.tsx` imports `@editorx/csdn/styles.css`.
+- `apps/playground/app/csdn/*`: demo page. `apps/playground/app/layout.tsx` imports `@geekx/csdn/styles.css`.
 - `apps/playground/e2e/csdn.spec.ts`, `csdn-visual.spec.ts`: functional checks and darwin geometry / screenshots.
 - `docs/superpowers/handoff/phase7-notes-from-6.md`, `RESUME.md`: phase 7 handoff.
 
 ---
 
-### Task 1: Scaffold `@editorx/csdn`
+### Task 1: Scaffold `@geekx/csdn`
 
 **Files:**
 - Create: `packages/csdn/package.json`
@@ -79,7 +79,7 @@
 
 **Interfaces:**
 - Consumes: `packages/publish/package.json`, `packages/rich-text/tsup.config.ts`, `packages/rich-text/vitest.config.ts`, `packages/rich-text/tsconfig.json`. `pnpm-workspace.yaml` already includes `packages/*`. `turbo.json` does not need an edit.
-- Produces: package name `@editorx/csdn`. Runtime exports `CsdnEditor`. Types `CsdnEditorProps`, `CsdnEditorHandle`. `CsdnEditorHandle.getDocument(): EditorDocument`. Root element `class="ex-csdn"` and `data-editor="markdown"`. `dist/index.js` first line is `'use client';`. `dist/styles.css` exists.
+- Produces: package name `@geekx/csdn`. Runtime exports `CsdnEditor`. Types `CsdnEditorProps`, `CsdnEditorHandle`. `CsdnEditorHandle.getDocument(): EditorDocument`. Root element `class="ex-csdn"` and `data-editor="markdown"`. `dist/index.js` first line is `'use client';`. `dist/styles.css` exists.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -97,23 +97,23 @@ function readJson(relativePath: string) {
   }
 }
 
-describe('@editorx/csdn package', () => {
+describe('@geekx/csdn package', () => {
   it('直接依赖 rich-text，而 rich-text 与 publish 不反向依赖', () => {
     const csdn = readJson('../package.json')
     const rich = readJson('../../rich-text/package.json')
     const publish = readJson('../../publish/package.json')
-    expect(csdn.dependencies?.['@editorx/rich-text']).toBe('workspace:*')
-    expect(csdn.dependencies?.['@editorx/markdown']).toBe('workspace:*')
-    expect(csdn.dependencies?.['@editorx/publish']).toBe('workspace:*')
-    expect(csdn.dependencies?.['@editorx/markdown-core']).toBe('workspace:*')
-    expect(csdn.peerDependenciesMeta?.['@editorx/rich-text']).toBeUndefined()
+    expect(csdn.dependencies?.['@geekx/rich-text']).toBe('workspace:*')
+    expect(csdn.dependencies?.['@geekx/markdown']).toBe('workspace:*')
+    expect(csdn.dependencies?.['@geekx/publish']).toBe('workspace:*')
+    expect(csdn.dependencies?.['@geekx/markdown-core']).toBe('workspace:*')
+    expect(csdn.peerDependenciesMeta?.['@geekx/rich-text']).toBeUndefined()
     const richText = JSON.stringify(rich)
-    expect(richText).not.toContain('@editorx/csdn')
-    expect(richText).not.toContain('@editorx/markdown')
-    expect(richText).not.toContain('@editorx/publish')
+    expect(richText).not.toContain('@geekx/csdn')
+    expect(richText).not.toContain('@geekx/markdown')
+    expect(richText).not.toContain('@geekx/publish')
     const publishText = JSON.stringify(publish)
-    expect(publishText).not.toContain('@editorx/csdn')
-    expect(publishText).not.toContain('@editorx/rich-text')
+    expect(publishText).not.toContain('@geekx/csdn')
+    expect(publishText).not.toContain('@geekx/rich-text')
   })
 })
 ```
@@ -187,9 +187,9 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
     expect(readFileSync(dist, 'utf8').split(/\r?\n/, 1)[0]).toBe("'use client';")
   })
 
-  it('静态依赖 @editorx/rich-text，并带有 styles.css', () => {
+  it('静态依赖 @geekx/rich-text，并带有 styles.css', () => {
     const source = readFileSync(dist, 'utf8')
-    expect(source).toContain('@editorx/rich-text')
+    expect(source).toContain('@geekx/rich-text')
     expect(source).not.toContain('import(')
     expect(existsSync(path.join(distDir, 'styles.css'))).toBe(true)
   })
@@ -200,10 +200,10 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/package.test.ts src/styles.test.ts src/shell.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/package.test.ts src/styles.test.ts src/shell.test.tsx
 ```
 
-Expected: FAIL. The filter does not know `@editorx/csdn`, or the modules `./csdn-editor` and `../package.json` cannot be loaded.
+Expected: FAIL. The filter does not know `@geekx/csdn`, or the modules `./csdn-editor` and `../package.json` cannot be loaded.
 
 - [ ] **Step 3: Write minimal implementation**
 
@@ -211,7 +211,7 @@ Expected: FAIL. The filter does not know `@editorx/csdn`, or the modules `./csdn
 
 ```json
 {
-  "name": "@editorx/csdn",
+  "name": "@geekx/csdn",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": ["*.css"],
@@ -235,24 +235,24 @@ Expected: FAIL. The filter does not know `@editorx/csdn`, or the modules `./csdn
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/markdown": "workspace:*",
-    "@editorx/markdown-core": "workspace:*",
-    "@editorx/publish": "workspace:*",
-    "@editorx/rich-text": "workspace:*",
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/markdown": "workspace:*",
+    "@geekx/markdown-core": "workspace:*",
+    "@geekx/publish": "workspace:*",
+    "@geekx/rich-text": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "dependencies": {
-    "@editorx/markdown": "workspace:*",
-    "@editorx/markdown-core": "workspace:*",
-    "@editorx/publish": "workspace:*",
-    "@editorx/rich-text": "workspace:*",
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/markdown": "workspace:*",
+    "@geekx/markdown-core": "workspace:*",
+    "@geekx/publish": "workspace:*",
+    "@geekx/rich-text": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "lucide-react": "^1.53.0"
   }
 }
@@ -303,13 +303,13 @@ export default defineConfig({
     'react-dom',
     'ckeditor5',
     '@ckeditor/ckeditor5-react',
-    '@editorx/markdown',
-    '@editorx/markdown-core',
-    '@editorx/rich-text',
-    '@editorx/publish',
-    '@editorx/theme',
-    '@editorx/toolbar',
-    '@editorx/ui',
+    '@geekx/markdown',
+    '@geekx/markdown-core',
+    '@geekx/rich-text',
+    '@geekx/publish',
+    '@geekx/theme',
+    '@geekx/toolbar',
+    '@geekx/ui',
   ],
   onSuccess: async () => {
     execFileSync(process.execPath, [copyCssScript], { cwd: packageDir, stdio: 'inherit' })
@@ -328,7 +328,7 @@ export function cx(...names: Array<string | false | null | undefined>): string {
 `packages/csdn/src/types.ts`:
 
 ```ts
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import type { Ref } from 'react'
 
 export interface CsdnEditorHandle {
@@ -359,7 +359,7 @@ export interface CsdnEditorProps {
 `packages/csdn/src/csdn-editor.tsx`:
 
 ```tsx
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { useImperativeHandle } from 'react'
 import { cx } from './cx'
 import type { CsdnEditorProps } from './types'
@@ -380,12 +380,12 @@ export type { CsdnEditorHandle, CsdnEditorProps } from './types'
 import './styles.css'
 ```
 
-In `apps/playground/package.json` `dependencies`, add `"@editorx/csdn": "workspace:*"` beside the other `@editorx/*` entries.
+In `apps/playground/package.json` `dependencies`, add `"@geekx/csdn": "workspace:*"` beside the other `@geekx/*` entries.
 
-In `apps/playground/app/layout.tsx`, after `import '@editorx/rich-text/styles.css'`, add:
+In `apps/playground/app/layout.tsx`, after `import '@geekx/rich-text/styles.css'`, add:
 
 ```tsx
-import '@editorx/csdn/styles.css'
+import '@geekx/csdn/styles.css'
 ```
 
 In `apps/playground/app/page.tsx`, add this list item after the `/publish` item:
@@ -396,7 +396,7 @@ In `apps/playground/app/page.tsx`, add this list item after the `/publish` item:
 
 - [ ] **Step 4: Controller links the workspace**
 
-If Step 2 or the build below reports that the filter cannot find `@editorx/csdn`, stop. The controller, from the repo root, runs this once:
+If Step 2 or the build below reports that the filter cannot find `@geekx/csdn`, stop. The controller, from the repo root, runs this once:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
@@ -409,8 +409,8 @@ That rewrites `pnpm-lock.yaml` only. The implementer does not run `pnpm install`
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn build
-pnpm --filter @editorx/csdn exec vitest run src/package.test.ts src/styles.test.ts src/shell.test.tsx src/dist.test.ts
+pnpm --filter @geekx/csdn build
+pnpm --filter @geekx/csdn exec vitest run src/package.test.ts src/styles.test.ts src/shell.test.tsx src/dist.test.ts
 ```
 
 Expected: PASS. `dist/index.js` first line is `'use client';`.
@@ -444,7 +444,7 @@ git status
 - Test: `packages/csdn/src/top-bar.test.tsx`, `packages/csdn/src/styles.test.ts`
 
 **Interfaces:**
-- Consumes: `CsdnEditor` root `.ex-csdn`. `ThemeToggle` from `@editorx/ui` (aria-label `切换到暗黑模式` when the resolved theme is light). `ThemeProvider` from `@editorx/theme`.
+- Consumes: `CsdnEditor` root `.ex-csdn`. `ThemeToggle` from `@geekx/ui` (aria-label `切换到暗黑模式` when the resolved theme is light). `ThemeProvider` from `@geekx/theme`.
 - Produces: `TopBar` props `{ onBack?: () => void; onSaveDraft: () => void; onSwitch: () => void; onPublish: () => void; showThemeToggle: boolean }`. Buttons: `.ex-csdn__back` named 返回, `.ex-csdn__draft` named 保存草稿, `.ex-csdn__switch` named 切换编辑器, `.ex-csdn__publish` named 发布. `showThemeToggle={false}` omits the theme button. Bar class `.ex-csdn__bar` is `height: 56px` and `border-bottom: 0`. `CsdnEditorProps` gains `onBack`, `showThemeToggle`, `theme`, `defaultTheme`, `onThemeChange`.
 
 - [ ] **Step 1: Write the failing test**
@@ -501,7 +501,7 @@ Append this `it` inside `describe('csdn styles')` in `packages/csdn/src/styles.t
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts
 ```
 
 Expected: FAIL. `.ex-csdn__bar` is missing, or `height: 56px` is absent from `styles.css`.
@@ -511,8 +511,8 @@ Expected: FAIL. `.ex-csdn__bar` is missing, or `height: 56px` is absent from `st
 Replace `packages/csdn/src/types.ts` with:
 
 ```ts
-import type { ThemeMode } from '@editorx/theme'
-import type { EditorDocument } from '@editorx/toolbar'
+import type { ThemeMode } from '@geekx/theme'
+import type { EditorDocument } from '@geekx/toolbar'
 import type { Ref } from 'react'
 
 export interface CsdnEditorHandle {
@@ -533,7 +533,7 @@ export interface CsdnEditorProps {
 `packages/csdn/src/top-bar.tsx`:
 
 ```tsx
-import { Button, ThemeToggle } from '@editorx/ui'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react'
 
 export interface TopBarProps {
@@ -593,9 +593,9 @@ Append to `packages/csdn/src/styles.css`:
 Replace `packages/csdn/src/csdn-editor.tsx` with:
 
 ```tsx
-import { ThemeProvider } from '@editorx/theme'
-import type { EditorDocument } from '@editorx/toolbar'
-import { ToastProvider } from '@editorx/ui'
+import { ThemeProvider } from '@geekx/theme'
+import type { EditorDocument } from '@geekx/toolbar'
+import { ToastProvider } from '@geekx/ui'
 import { useImperativeHandle } from 'react'
 import { cx } from './cx'
 import { TopBar } from './top-bar'
@@ -641,7 +641,7 @@ Add `.ex-csdn-theme { display: contents; }` at the top of `styles.css`.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts src/shell.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts src/shell.test.tsx
 ```
 
 Expected: PASS.
@@ -676,7 +676,7 @@ git status
 - Test: `packages/csdn/src/top-bar.test.tsx`, `packages/csdn/src/styles.test.ts`
 
 **Interfaces:**
-- Consumes: `titleCounter(length: number, messages: Pick<Messages['richText'], 'titleNeed' | 'titleCount' | 'titleOver'>): { text: string; over: boolean }` from `@editorx/rich-text` after this task exports it. Bands: length `< 5` → `还需输入{n}个字` with `n = 5 - length`; `5..100` → `{n} / 100`; `> 100` → `{n}/100` and `over: true`.
+- Consumes: `titleCounter(length: number, messages: Pick<Messages['richText'], 'titleNeed' | 'titleCount' | 'titleOver'>): { text: string; over: boolean }` from `@geekx/rich-text` after this task exports it. Bands: length `< 5` → `还需输入{n}个字` with `n = 5 - length`; `5..100` → `{n} / 100`; `> 100` → `{n}/100` and `over: true`.
 - Produces: `CsdnEditorProps.initialDocument?: EditorDocument` and `defaultEditor?: EditorType`. `getDocument().title` is the bar string when `data-editor="markdown"`. `defaultEditor="richtext"` sets `data-editor="richtext"` and renders no title input. Counter element `.ex-csdn-title__count`, plus `.is-over` when `over` is true. CSS `.ex-csdn-title__count.is-over` uses `color: var(--ex-color-error)`.
 
 - [ ] **Step 1: Write the failing test**
@@ -736,7 +736,7 @@ Add the `userEvent` import to that file if it is not already imported. Append to
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts
 ```
 
 Expected: FAIL. `getByRole('textbox', { name: '文章标题' })` cannot find the input.
@@ -752,7 +752,7 @@ export { titleCounter } from './title-counter'
 Extend `CsdnEditorProps` in `types.ts` with:
 
 ```ts
-import type { EditorDocument, EditorType } from '@editorx/toolbar'
+import type { EditorDocument, EditorType } from '@geekx/toolbar'
 
 initialDocument?: EditorDocument
 defaultEditor?: EditorType
@@ -761,10 +761,10 @@ defaultEditor?: EditorType
 Replace `packages/csdn/src/top-bar.tsx` with:
 
 ```tsx
-import { titleCounter } from '@editorx/rich-text'
-import type { EditorType } from '@editorx/toolbar'
-import { useMessages } from '@editorx/toolbar'
-import { Button, ThemeToggle } from '@editorx/ui'
+import { titleCounter } from '@geekx/rich-text'
+import type { EditorType } from '@geekx/toolbar'
+import { useMessages } from '@geekx/toolbar'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react'
 import { cx } from './cx'
 
@@ -867,9 +867,9 @@ Append to `styles.css`:
 Replace `csdn-editor.tsx` with:
 
 ```tsx
-import { ThemeProvider } from '@editorx/theme'
-import { MessagesProvider, type EditorDocument, type EditorType } from '@editorx/toolbar'
-import { ToastProvider } from '@editorx/ui'
+import { ThemeProvider } from '@geekx/theme'
+import { MessagesProvider, type EditorDocument, type EditorType } from '@geekx/toolbar'
+import { ToastProvider } from '@geekx/ui'
 import { useImperativeHandle, useState } from 'react'
 import { cx } from './cx'
 import { TopBar } from './top-bar'
@@ -927,14 +927,14 @@ function CsdnEditorShell({
 }
 ```
 
-Add `locale?: DeepPartial<Messages>` to `CsdnEditorProps` and import those types from `@editorx/toolbar`. `MessagesProvider` already accepts `DeepPartial<Messages>`.
+Add `locale?: DeepPartial<Messages>` to `CsdnEditorProps` and import those types from `@geekx/toolbar`. `MessagesProvider` already accepts `DeepPartial<Messages>`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/title-counter.test.ts
-pnpm --filter @editorx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts src/shell.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/title-counter.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/top-bar.test.tsx src/styles.test.ts src/shell.test.tsx
 ```
 
 Expected: PASS.
@@ -1038,7 +1038,7 @@ Append to `styles.test.ts`:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/editor-mount.test.tsx src/styles.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/editor-mount.test.tsx src/styles.test.ts
 ```
 
 Expected: FAIL. `.ex-mde` is null.
@@ -1048,7 +1048,7 @@ Expected: FAIL. `.ex-mde` is null.
 Add to `CsdnEditorProps`:
 
 ```ts
-import type { EditorExtension, ToolbarLayout } from '@editorx/toolbar'
+import type { EditorExtension, ToolbarLayout } from '@geekx/toolbar'
 
 extensions?: readonly EditorExtension[]
 toolbarLayout?: ToolbarLayout
@@ -1069,7 +1069,7 @@ Append to `styles.css`:
 .ex-csdn[data-editor='markdown'] .ex-csdn__editor { padding: 16px; }
 ```
 
-Replace the shell in `csdn-editor.tsx` so it keeps the `ThemeProvider` / `MessagesProvider` / `ToastProvider` wrapper from Task 3 and uses this shell. Import `MarkdownEditor`, type `MarkdownEditorHandle` from `@editorx/markdown`, and `RichTextEditor`, type `RichTextEditorHandle` from `@editorx/rich-text`.
+Replace the shell in `csdn-editor.tsx` so it keeps the `ThemeProvider` / `MessagesProvider` / `ToastProvider` wrapper from Task 3 and uses this shell. Import `MarkdownEditor`, type `MarkdownEditorHandle` from `@geekx/markdown`, and `RichTextEditor`, type `RichTextEditorHandle` from `@geekx/rich-text`.
 
 ```tsx
 const NO_EXTENSIONS: readonly EditorExtension[] = []
@@ -1156,7 +1156,7 @@ Do not pass `autoSaveInterval`, `theme`, or `defaultTheme` on either editor. Add
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/editor-mount.test.tsx src/top-bar.test.tsx src/styles.test.ts src/shell.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/editor-mount.test.tsx src/top-bar.test.tsx src/styles.test.ts src/shell.test.tsx
 ```
 
 Expected: PASS. One editor node is present in each test.
@@ -1189,7 +1189,7 @@ git status
 - Test: `packages/csdn/src/submit-publish.test.ts`, `packages/csdn/src/publish-shell.test.tsx`
 
 **Interfaces:**
-- Consumes: from `@editorx/publish`: `createSettings`, `resolveTemplate`, `toPayload`, `htmlToText`, `countChars`, `validatePublish`, `firstError`, `TITLE_MIN`, `TITLE_MAX`. `PublishPanel` props `value`, `onChange`, `document`, `adapters`, `barPosition="fixed"`, `slots.barStart`. `zhCN.publish` messages. `countRichTextChars` from `@editorx/rich-text` is what `RichTextEditor` already uses for `onWordCount`; the shell displays `formatMessage(messages.richText.words, { n })` which is `共 {n} 字`.
+- Consumes: from `@geekx/publish`: `createSettings`, `resolveTemplate`, `toPayload`, `htmlToText`, `countChars`, `validatePublish`, `firstError`, `TITLE_MIN`, `TITLE_MAX`. `PublishPanel` props `value`, `onChange`, `document`, `adapters`, `barPosition="fixed"`, `slots.barStart`. `zhCN.publish` messages. `countRichTextChars` from `@geekx/rich-text` is what `RichTextEditor` already uses for `onWordCount`; the shell displays `formatMessage(messages.richText.words, { n })` which is `共 {n} 字`.
 - Produces: `submitPublish(input: { document: EditorDocument; settings: PublishSettings; adapters: EditorAdapters; notify: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void; messages: Messages['publish']; now?: () => number }): Promise<boolean>`. `CsdnEditorProps.adapters?: EditorAdapters`, `initialSettings?: Partial<PublishSettings>`, `slots?: { publishBarStart?: ReactNode }`. Shell `.ex-csdn__publish` calls `submitPublish`. Rich text renders `PublishPanel` in `slots.afterPaper`. The fixed bar's parent becomes `.ex-rte-bar-host`. Markdown does not render `.ex-pub-card`.
 
 - [ ] **Step 1: Write the failing test**
@@ -1197,8 +1197,8 @@ git status
 `packages/csdn/src/submit-publish.test.ts`:
 
 ```ts
-import { createSettings } from '@editorx/publish'
-import { zhCN, type EditorDocument } from '@editorx/toolbar'
+import { createSettings } from '@geekx/publish'
+import { zhCN, type EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { submitPublish } from './submit-publish'
 
@@ -1312,12 +1312,12 @@ describe('submitPublish', () => {
 `packages/csdn/src/publish-shell.test.tsx`:
 
 ```tsx
-import { htmlToText } from '@editorx/publish'
+import { htmlToText } from '@geekx/publish'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { countRichTextChars } from '@editorx/rich-text'
+import { countRichTextChars } from '@geekx/rich-text'
 import { CsdnEditor } from './csdn-editor'
 import type { CsdnEditorHandle } from './types'
 
@@ -1433,7 +1433,7 @@ describe('外壳发布', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/submit-publish.test.ts src/publish-shell.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/submit-publish.test.ts src/publish-shell.test.tsx
 ```
 
 Expected: FAIL. `submitPublish` is not defined, or `.ex-csdn__publish` does not toast.
@@ -1452,7 +1452,7 @@ import {
   TITLE_MIN,
   toPayload,
   validatePublish,
-} from '@editorx/publish'
+} from '@geekx/publish'
 import {
   errorMessage,
   formatMessage,
@@ -1460,7 +1460,7 @@ import {
   type EditorDocument,
   type Messages,
   type PublishSettings,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 
 export async function submitPublish(input: {
   document: EditorDocument
@@ -1509,7 +1509,7 @@ Add to `CsdnEditorProps`:
 
 ```ts
 import type { ReactNode } from 'react'
-import type { EditorAdapters, PublishSettings } from '@editorx/toolbar'
+import type { EditorAdapters, PublishSettings } from '@geekx/toolbar'
 
 adapters?: EditorAdapters
 initialSettings?: Partial<PublishSettings>
@@ -1519,9 +1519,9 @@ slots?: { publishBarStart?: ReactNode }
 Inside `CsdnEditorShell`, keep the editor mount from Task 4 and add settings plus publish:
 
 ```tsx
-import { createSettings, PublishPanel } from '@editorx/publish'
-import { formatMessage, useMessages } from '@editorx/toolbar'
-import { useToast } from '@editorx/ui'
+import { createSettings, PublishPanel } from '@geekx/publish'
+import { formatMessage, useMessages } from '@geekx/toolbar'
+import { useToast } from '@geekx/ui'
 import { submitPublish } from './submit-publish'
 
 const EMPTY_ADAPTERS: EditorAdapters = {}
@@ -1581,7 +1581,7 @@ Markdown branch does not render `PublishPanel`.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/submit-publish.test.ts src/publish-shell.test.tsx src/editor-mount.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/submit-publish.test.ts src/publish-shell.test.tsx src/editor-mount.test.tsx
 ```
 
 Expected: PASS.
@@ -1613,7 +1613,7 @@ git status
 - Test: `packages/csdn/src/switch-document.test.ts`, `packages/csdn/src/switch-editor.test.tsx`
 
 **Interfaces:**
-- Consumes: `htmlToMarkdown(html: string): string` from `@editorx/markdown-core`. `Modal` from `@editorx/ui` (`open`, `onClose`, `title`, `footer`). `useMessages().dialog.confirm` is `确定`, `dialog.cancel` is `取消`. Shell `readDocument()` from Task 4. `onEditorTypeChange` from Task 4.
+- Consumes: `htmlToMarkdown(html: string): string` from `@geekx/markdown-core`. `Modal` from `@geekx/ui` (`open`, `onClose`, `title`, `footer`). `useMessages().dialog.confirm` is `确定`, `dialog.cancel` is `取消`. Shell `readDocument()` from Task 4. `onEditorTypeChange` from Task 4.
 - Produces: `switchedDocument(doc: EditorDocument): EditorDocument`. Markdown in → `{ editorType: 'richtext', title, html: doc.html, markdown: undefined }`. Rich text in → `{ editorType: 'markdown', title, markdown: htmlToMarkdown(doc.html), html: doc.html }`. Confirm dialog title `切换编辑器`. Cancel closes it and leaves `data-editor` unchanged. Confirm increments a mount key, stores the switched document, and remounts the other editor with `defaultValue` set to that html or markdown. `onEditorTypeChange` runs from the confirm click handler.
 
 - [ ] **Step 1: Write the failing test**
@@ -1621,7 +1621,7 @@ git status
 `packages/csdn/src/switch-document.test.ts`:
 
 ```ts
-import { htmlToMarkdown } from '@editorx/markdown-core'
+import { htmlToMarkdown } from '@geekx/markdown-core'
 import { describe, expect, it } from 'vitest'
 import { switchedDocument } from './switch-document'
 
@@ -1647,7 +1647,7 @@ describe('switchedDocument', () => {
 `packages/csdn/src/switch-editor.test.tsx`:
 
 ```tsx
-import { htmlToMarkdown } from '@editorx/markdown-core'
+import { htmlToMarkdown } from '@geekx/markdown-core'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
@@ -1749,7 +1749,7 @@ describe('切换编辑器', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/switch-document.test.ts src/switch-editor.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/switch-document.test.ts src/switch-editor.test.tsx
 ```
 
 Expected: FAIL. `switchedDocument` is not defined, or the dialog does not appear.
@@ -1759,8 +1759,8 @@ Expected: FAIL. `switchedDocument` is not defined, or the dialog does not appear
 `packages/csdn/src/switch-document.ts`:
 
 ```ts
-import { htmlToMarkdown } from '@editorx/markdown-core'
-import type { EditorDocument } from '@editorx/toolbar'
+import { htmlToMarkdown } from '@geekx/markdown-core'
+import type { EditorDocument } from '@geekx/toolbar'
 
 export function switchedDocument(doc: EditorDocument): EditorDocument {
   if (doc.editorType === 'markdown') {
@@ -1803,7 +1803,7 @@ const confirmSwitch = () => {
 Render this beside the editor region, inside the shell:
 
 ```tsx
-import { Modal, Button } from '@editorx/ui'
+import { Modal, Button } from '@geekx/ui'
 
 <Modal
   open={switchOpen}
@@ -1832,7 +1832,7 @@ Do not write an effect that calls `setValue` or `setEditorType`.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/switch-document.test.ts src/switch-editor.test.tsx src/editor-mount.test.tsx src/publish-shell.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/switch-document.test.ts src/switch-editor.test.tsx src/editor-mount.test.tsx src/publish-shell.test.tsx
 ```
 
 Expected: PASS.
@@ -1865,7 +1865,7 @@ git status
 - Test: `packages/csdn/src/draft-backup.test.ts`, `packages/csdn/src/autosave.test.tsx`
 
 **Interfaces:**
-- Consumes: `readDocument()` and `settings` from the shell. `EditorAdapters.onSaveDraft?(doc: EditorDocument, settings?: PublishSettings): Promise<void>`. `formatMessage(messages.publish.errors.saveDraft, { message })` → `保存草稿失败：{message}`. `messages.publish.status.draftSaved` → `草稿已保存`. `errorMessage` from `@editorx/toolbar`.
+- Consumes: `readDocument()` and `settings` from the shell. `EditorAdapters.onSaveDraft?(doc: EditorDocument, settings?: PublishSettings): Promise<void>`. `formatMessage(messages.publish.errors.saveDraft, { message })` → `保存草稿失败：{message}`. `messages.publish.status.draftSaved` → `草稿已保存`. `errorMessage` from `@geekx/toolbar`.
 - Produces: `DRAFT_STORAGE_KEY = 'editorx-csdn-draft'`. `MAX_TIMER_DELAY = 2147483647`. `CsdnDraftBackup = { document: EditorDocument; settings: PublishSettings; updatedAt: number }`. `draftFingerprint(doc, settings): string` uses markdown source for markdown and html for rich text, plus `editorType`, `title`, and `settings`. `readDraftBackup(storage, key?): CsdnDraftBackup | null`. `writeDraftBackup(storage, backup, key?): void`. `shouldPromptRestore(backup, initialUpdatedAt, initialDoc, initialSettings): boolean`. `CsdnEditorProps.autoSaveInterval?: number`, `initialUpdatedAt?: number`, `draftStorageKey?: string`. Handle gains `getSettings(): PublishSettings` and `saveDraft(): Promise<boolean>`. Root `data-dirty="true" | "false"`. Restore dialog title `恢复本地草稿`.
 
 - [ ] **Step 1: Write the failing test**
@@ -1873,8 +1873,8 @@ git status
 `packages/csdn/src/draft-backup.test.ts`:
 
 ```ts
-import { createSettings } from '@editorx/publish'
-import type { EditorDocument } from '@editorx/toolbar'
+import { createSettings } from '@geekx/publish'
+import type { EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import {
   draftFingerprint,
@@ -1928,7 +1928,7 @@ describe('draft backup', () => {
 `packages/csdn/src/autosave.test.tsx`:
 
 ```tsx
-import { createSettings } from '@editorx/publish'
+import { createSettings } from '@geekx/publish'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
@@ -2086,7 +2086,7 @@ describe('自动保存与本地备份', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/draft-backup.test.ts src/autosave.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/draft-backup.test.ts src/autosave.test.tsx
 ```
 
 Expected: FAIL. `draftFingerprint` or `DRAFT_STORAGE_KEY` is not defined, or the restore dialog is missing.
@@ -2096,7 +2096,7 @@ Expected: FAIL. `draftFingerprint` or `DRAFT_STORAGE_KEY` is not defined, or the
 `packages/csdn/src/draft-backup.ts`:
 
 ```ts
-import type { EditorDocument, PublishSettings } from '@editorx/toolbar'
+import type { EditorDocument, PublishSettings } from '@geekx/toolbar'
 
 export const DRAFT_STORAGE_KEY = 'editorx-csdn-draft'
 export const MAX_TIMER_DELAY = 2_147_483_647
@@ -2286,7 +2286,7 @@ Do not pass `autoSaveInterval` to `MarkdownEditor`.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/draft-backup.test.ts src/autosave.test.tsx src/switch-editor.test.tsx src/publish-shell.test.tsx src/shell.test.tsx
+pnpm --filter @geekx/csdn exec vitest run src/draft-backup.test.ts src/autosave.test.tsx src/switch-editor.test.tsx src/publish-shell.test.tsx src/shell.test.tsx
 ```
 
 Expected: PASS. The failure test shows one error toast, and cancel keeps `足够长的标题`.
@@ -2365,7 +2365,7 @@ describe('/csdn 页面契约', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/playground-contract.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/playground-contract.test.ts
 ```
 
 Expected: FAIL. `apps/playground/app/csdn/page.tsx` cannot be read.
@@ -2375,7 +2375,7 @@ Expected: FAIL. `apps/playground/app/csdn/page.tsx` cannot be read.
 `apps/playground/app/csdn/page.tsx`:
 
 ```tsx
-import type { EditorType } from '@editorx/toolbar'
+import type { EditorType } from '@geekx/toolbar'
 import { CsdnPlayground } from './csdn-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
@@ -2440,8 +2440,8 @@ html:has(.pg-csdn) body {
 
 import '../quota-notice.css'
 import './csdn.css'
-import { CsdnEditor } from '@editorx/csdn'
-import type { EditorExtension, EditorType } from '@editorx/toolbar'
+import { CsdnEditor } from '@geekx/csdn'
+import type { EditorExtension, EditorType } from '@geekx/toolbar'
 import { useEffect, useMemo, useState } from 'react'
 import { csdnDemoExtensions } from '../markdown/csdn-demo-extensions'
 import { QuotaNotice } from '../quota-notice'
@@ -2571,9 +2571,9 @@ slots={{
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn build
-pnpm --filter @editorx/csdn exec vitest run src/playground-contract.test.ts src/editor-mount.test.tsx
-pnpm --filter @editorx/playground exec tsc --noEmit
+pnpm --filter @geekx/csdn build
+pnpm --filter @geekx/csdn exec vitest run src/playground-contract.test.ts src/editor-mount.test.tsx
+pnpm --filter @geekx/playground exec tsc --noEmit
 ```
 
 Expected: PASS. `tsc` exits 0.
@@ -2711,7 +2711,7 @@ lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
-pnpm --filter @editorx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
+pnpm --filter @geekx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
 ```
 
 Expected: FAIL. Functional assertions fail until the page matches, or the visual spec fails because `csdn-markdown-light.png` / `csdn-richtext-light.png` have no darwin snapshot yet. A failure in an unrelated spec is not this task.
@@ -2725,7 +2725,7 @@ On darwin, after functional tests pass, write only this spec's snapshots:
 ```bash
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/playground exec playwright test e2e/csdn-visual.spec.ts --project=chromium --update-snapshots
+pnpm --filter @geekx/playground exec playwright test e2e/csdn-visual.spec.ts --project=chromium --update-snapshots
 ```
 
 Do not pass any other spec file to `--update-snapshots`. Do not touch win32 PNGs or existing snapshot folders.
@@ -2735,7 +2735,7 @@ Do not pass any other spec file to `--update-snapshots`. Do not touch win32 PNGs
 ```bash
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
+pnpm --filter @geekx/playground exec playwright test e2e/csdn.spec.ts e2e/csdn-visual.spec.ts --project=chromium
 lsof -ti tcp:3100 | xargs kill -9 2>/dev/null || true
 ```
 
@@ -2808,7 +2808,7 @@ describe('阶段 7 交接', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/handoff-contract.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/handoff-contract.test.ts
 ```
 
 Expected: FAIL. `phase7-notes-from-6.md` cannot be read.
@@ -2820,11 +2820,11 @@ Write `docs/superpowers/handoff/phase7-notes-from-6.md` in Chinese with these se
 ```markdown
 # 阶段 6 交给阶段 7 的笔记
 
-阶段 6 代码 HEAD：`<short hash>`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@editorx/csdn` 的 `<CsdnEditor />`。阶段 7 做 `csdn-extensions` 时以本文为准。
+阶段 6 代码 HEAD：`<short hash>`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@geekx/csdn` 的 `<CsdnEditor />`。阶段 7 做 `csdn-extensions` 时以本文为准。
 
 ## 代码范围
 
-`<CsdnEditor />` 组合顶栏、一个编辑器、发布设置、确认切换和自动保存。`extensions` 默认是空数组。`@editorx/csdn-extensions` 尚未创建。
+`<CsdnEditor />` 组合顶栏、一个编辑器、发布设置、确认切换和自动保存。`extensions` 默认是空数组。`@geekx/csdn-extensions` 尚未创建。
 
 ## 顶栏
 
@@ -2901,7 +2901,7 @@ Leave the stale win32 baseline list unchanged.
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/csdn exec vitest run src/handoff-contract.test.ts
+pnpm --filter @geekx/csdn exec vitest run src/handoff-contract.test.ts
 test "$(git branch --show-current)" = develop
 git diff --check
 ```

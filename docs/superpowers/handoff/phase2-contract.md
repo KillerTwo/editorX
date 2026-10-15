@@ -1,6 +1,6 @@
 # Phase 2 shared contract (controller-defined; binding for plans 2a and 2b)
 
-Package: `packages/markdown-core` → `@editorx/markdown-core`. Framework-free TS (no React, NO 'use client' banner). Build: tsup ESM + d.ts, single entry `src/index.ts`, plus `./styles.css` export if the package ships styles (tooling/copy-css.mjs skips when `src/styles.css` is missing). Scaffold mirrors packages/theme (tsconfig extends tooling/tsconfig.base.json, vitest jsdom + tooling/test/setup-dom.ts) minus the 'use client' prepend.
+Package: `packages/markdown-core` → `@geekx/markdown-core`. Framework-free TS (no React, NO 'use client' banner). Build: tsup ESM + d.ts, single entry `src/index.ts`, plus `./styles.css` export if the package ships styles (tooling/copy-css.mjs skips when `src/styles.css` is missing). Scaffold mirrors packages/theme (tsconfig extends tooling/tsconfig.base.json, vitest jsdom + tooling/test/setup-dom.ts) minus the 'use client' prepend.
 
 ## File ownership
 - Plan 2a owns: package scaffold; `src/types.ts`; `src/sections.ts`; `src/renderer/**`; `src/commands/**`; `src/utils/**`; `src/index.ts` (2b appends exports).

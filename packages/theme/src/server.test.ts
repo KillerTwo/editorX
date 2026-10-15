@@ -3,7 +3,7 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { isThemeMode, resolveTheme } from './server'
 
-describe('@editorx/theme/server 源码入口', () => {
+describe('@geekx/theme/server 源码入口', () => {
   it('导出可用的 resolveTheme 与 isThemeMode', () => {
     expect(resolveTheme('system', true)).toBe('dark')
     expect(resolveTheme('light', true)).toBe('light')

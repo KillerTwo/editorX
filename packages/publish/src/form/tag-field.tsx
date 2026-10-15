@@ -1,5 +1,5 @@
-import { useMessages } from '@editorx/toolbar'
-import { Tag } from '@editorx/ui'
+import { useMessages } from '@geekx/toolbar'
+import { Tag } from '@geekx/ui'
 import { useEffect, useRef, useState } from 'react'
 import { PlusIcon } from '../icons'
 import { MAX_TAGS } from '../validate'

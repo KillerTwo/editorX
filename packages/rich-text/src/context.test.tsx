@@ -1,4 +1,4 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'

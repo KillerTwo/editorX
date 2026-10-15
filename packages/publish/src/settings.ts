@@ -1,4 +1,4 @@
-import type { CoverMode, EditorDocument, EditorType, PublishCover, PublishPayload, PublishSettings } from '@editorx/toolbar'
+import type { CoverMode, EditorDocument, EditorType, PublishCover, PublishPayload, PublishSettings } from '@geekx/toolbar'
 
 export const FALLBACK_DOC: EditorDocument = { editorType: 'markdown', title: '', html: '' }
 

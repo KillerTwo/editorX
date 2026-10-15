@@ -1,4 +1,4 @@
-# @editorx/theme
+# @geekx/theme
 
 ## 0.1.0
 

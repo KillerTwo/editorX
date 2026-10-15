@@ -1,5 +1,5 @@
-import { useMessages } from '@editorx/toolbar'
-import { Tooltip } from '@editorx/ui'
+import { useMessages } from '@geekx/toolbar'
+import { Tooltip } from '@geekx/ui'
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { cx } from '../cx'
 import { HelpIcon } from '../icons'

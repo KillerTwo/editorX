@@ -1,8 +1,8 @@
-# Phase 2a：`@editorx/markdown-core` 渲染与命令 Implementation Plan
+# Phase 2a：`@geekx/markdown-core` 渲染与命令 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 新建框架无关的 `@editorx/markdown-core` 包，提供共享类型、section 切分、增量 Markdown 渲染器（GFM / 脚注 / KaTeX / emoji / Mermaid 占位 / ex-embed / Prism / DOMPurify）、Mermaid 懒渲染、纯函数编辑命令与导入导出工具。
+**Goal:** 新建框架无关的 `@geekx/markdown-core` 包，提供共享类型、section 切分、增量 Markdown 渲染器（GFM / 脚注 / KaTeX / emoji / Mermaid 占位 / ex-embed / Prism / DOMPurify）、Mermaid 懒渲染、纯函数编辑命令与导入导出工具。
 
 **Architecture:** `splitSections` 用逐行扫描（跳过围栏代码）在 ATX/setext 标题处切段，渲染器与 2b 的编辑器高亮共用它以保证 section 下标一致。渲染器对每段独立调用 markdown-it，按「全局定义签名 + 段文本」缓存净化后的段 HTML；标题 id 与 `[TOC]` 在组装阶段用全文 slugger 统一回填。命令是 `TextState → TextState` 纯函数，`runCommand` 把新旧文本的最小差异区间交给 `EditorEngine.replace`。
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- 包名 `@editorx/markdown-core`，目录 `packages/markdown-core`；框架无关：不得依赖 React，构建产物**不得**带 `'use client'`。
+- 包名 `@geekx/markdown-core`，目录 `packages/markdown-core`；框架无关：不得依赖 React，构建产物**不得**带 `'use client'`。
 - TypeScript `~5.9.3`；vitest `^5.0.3`；ESM（`"type": "module"`）；tsconfig 继承 `tooling/tsconfig.base.json`（`strict`、`noUncheckedIndexedAccess`、`verbatimModuleSyntax`）。
 - 测试环境 jsdom + `../../tooling/test/setup-dom.ts`（与 `packages/theme` 一致）。
 - 输出的类名一律 `ex-` 前缀（`ex-preview-section`、`ex-mermaid`、`ex-embed`、`ex-toc`、`ex-task-list-item` …），CSS 变量一律 `--ex-*`；唯一例外是第三方库自带的约定类名（Prism `token`/`language-*`、KaTeX `katex*`、脚注插件 `footnote*`），保持原样以兼容其生态样式。
@@ -106,7 +106,7 @@ packages/markdown-core/
 
 ```json
 {
-  "name": "@editorx/markdown-core",
+  "name": "@geekx/markdown-core",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": [
@@ -321,7 +321,7 @@ describe('splitSections', () => {
 
 - [ ] **Step 4: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/sections.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/sections.test.ts`
 Expected: FAIL，`Failed to resolve import "./sections"`。
 
 - [ ] **Step 5: 实现 `splitSections`**
@@ -426,17 +426,17 @@ export { splitSections } from './sections'
 - [ ] **Step 7: 安装 workspace 链接并运行测试**
 
 Run: `pnpm install`
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/sections.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/sections.test.ts`
 Expected: PASS（14 tests）。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck; pnpm --filter @editorx/markdown-core build`
+Run: `pnpm --filter @geekx/markdown-core typecheck; pnpm --filter @geekx/markdown-core build`
 Expected: 均成功；`dist/index.js`、`dist/index.d.ts` 生成，控制台出现 `[copy-css] src/styles.css not found, skipping`。
 
 - [ ] **Step 8: Commit**
 
 ```powershell
 git add packages/markdown-core/package.json packages/markdown-core/tsconfig.json packages/markdown-core/tsup.config.ts packages/markdown-core/vitest.config.ts packages/markdown-core/src/types.ts packages/markdown-core/src/sections.ts packages/markdown-core/src/sections.test.ts packages/markdown-core/src/index.ts pnpm-lock.yaml
-git commit -m "feat(markdown-core): 新增 markdown-core 包脚手架、共享类型与 section 切分" -m "1. 新增框架无关的 @editorx/markdown-core 包（tsup ESM + d.ts，不带 'use client'）
+git commit -m "feat(markdown-core): 新增 markdown-core 包脚手架、共享类型与 section 切分" -m "1. 新增框架无关的 @geekx/markdown-core 包（tsup ESM + d.ts，不带 'use client'）
 2. src/types.ts 按 Phase 2 契约定义 EditorEngine、Renderer、TextState 等共享类型
 3. splitSections 在 ATX/setext 标题处切段且不切入围栏代码，段落连续覆盖全文"
 ```
@@ -493,8 +493,8 @@ git commit -m "feat(markdown-core): 新增 markdown-core 包脚手架、共享�
 Run:
 
 ```powershell
-pnpm --filter @editorx/markdown-core add markdown-it@15.0.2 markdown-it-footnote@4.0.0 markdown-it-abbr@2.0.0 markdown-it-sub@2.0.0 markdown-it-sup@2.0.0 markdown-it-mark@4.0.0 markdown-it-emoji@3.1.0 prismjs@1.30.0 dompurify@3.4.16 github-slugger@2.0.0
-pnpm --filter @editorx/markdown-core add -D @types/prismjs@1.26.6
+pnpm --filter @geekx/markdown-core add markdown-it@15.0.2 markdown-it-footnote@4.0.0 markdown-it-abbr@2.0.0 markdown-it-sub@2.0.0 markdown-it-sup@2.0.0 markdown-it-mark@4.0.0 markdown-it-emoji@3.1.0 prismjs@1.30.0 dompurify@3.4.16 github-slugger@2.0.0
+pnpm --filter @geekx/markdown-core add -D @types/prismjs@1.26.6
 ```
 
 Expected: `packages/markdown-core/package.json` 出现 `dependencies` 与 `devDependencies`，`pnpm-lock.yaml` 更新。markdown-it 15 自带类型，**不要**安装 `@types/markdown-it`（会与自带类型冲突）。
@@ -751,7 +751,7 @@ describe('createRenderer — incremental cache', () => {
 
 - [ ] **Step 3: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/renderer/renderer.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/renderer/renderer.test.ts`
 Expected: FAIL，`Failed to resolve import "./renderer"`。
 
 - [ ] **Step 4: 第三方无类型模块声明**
@@ -1392,10 +1392,10 @@ export { createRenderer } from './renderer/renderer'
 
 - [ ] **Step 11: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/renderer/renderer.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/renderer/renderer.test.ts`
 Expected: PASS（全部用例）。若 `中文 标题` 的 slug 断言失败，打印 `new GithubSlugger().slug('中文 标题')` 的实际值并以 github-slugger 行为为准修正**断言**（不要改 slug 算法）。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
+Run: `pnpm --filter @geekx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
 Expected: 均无错误。
 
 - [ ] **Step 12: Commit**
@@ -1435,7 +1435,7 @@ git commit -m "feat(markdown-core): 新增按 section 增量渲染的 Markdown �
 - [ ] **Step 1: 安装依赖**
 
 ```powershell
-pnpm --filter @editorx/markdown-core add katex@0.19.0
+pnpm --filter @geekx/markdown-core add katex@0.19.0
 ```
 
 Expected: `dependencies` 新增 `katex`（emoji 插件已在 Task 2 安装）。
@@ -1624,7 +1624,7 @@ describe('ex-embed fences', () => {
 
 - [ ] **Step 3: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/renderer/extensions.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/renderer/extensions.test.ts`
 Expected: FAIL（`katex` 断言失败、`.ex-mermaid` 为 null 等）。
 
 - [ ] **Step 4: 实现数学插件**
@@ -1906,10 +1906,10 @@ export { isFlowchartJs } from './renderer/fences'
 
 - [ ] **Step 8: 运行测试确认通过（含 Task 2 回归）**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/renderer`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/renderer`
 Expected: PASS（`renderer.test.ts` 与 `extensions.test.ts` 全部通过）。若 `<math` 断言失败，说明 DOMPurify 丢弃了 MathML：检查 `sanitize.ts` 的 `ADD_TAGS` 是否包含 `semantics`、`annotation`，不要改成 `output: 'html'`。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
+Run: `pnpm --filter @geekx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
 Expected: 均无错误。
 
 - [ ] **Step 9: Commit**
@@ -1949,7 +1949,7 @@ git commit -m "feat(markdown-core): 渲染器支持 KaTeX 公式、图表占位�
 - [ ] **Step 1: 安装依赖**
 
 ```powershell
-pnpm --filter @editorx/markdown-core add mermaid@12.1.0 flowchart.js@1.18.0
+pnpm --filter @geekx/markdown-core add mermaid@12.1.0 flowchart.js@1.18.0
 ```
 
 Expected: `dependencies` 新增 `mermaid`、`flowchart.js`；`pnpm-lock.yaml` 中出现 `raphael@2.3.0`。
@@ -2137,7 +2137,7 @@ describe('renderDiagrams — flowchart.js', () => {
 
 - [ ] **Step 3: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/renderer/diagrams.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/renderer/diagrams.test.ts`
 Expected: FAIL，`Failed to resolve import "./diagrams"`。
 
 - [ ] **Step 4: 实现 `renderDiagrams`**
@@ -2296,10 +2296,10 @@ export { FLOWCHART_THEMES, renderDiagrams, type RenderDiagramsOptions } from './
 
 - [ ] **Step 6: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/renderer`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/renderer`
 Expected: PASS（diagrams 11 个用例 + 之前的渲染器用例）。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
+Run: `pnpm --filter @geekx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
 Expected: 均无错误。
 
 - [ ] **Step 7: Commit**
@@ -2546,7 +2546,7 @@ describe('runCommand / execCommand', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/commands`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/commands`
 Expected: FAIL，`Failed to resolve import "./block"`。
 
 - [ ] **Step 3: 实现通用工具**
@@ -2970,10 +2970,10 @@ export type { LinkArgs, PlaceholderArgs } from './commands/inline'
 
 - [ ] **Step 8: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/commands`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/commands`
 Expected: PASS（43 个表驱动用例 + 注册表/模板/minimalDiff/适配器用例）。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
+Run: `pnpm --filter @geekx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
 Expected: 均无错误。若 `cases` 数组中 `commands.heading1` 等与 `CommandTransform<never>` 不兼容，把 `Case` 的第二项类型改为 `CommandTransform<any>` 并加 `// eslint-disable-next-line @typescript-eslint/no-explicit-any`，不要改命令签名。
 
 - [ ] **Step 9: Commit**
@@ -3013,8 +3013,8 @@ git commit -m "feat(markdown-core): 新增纯函数编辑命令与引擎适配�
 - [ ] **Step 1: 安装依赖**
 
 ```powershell
-pnpm --filter @editorx/markdown-core add turndown@7.2.4 @joplin/turndown-plugin-gfm@1.0.68
-pnpm --filter @editorx/markdown-core add -D @types/turndown@5.0.6
+pnpm --filter @geekx/markdown-core add turndown@7.2.4 @joplin/turndown-plugin-gfm@1.0.68
+pnpm --filter @geekx/markdown-core add -D @types/turndown@5.0.6
 ```
 
 - [ ] **Step 2: 写失败测试**
@@ -3179,7 +3179,7 @@ describe('htmlToMarkdown', () => {
 
 - [ ] **Step 3: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/utils`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/utils`
 Expected: FAIL，`Failed to resolve import "./count"`。
 
 - [ ] **Step 4: 实现 `countWords`**
@@ -3440,7 +3440,7 @@ export { exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF, type ExportHtml
 
 - [ ] **Step 8: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/utils`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/utils`
 Expected: PASS。
 
 排障指引（只改实现，不放宽断言）：
@@ -3448,7 +3448,7 @@ Expected: PASS。
 - 表格断言失败：打印实际输出，若 GFM 插件因表格无 `<thead>` 而保留 HTML，检查 markdown-it 输出是否含 `<thead>`（应含）。
 - `importFile` 在 jsdom 中 `file.text` 不存在：jsdom 30 已实现 `Blob.text()`；如环境缺失，改用 `new Response(file).text()`。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
+Run: `pnpm --filter @geekx/markdown-core typecheck; pnpm exec eslint packages/markdown-core`
 Expected: 均无错误。
 
 - [ ] **Step 9: Commit**
@@ -3470,7 +3470,7 @@ git commit -m "feat(markdown-core): 新增字数/段落统计、Markdown/HTML �
 
 **Interfaces:**
 - Consumes: Task 1–6 的全部导出。
-- Produces: `@editorx/markdown-core` 公共 API（2b 只在此文件末尾追加 `engine` / `scroll-sync` 导出）：类型 `EditorEngine, EmbedDef, EngineEvent, EngineOptions, RenderedSection, Renderer, RendererOptions, RenderResult, SectionOffset, Selection, SourceSection, TextState, TocItem, Unsubscribe, RenderDiagramsOptions, CommandName, CommandTransform, CodeBlockArgs, HeadingArgs, MathArgs, MermaidArgs, TableArgs, LinkArgs, PlaceholderArgs, WordCount, HtmlCount, ExportHtmlOptions`；值 `splitSections, createRenderer, isFlowchartJs, renderDiagrams, FLOWCHART_THEMES, commands, execCommand, minimalDiff, runCommand, MERMAID_TEMPLATES, countWords, countHtml, htmlToMarkdown, exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF`。
+- Produces: `@geekx/markdown-core` 公共 API（2b 只在此文件末尾追加 `engine` / `scroll-sync` 导出）：类型 `EditorEngine, EmbedDef, EngineEvent, EngineOptions, RenderedSection, Renderer, RendererOptions, RenderResult, SectionOffset, Selection, SourceSection, TextState, TocItem, Unsubscribe, RenderDiagramsOptions, CommandName, CommandTransform, CodeBlockArgs, HeadingArgs, MathArgs, MermaidArgs, TableArgs, LinkArgs, PlaceholderArgs, WordCount, HtmlCount, ExportHtmlOptions`；值 `splitSections, createRenderer, isFlowchartJs, renderDiagrams, FLOWCHART_THEMES, commands, execCommand, minimalDiff, runCommand, MERMAID_TEMPLATES, countWords, countHtml, htmlToMarkdown, exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF`。
 
 - [ ] **Step 1: 写导出清单测试**
 
@@ -3480,7 +3480,7 @@ git commit -m "feat(markdown-core): 新增字数/段落统计、Markdown/HTML �
 import { describe, expect, it } from 'vitest'
 import * as api from './index'
 
-describe('@editorx/markdown-core public API', () => {
+describe('@geekx/markdown-core public API', () => {
   it('exposes every phase 2a runtime export', () => {
     expect(Object.keys(api)).toEqual(
       expect.arrayContaining([
@@ -3519,7 +3519,7 @@ describe('@editorx/markdown-core public API', () => {
 
 - [ ] **Step 2: 运行测试**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/index.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/index.test.ts`
 Expected: 若前序任务都已追加导出则直接 PASS；若 FAIL，按 Step 3 补齐 `index.ts` 后重跑。
 
 - [ ] **Step 3: 核对 `src/index.ts` 完整内容**
@@ -3571,10 +3571,10 @@ export { exportHtml, exportMarkdown, importFile, KATEX_CSS_HREF, type ExportHtml
 
 - [ ] **Step 4: 全量测试、类型检查与 lint**
 
-Run: `pnpm --filter @editorx/markdown-core test`
+Run: `pnpm --filter @geekx/markdown-core test`
 Expected: 所有测试文件 PASS（sections、renderer、extensions、diagrams、commands、utils、index）。
 
-Run: `pnpm --filter @editorx/markdown-core typecheck`
+Run: `pnpm --filter @geekx/markdown-core typecheck`
 Expected: 无错误。
 
 Run: `pnpm exec eslint packages/markdown-core`
@@ -3582,7 +3582,7 @@ Expected: 无错误。
 
 - [ ] **Step 5: 构建并检查产物**
 
-Run: `pnpm --filter @editorx/markdown-core build`
+Run: `pnpm --filter @geekx/markdown-core build`
 Expected: 生成 `packages/markdown-core/dist/index.js`、`index.d.ts`、`index.js.map`；输出 `[copy-css] src/styles.css not found, skipping`（2b 会创建该文件）。
 
 Run（产物不得含 `'use client'`，应无任何输出）：
@@ -3619,7 +3619,7 @@ Expected: 无输出。
 
 - [ ] **Step 6: 通过 turbo 跑一遍包级流水线**
 
-Run: `pnpm turbo run build typecheck test --filter=@editorx/markdown-core`
+Run: `pnpm turbo run build typecheck test --filter=@geekx/markdown-core`
 Expected: 三个任务全部成功。
 
 - [ ] **Step 7: Commit**

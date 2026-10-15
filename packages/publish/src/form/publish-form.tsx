@@ -9,8 +9,8 @@ import {
   type EditorDocument,
   type MissingAdapterPolicy,
   type PublishOption,
-} from '@editorx/toolbar'
-import { RadioGroup, Select, type ToastType } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { RadioGroup, Select, type ToastType } from '@geekx/ui'
 import { useEffect, useId, useMemo, useRef } from 'react'
 import { adapterState } from '../adapter-state'
 import { extractImages, extractSummary } from '../extract'

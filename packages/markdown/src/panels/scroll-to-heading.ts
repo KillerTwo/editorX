@@ -1,4 +1,4 @@
-import type { EditorEngine } from '@editorx/markdown-core'
+import type { EditorEngine } from '@geekx/markdown-core'
 import type { ViewMode } from '../types'
 
 export interface ScrollToHeadingTarget {

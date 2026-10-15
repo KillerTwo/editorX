@@ -1,8 +1,8 @@
-import { csdnExtensions } from '@editorx/csdn-extensions'
-import { MarkdownEditor, type MarkdownEditorHandle } from '@editorx/markdown'
-import { createSettings, PublishModal, PublishPanel } from '@editorx/publish'
-import { RichTextEditor, type RichTextEditorHandle } from '@editorx/rich-text'
-import { ThemeProvider } from '@editorx/theme'
+import { csdnExtensions } from '@geekx/csdn-extensions'
+import { MarkdownEditor, type MarkdownEditorHandle } from '@geekx/markdown'
+import { createSettings, PublishModal, PublishPanel } from '@geekx/publish'
+import { RichTextEditor, type RichTextEditorHandle } from '@geekx/rich-text'
+import { ThemeProvider } from '@geekx/theme'
 import {
   errorMessage,
   formatMessage,
@@ -12,8 +12,8 @@ import {
   type EditorDocument,
   type EditorType,
   type PublishSettings,
-} from '@editorx/toolbar'
-import { Button, Modal, ToastProvider, useToast } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { Button, Modal, ToastProvider, useToast } from '@geekx/ui'
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from 'react'
 import { cx } from './cx'
 import {

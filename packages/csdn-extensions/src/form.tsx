@@ -1,4 +1,4 @@
-import { errorMessage, formatMessage, type ExtensionContext, type InsertContent, type Template } from '@editorx/toolbar'
+import { errorMessage, formatMessage, type ExtensionContext, type InsertContent, type Template } from '@geekx/toolbar'
 import { useId, type ReactNode } from 'react'
 
 export function ExtField({ label, children }: { label: string; children: (id: string) => ReactNode }) {

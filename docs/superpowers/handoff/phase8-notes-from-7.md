@@ -1,6 +1,6 @@
 # 阶段 7 交给阶段 8 的笔记
 
-阶段 7 代码 HEAD：`ffadfd0`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@editorx/csdn-extensions`。阶段 8 做 Changesets、README 和 npm 发布时以本文为准。
+阶段 7 代码 HEAD：`ffadfd0`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@geekx/csdn-extensions`。阶段 8 做 Changesets、README 和 npm 发布时以本文为准。
 
 ## 包
 

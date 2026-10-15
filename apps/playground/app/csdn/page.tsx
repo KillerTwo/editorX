@@ -1,8 +1,8 @@
-import '@editorx/markdown-core/styles.css'
-import '@editorx/toolbar/styles.css'
-import '@editorx/markdown/styles.css'
+import '@geekx/markdown-core/styles.css'
+import '@geekx/toolbar/styles.css'
+import '@geekx/markdown/styles.css'
 import 'katex/dist/katex.min.css'
-import type { EditorType } from '@editorx/toolbar'
+import type { EditorType } from '@geekx/toolbar'
 import { CsdnPlayground } from './csdn-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>

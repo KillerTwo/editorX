@@ -1,5 +1,5 @@
-import { formatMessage, type Messages } from '@editorx/toolbar'
-import { addDays, timeSlots, toDateKey, type DateKey, type TimeOption } from '@editorx/ui'
+import { formatMessage, type Messages } from '@geekx/toolbar'
+import { addDays, timeSlots, toDateKey, type DateKey, type TimeOption } from '@geekx/ui'
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE

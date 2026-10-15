@@ -1,6 +1,6 @@
 import '../quota-notice.css'
 import './publish.css'
-import type { MissingAdapterPolicy } from '@editorx/toolbar'
+import type { MissingAdapterPolicy } from '@geekx/toolbar'
 import { PublishPlayground } from './publish-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>

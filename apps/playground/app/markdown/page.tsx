@@ -1,10 +1,10 @@
-import '@editorx/markdown-core/styles.css'
-import '@editorx/toolbar/styles.css'
-import '@editorx/markdown/styles.css'
+import '@geekx/markdown-core/styles.css'
+import '@geekx/toolbar/styles.css'
+import '@geekx/markdown/styles.css'
 import 'katex/dist/katex.min.css'
 import '../quota-notice.css'
 import './markdown.css'
-import type { ViewMode } from '@editorx/markdown'
+import type { ViewMode } from '@geekx/markdown'
 import { MarkdownPlayground } from './markdown-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>

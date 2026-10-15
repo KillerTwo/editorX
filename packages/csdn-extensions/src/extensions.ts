@@ -1,4 +1,4 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { csdnAiExtension } from './ai'
 import { csdnInscodeExtension } from './inscode'
 import { csdnResourceExtension } from './resource'

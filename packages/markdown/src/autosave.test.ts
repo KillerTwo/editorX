@@ -1,4 +1,4 @@
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { createDraftSaver } from './autosave'
 import { createEditorStore } from './store'

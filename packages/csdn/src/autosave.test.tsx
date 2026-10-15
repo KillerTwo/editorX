@@ -1,5 +1,5 @@
-import { createSettings } from '@editorx/publish'
-import type { EditorDocument, PublishSettings } from '@editorx/toolbar'
+import { createSettings } from '@geekx/publish'
+import type { EditorDocument, PublishSettings } from '@geekx/toolbar'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderToString } from 'react-dom/server'

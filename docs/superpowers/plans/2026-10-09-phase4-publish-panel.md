@@ -1,8 +1,8 @@
-# 阶段 4：`@editorx/publish` 发布设置面板（`<PublishPanel />` / `<PublishModal />`）实现计划
+# 阶段 4：`@geekx/publish` 发布设置面板（`<PublishPanel />` / `<PublishModal />`）实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 新建 `@editorx/publish` 包，100% 复刻 CSDN「发布文章」设置表单。同一份表单有两种呈现：
+**Goal:** 新建 `@geekx/publish` 包，100% 复刻 CSDN「发布文章」设置表单。同一份表单有两种呈现：
 - Markdown 页面底部的**内联卡片**（参考 `12-36-05`）；
 - 点击「发布文章」弹出的**模态框**（参考 `12-36-37`）。
 
@@ -13,9 +13,9 @@
 - `usePublishController` 持有表单状态（受控/非受控）、校验错误、提交中状态，调用 `adapters.onPublish` / `onSaveDraft` 并发 toast。
 - `PublishForm` 只渲染字段（`FormItem` + 各字段组件），`PublishActions` 渲染按钮，`ScheduleDialog` 是定时发布弹窗；`PublishPanel`（内联）与 `PublishModal`（模态）只是把三者装进不同外壳。
 - 两种呈现的尺寸差异全部在 `styles.css` 中用 `.ex-pub`（内联）/ `.ex-pub--modal`（模态）上的组件私有变量 `--ex-pub-*` 表达；颜色只取 theme 新增的 `--ex-color-pub-*` token。
-- 通用控件 `RadioGroup`、`Checkbox`、`Select`、`ImageCropper`（+ `cropImage`）放进 `@editorx/ui`，供 phase 5/6 复用。
+- 通用控件 `RadioGroup`、`Checkbox`、`Select`、`ImageCropper`（+ `cropImage`）放进 `@geekx/ui`，供 phase 5/6 复用。
 
-**Tech Stack:** React 19、`@editorx/theme` / `@editorx/ui` / `@editorx/toolbar`（类型、Messages、MessagesProvider）、@floating-ui/react 0.27.20、lucide-react 1.53、tsup（`'use client';` banner + copy-css）、Vitest + jsdom + Testing Library + user-event、Next 16 playground、Playwright 1.64（`chromium` project，基线 `*-chromium-win32.png`）。
+**Tech Stack:** React 19、`@geekx/theme` / `@geekx/ui` / `@geekx/toolbar`（类型、Messages、MessagesProvider）、@floating-ui/react 0.27.20、lucide-react 1.53、tsup（`'use client';` banner + copy-css）、Vitest + jsdom + Testing Library + user-event、Next 16 playground、Playwright 1.64（`chromium` project，基线 `*-chromium-win32.png`）。
 
 **Spec:** `docs/superpowers/specs/2026-10-09-csdn-editor-design.md` §5.1（`EditorAdapters`）、§6.3（`<PublishPanel />`）、§6.5（i18n）、§6.6（主题）、§7（缺失 adapter 策略）、§8（tokens-only、发布面板视觉回归 0.1%）、§9（发布表单校验单测）。绑定输入：
 - `.superpowers/phase4-notes-from-3.md`（可复用 API、约定、坑）；
@@ -27,7 +27,7 @@
 ## Global Constraints
 
 - 继承 3a/3b 的全部 Global Constraints：
-  - `'use client'` 只加在 React 包（`@editorx/publish` 是 React 包，tsup banner `'use client';`）；
+  - `'use client'` 只加在 React 包（`@geekx/publish` 是 React 包，tsup banner `'use client';`）；
   - SSR 安全：渲染期间不读 `window` / `document` / `navigator`，DOM 访问只在 effect 或事件里；
   - StrictMode：组件测试统一包 `<StrictMode>`；
   - 只用 `var(--ex-*)`，类名前缀 `ex-`（状态类 `is-*` 除外）；
@@ -36,7 +36,7 @@
   - `restoreMocks: true`；
   - PowerShell 用 `;` 串联；
   - 逐文件 `git add`，中文 Conventional Commits（`-m` 标题 + `-m` 正文）。
-- **依赖方向**：`@editorx/publish` 依赖 `@editorx/theme`、`@editorx/ui`、`@editorx/toolbar`（peer + dev workspace），**绝不依赖** `@editorx/markdown` / `@editorx/markdown-core`。组合成 `<CsdnEditor />` 是 phase 6 的事。
+- **依赖方向**：`@geekx/publish` 依赖 `@geekx/theme`、`@geekx/ui`、`@geekx/toolbar`（peer + dev workspace），**绝不依赖** `@geekx/markdown` / `@geekx/markdown-core`。组合成 `<CsdnEditor />` 是 phase 6 的事。
 - **后端解耦**：只通过 `EditorAdapters`（`onPublish`、`onSaveDraft`、`searchTags`、`getCategories`、`uploadImage`，以及本计划新增的 `getActivities`、`getTopics`）与外界交互。
 - **缺失 adapter 策略**（spec §7，`missingAdapter: 'hide' | 'disable'`，默认 `'hide'`）：
 
@@ -148,7 +148,7 @@ apps/playground/
 | 3 | RadioGroup + Checkbox + Modal `maskClassName`（ui） |
 | 4 | Select（ui） |
 | 5 | ImageCropper + `cropImage`（ui） |
-| 6 | `@editorx/publish` 脚手架 + 纯逻辑 |
+| 6 | `@geekx/publish` 脚手架 + 纯逻辑 |
 | 7 | `useAsyncList` + `usePublishController` |
 | 8 | 字段组件：FormItem / 标签 / 摘要 / 分类 / 选项字段 |
 | 9 | 封面字段 + 裁剪弹窗 |
@@ -270,7 +270,7 @@ describe('发布相关共享类型（typecheck 期断言）', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/toolbar typecheck; pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx
+pnpm --filter @geekx/toolbar typecheck; pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx
 ```
 
 预期：typecheck 报 `ArticleType` / `PublishOption` 等未导出、`getActivities` 不存在；vitest 报 `zhCN.publish` 为 undefined。
@@ -507,7 +507,7 @@ export type {
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/toolbar typecheck; pnpm --filter @editorx/toolbar test; pnpm --filter @editorx/markdown typecheck; pnpm --filter @editorx/playground typecheck
+pnpm --filter @geekx/toolbar typecheck; pnpm --filter @geekx/toolbar test; pnpm --filter @geekx/markdown typecheck; pnpm --filter @geekx/playground typecheck
 ```
 
 预期：全部无错误。`publish-types.test.ts` 运行期为空断言，检查发生在 typecheck；下游既有 `onSaveDraft(doc)` 调用不受影响（`settings` 可选）。
@@ -587,7 +587,7 @@ describe('发布面板 token', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/theme exec vitest run src/styles.test.ts
+pnpm --filter @geekx/theme exec vitest run src/styles.test.ts
 ```
 
 预期：「发布面板 token」36 条全部失败（`expected.get` 为 undefined）。
@@ -765,7 +765,7 @@ pnpm --filter @editorx/theme exec vitest run src/styles.test.ts
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/theme test
+pnpm --filter @geekx/theme test
 ```
 
 预期：全部通过，包括既有的「兜底块覆盖全部颜色 token 且值与主块一致」三条。
@@ -780,7 +780,7 @@ git commit -m "feat(theme): 新增发布面板颜色 token" -m "新增通用的 
 
 ---
 
-### Task 3: `@editorx/ui` —— RadioGroup + Checkbox + Modal `maskClassName`
+### Task 3: `@geekx/ui` —— RadioGroup + Checkbox + Modal `maskClassName`
 
 **Files:**
 - Create: `packages/ui/src/radio-group.tsx`、`radio-group.test.tsx`、`checkbox.tsx`、`checkbox.test.tsx`、`styles.test.ts`（均在 `packages/ui/src/`）
@@ -956,7 +956,7 @@ describe('ui styles.css', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/ui exec vitest run src/radio-group.test.tsx src/checkbox.test.tsx src/modal.test.tsx src/styles.test.ts
+pnpm --filter @geekx/ui exec vitest run src/radio-group.test.tsx src/checkbox.test.tsx src/modal.test.tsx src/styles.test.ts
 ```
 
 预期：找不到 `./radio-group`、`./checkbox`；`maskClassName` 用例失败；「不写死颜色值」因 `.ex-btn--primary` 的 `#fff` 失败。
@@ -1227,7 +1227,7 @@ export type { CheckboxProps } from './checkbox'
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/ui test; pnpm --filter @editorx/ui typecheck
+pnpm --filter @geekx/ui test; pnpm --filter @geekx/ui typecheck
 ```
 
 预期：ui 全部用例通过（含既有 button/modal 用例）；typecheck 无错误。
@@ -1249,7 +1249,7 @@ git commit -m "feat(ui): 新增单选组与复选框，Modal 支持遮罩类名"
 
 ---
 
-### Task 4: `@editorx/ui` —— Select
+### Task 4: `@geekx/ui` —— Select
 
 **Files:**
 - Create: `packages/ui/src/select.tsx`、`packages/ui/src/select.test.tsx`
@@ -1375,7 +1375,7 @@ describe('Select', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/ui exec vitest run src/select.test.tsx
+pnpm --filter @geekx/ui exec vitest run src/select.test.tsx
 ```
 
 预期：找不到 `./select`。
@@ -1401,7 +1401,7 @@ import {
   useListNavigation,
   useRole,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { ChevronDown } from 'lucide-react'
 import { useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { cx } from './cx'
@@ -1550,7 +1550,7 @@ export type { SelectOption, SelectProps } from './select'
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/ui test; pnpm --filter @editorx/ui typecheck
+pnpm --filter @geekx/ui test; pnpm --filter @geekx/ui typecheck
 ```
 
 预期：全部通过。若「键盘」用例首项未获焦，检查 `listRef` 下标是否与 `options` 下标一致（禁用项也占位）、`tabIndex` 是否随 `activeIndex` 更新。
@@ -1566,7 +1566,7 @@ git commit -m "feat(ui): 新增 Select 下拉选择" -m "触发器为 combobox�
 
 ---
 
-### Task 5: `@editorx/ui` —— ImageCropper + `cropImage`
+### Task 5: `@geekx/ui` —— ImageCropper + `cropImage`
 
 **Files:**
 - Create: `packages/ui/src/crop.ts`、`crop.test.ts`、`image-cropper.tsx`、`image-cropper.test.tsx`
@@ -1746,7 +1746,7 @@ describe('ImageCropper', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/ui exec vitest run src/crop.test.ts src/image-cropper.test.tsx
+pnpm --filter @geekx/ui exec vitest run src/crop.test.ts src/image-cropper.test.tsx
 ```
 
 预期：找不到 `./crop`、`./image-cropper`。
@@ -1961,7 +1961,7 @@ export type { CropArea, Size } from './crop'
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/ui test; pnpm --filter @editorx/ui typecheck; pnpm --filter @editorx/ui build
+pnpm --filter @geekx/ui test; pnpm --filter @geekx/ui typecheck; pnpm --filter @geekx/ui build
 ```
 
 预期：全部通过，`dist/index.d.ts` 含 `ImageCropper`、`cropImage`、`Select`、`RadioGroup`、`Checkbox`。
@@ -1979,7 +1979,7 @@ git commit -m "feat(ui): 新增图片裁剪组件与 cropImage" -m "crop.ts 提�
 
 ---
 
-### Task 6: `@editorx/publish` 脚手架 + 纯逻辑
+### Task 6: `@geekx/publish` 脚手架 + 纯逻辑
 
 **Files:**
 - Create: `packages/publish/package.json`、`tsconfig.json`、`tsup.config.ts`、`vitest.config.ts`
@@ -2033,7 +2033,7 @@ git commit -m "feat(ui): 新增图片裁剪组件与 cropImage" -m "crop.ts 提�
 
 ```json
 {
-  "name": "@editorx/publish",
+  "name": "@geekx/publish",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": [
@@ -2057,16 +2057,16 @@ git commit -m "feat(ui): 新增图片裁剪组件与 cropImage" -m "crop.ts 提�
     "typecheck": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
-    "@editorx/theme": "workspace:^",
-    "@editorx/toolbar": "workspace:^",
-    "@editorx/ui": "workspace:^",
+    "@geekx/theme": "workspace:^",
+    "@geekx/toolbar": "workspace:^",
+    "@geekx/ui": "workspace:^",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
@@ -2128,14 +2128,14 @@ export { extractImages, extractSummary, htmlToText } from './extract'
 pnpm install
 ```
 
-预期：workspace 链接 `@editorx/publish`，`pnpm-lock.yaml` 新增 `packages/publish` importer。
+预期：workspace 链接 `@geekx/publish`，`pnpm-lock.yaml` 新增 `packages/publish` importer。
 
 - [ ] **Step 2: 写失败测试**
 
 `packages/publish/src/logic.test.ts`：
 
 ```ts
-import { zhCN, type EditorAdapters, type PublishSettings } from '@editorx/toolbar'
+import { zhCN, type EditorAdapters, type PublishSettings } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import { adapterState } from './adapter-state'
 import { extractImages, extractSummary, htmlToText } from './extract'
@@ -2301,7 +2301,7 @@ describe('adapterState', () => {
 - [ ] **Step 3: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/publish exec vitest run src/logic.test.ts
+pnpm --filter @geekx/publish exec vitest run src/logic.test.ts
 ```
 
 预期：找不到 `./adapter-state`、`./extract` 等模块。
@@ -2311,7 +2311,7 @@ pnpm --filter @editorx/publish exec vitest run src/logic.test.ts
 `packages/publish/src/settings.ts`：
 
 ```ts
-import type { CoverMode, EditorDocument, PublishCover, PublishPayload, PublishSettings } from '@editorx/toolbar'
+import type { CoverMode, EditorDocument, PublishCover, PublishPayload, PublishSettings } from '@geekx/toolbar'
 
 export const COVER_CAPACITY: Record<CoverMode, number> = { single: 1, triple: 3, none: 0 }
 
@@ -2375,7 +2375,7 @@ export function toPayload(doc: EditorDocument, settings: PublishSettings): Publi
 `packages/publish/src/validate.ts`：
 
 ```ts
-import { formatMessage, type Messages, type PublishSettings } from '@editorx/toolbar'
+import { formatMessage, type Messages, type PublishSettings } from '@geekx/toolbar'
 import { COVER_CAPACITY } from './settings'
 
 export const MAX_TAGS = 7
@@ -2453,7 +2453,7 @@ export function firstError(errors: PublishErrors): { field: PublishField; messag
 `packages/publish/src/extract.ts`：
 
 ```ts
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { sliceChars, SUMMARY_MAX } from './validate'
 
 const UPLOADING_PREFIX = 'ex-uploading://'
@@ -2523,7 +2523,7 @@ export function formatScheduleTime(iso: string): string {
 `packages/publish/src/adapter-state.ts`：
 
 ```ts
-import type { AdapterName, EditorAdapters, MissingAdapterPolicy } from '@editorx/toolbar'
+import type { AdapterName, EditorAdapters, MissingAdapterPolicy } from '@geekx/toolbar'
 
 export type AdapterState = 'enabled' | 'disabled' | 'hidden'
 
@@ -2536,7 +2536,7 @@ export function adapterState(adapters: EditorAdapters, name: AdapterName, policy
 - [ ] **Step 5: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/publish test; pnpm --filter @editorx/publish typecheck; pnpm --filter @editorx/publish build
+pnpm --filter @geekx/publish test; pnpm --filter @geekx/publish typecheck; pnpm --filter @geekx/publish build
 ```
 
 预期：`logic.test.ts` 全部通过；typecheck 无错误；`dist/index.js` 首行 `'use client';`，`dist/styles.css` 存在。
@@ -2559,7 +2559,7 @@ git add packages/publish/src/schedule.ts
 git add packages/publish/src/adapter-state.ts
 git add packages/publish/src/logic.test.ts
 git add pnpm-lock.yaml
-git commit -m "feat(publish): 新建发布面板包与表单纯逻辑" -m "新增 @editorx/publish（React 包，tsup 'use client' banner，peer 依赖 theme/ui/toolbar，不依赖 markdown）。" -m "纯函数覆盖默认设置与封面增删、可配置校验规则（标签 1–7、摘要 ≤256、三图封面、转载/翻译原文链接、定时时间、标题 5–100）、正文摘要与图片提取、datetime-local 换算和缺失 adapter 状态。"
+git commit -m "feat(publish): 新建发布面板包与表单纯逻辑" -m "新增 @geekx/publish（React 包，tsup 'use client' banner，peer 依赖 theme/ui/toolbar，不依赖 markdown）。" -m "纯函数覆盖默认设置与封面增删、可配置校验规则（标签 1–7、摘要 ≤256、三图封面、转载/翻译原文链接、定时时间、标题 5–100）、正文摘要与图片提取、datetime-local 换算和缺失 adapter 状态。"
 ```
 
 ---
@@ -2571,7 +2571,7 @@ git commit -m "feat(publish): 新建发布面板包与表单纯逻辑" -m "新�
 - Modify: `packages/publish/src/index.ts`
 
 **Interfaces:**
-- Consumes：Task 6 全部纯函数；`ToastType`（`@editorx/ui`）；`errorMessage` / `formatMessage`。
+- Consumes：Task 6 全部纯函数；`ToastType`（`@geekx/ui`）；`errorMessage` / `formatMessage`。
 - Produces：
   ```ts
   function useAsyncList<T>(load: (() => Promise<T[]>) | undefined, onError: (error: unknown) => void): T[] | null
@@ -2602,7 +2602,7 @@ git commit -m "feat(publish): 新建发布面板包与表单纯逻辑" -m "新�
 `packages/publish/src/controller.test.tsx`：
 
 ```tsx
-import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@editorx/toolbar'
+import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@geekx/toolbar'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createSettings } from './settings'
@@ -2790,7 +2790,7 @@ void _typeCheck
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/publish exec vitest run src/controller.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/controller.test.tsx
 ```
 
 预期：找不到 `./use-async-list`、`./use-publish-controller`。
@@ -2848,8 +2848,8 @@ import {
   type Messages,
   type PublishPayload,
   type PublishSettings,
-} from '@editorx/toolbar'
-import type { ToastType } from '@editorx/ui'
+} from '@geekx/toolbar'
+import type { ToastType } from '@geekx/ui'
 import { useCallback, useRef, useState } from 'react'
 import { formatScheduleTime } from './schedule'
 import { createSettings, toPayload } from './settings'
@@ -2999,7 +2999,7 @@ export type { PublishBusy, PublishController, PublishControllerOptions } from '.
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/publish test; pnpm --filter @editorx/publish typecheck
+pnpm --filter @geekx/publish test; pnpm --filter @geekx/publish typecheck
 ```
 
 预期：全部通过。
@@ -3049,8 +3049,8 @@ git commit -m "feat(publish): 发布表单状态控制器" -m "usePublishControl
 `packages/publish/src/test-utils.tsx`：
 
 ```tsx
-import { ThemeProvider } from '@editorx/theme'
-import { ToastProvider } from '@editorx/ui'
+import { ThemeProvider } from '@geekx/theme'
+import { ToastProvider } from '@geekx/ui'
 import { render, type RenderResult } from '@testing-library/react'
 import { StrictMode, type ReactElement, type ReactNode } from 'react'
 
@@ -3072,7 +3072,7 @@ export function renderWithProviders(ui: ReactElement): RenderResult {
 `packages/publish/src/form/fields.test.tsx`：
 
 ```tsx
-import type { ArticleType, Category } from '@editorx/toolbar'
+import type { ArticleType, Category } from '@geekx/toolbar'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -3290,7 +3290,7 @@ describe('选项字段', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/publish exec vitest run src/form/fields.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/form/fields.test.tsx
 ```
 
 预期：找不到 `./form-item` 等模块。
@@ -3300,7 +3300,7 @@ pnpm --filter @editorx/publish exec vitest run src/form/fields.test.tsx
 `packages/publish/src/types.ts`：
 
 ```ts
-import type { ThemeMode } from '@editorx/theme'
+import type { ThemeMode } from '@geekx/theme'
 import type {
   CoverMode,
   DeepPartial,
@@ -3311,7 +3311,7 @@ import type {
   PublishOption,
   PublishPayload,
   PublishSettings,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 import type { ReactNode } from 'react'
 import type { PublishRules } from './validate'
 
@@ -3401,7 +3401,7 @@ export function PlusIcon({ size }: { size: number }) {
 `packages/publish/src/form/form-item.tsx`：
 
 ```tsx
-import { Tooltip } from '@editorx/ui'
+import { Tooltip } from '@geekx/ui'
 import { CircleHelp } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cx } from '../cx'
@@ -3460,8 +3460,8 @@ export function FormItem({ field, id, label, labelSuffix, required, help, error,
 `packages/publish/src/form/tag-field.tsx`：
 
 ```tsx
-import { formatMessage, useMessages } from '@editorx/toolbar'
-import { Popover, Tag } from '@editorx/ui'
+import { formatMessage, useMessages } from '@geekx/toolbar'
+import { Popover, Tag } from '@geekx/ui'
 import { Plus } from 'lucide-react'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { cx } from '../cx'
@@ -3604,7 +3604,7 @@ function TagSearch({ selected, onAdd, searchTags }: TagSearchProps) {
 `packages/publish/src/form/summary-field.tsx`：
 
 ```tsx
-import { formatMessage, useMessages } from '@editorx/toolbar'
+import { formatMessage, useMessages } from '@geekx/toolbar'
 import { cx } from '../cx'
 import type { PublishVariant } from '../types'
 import { countChars, SUMMARY_MAX } from '../validate'
@@ -3651,8 +3651,8 @@ export function SummaryField({ id, value, onChange, source, variant, invalid }: 
 `packages/publish/src/form/category-field.tsx`：
 
 ```tsx
-import { useMessages, type Category } from '@editorx/toolbar'
-import { Checkbox } from '@editorx/ui'
+import { useMessages, type Category } from '@geekx/toolbar'
+import { Checkbox } from '@geekx/ui'
 import type { AdapterState } from '../adapter-state'
 import type { PublishVariant } from '../types'
 import { labelId } from './form-item'
@@ -3692,8 +3692,8 @@ export function CategoryField({ id, value, onChange, categories, state, variant 
 `packages/publish/src/form/option-fields.tsx`：
 
 ```tsx
-import { useMessages, type ArticleType, type PublishOption } from '@editorx/toolbar'
-import { Checkbox, RadioGroup, Select } from '@editorx/ui'
+import { useMessages, type ArticleType, type PublishOption } from '@geekx/toolbar'
+import { Checkbox, RadioGroup, Select } from '@geekx/ui'
 import type { AdapterState } from '../adapter-state'
 import { VerifiedIcon } from '../icons'
 import type { AgreementLinks } from '../types'
@@ -3854,7 +3854,7 @@ export type {
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/publish test; pnpm --filter @editorx/publish typecheck
+pnpm --filter @geekx/publish test; pnpm --filter @geekx/publish typecheck
 ```
 
 预期：全部通过。
@@ -3908,7 +3908,7 @@ git commit -m "feat(publish): 发布表单字段组件" -m "FormItem 统一渲�
 `packages/publish/src/form/cover-field.test.tsx`：
 
 ```tsx
-import type { PublishCover } from '@editorx/toolbar'
+import type { PublishCover } from '@geekx/toolbar'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -3916,8 +3916,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../test-utils'
 import { CoverField, type CoverFieldProps } from './cover-field'
 
-vi.mock('@editorx/ui', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@editorx/ui')>()),
+vi.mock('@geekx/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@geekx/ui')>()),
   cropImage: vi.fn(async () => new Blob(['png'], { type: 'image/png' })),
 }))
 
@@ -4041,7 +4041,7 @@ describe('CoverField', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/publish exec vitest run src/form/cover-field.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/form/cover-field.test.tsx
 ```
 
 预期：找不到 `./cover-field`。
@@ -4051,8 +4051,8 @@ pnpm --filter @editorx/publish exec vitest run src/form/cover-field.test.tsx
 `packages/publish/src/form/cover-crop-dialog.tsx`：
 
 ```tsx
-import { errorMessage, formatMessage, useMessages } from '@editorx/toolbar'
-import { Button, cropImage, ImageCropper, Modal, type CropArea } from '@editorx/ui'
+import { errorMessage, formatMessage, useMessages } from '@geekx/toolbar'
+import { Button, cropImage, ImageCropper, Modal, type CropArea } from '@geekx/ui'
 import { useState } from 'react'
 
 export const COVER_ASPECT = 16 / 9
@@ -4119,8 +4119,8 @@ import {
   useMessages,
   type CoverMode,
   type PublishCover,
-} from '@editorx/toolbar'
-import { RadioGroup } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { RadioGroup } from '@geekx/ui'
 import { Trash2 } from 'lucide-react'
 import { useRef, useState, type ChangeEvent } from 'react'
 import type { AdapterState } from '../adapter-state'
@@ -4293,7 +4293,7 @@ export function CoverField(props: CoverFieldProps) {
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/publish test; pnpm --filter @editorx/publish typecheck
+pnpm --filter @geekx/publish test; pnpm --filter @geekx/publish typecheck
 ```
 
 预期：全部通过。
@@ -4338,7 +4338,7 @@ git commit -m "feat(publish): 封面字段与裁剪上传" -m "封面支持从�
 `packages/publish/src/publish-panel.test.tsx`：
 
 ```tsx
-import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@editorx/toolbar'
+import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@geekx/toolbar'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -4659,8 +4659,8 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
     expect(readFileSync(dist, 'utf8').split(/\r?\n/, 1)[0]).toBe("'use client';")
   })
 
-  it('不依赖 @editorx/markdown', () => {
-    expect(readFileSync(dist, 'utf8')).not.toMatch(/@editorx\/markdown/)
+  it('不依赖 @geekx/markdown', () => {
+    expect(readFileSync(dist, 'utf8')).not.toMatch(/@geekx\/markdown/)
   })
 })
 ```
@@ -4668,7 +4668,7 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
 - [ ] **Step 2: 运行确认失败**
 
 ```powershell
-pnpm --filter @editorx/publish exec vitest run src/publish-panel.test.tsx src/styles.test.ts src/ssr.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/publish-panel.test.tsx src/styles.test.ts src/ssr.test.tsx
 ```
 
 预期：找不到 `./publish-panel`；styles 用例因占位 CSS 失败。
@@ -4688,8 +4688,8 @@ import {
   type EditorDocument,
   type MissingAdapterPolicy,
   type PublishOption,
-} from '@editorx/toolbar'
-import { RadioGroup, Select, type ToastType } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { RadioGroup, Select, type ToastType } from '@geekx/ui'
 import { useEffect, useId, useMemo, useRef } from 'react'
 import { adapterState } from '../adapter-state'
 import { extractImages, extractSummary } from '../extract'
@@ -4897,8 +4897,8 @@ export function PublishForm(props: PublishFormProps) {
 `packages/publish/src/actions.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import { useMessages } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { ChevronRight } from 'lucide-react'
 import type { AdapterState } from './adapter-state'
 import { CaretDownIcon } from './icons'
@@ -4977,8 +4977,8 @@ export function PublishActions(props: PublishActionsProps) {
 `packages/publish/src/schedule-dialog.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
-import { Button, Modal } from '@editorx/ui'
+import { useMessages } from '@geekx/toolbar'
+import { Button, Modal } from '@geekx/ui'
 import { useId, useState } from 'react'
 import { defaultScheduleTime, fromLocalInputValue, toLocalInputValue } from './schedule'
 
@@ -5034,9 +5034,9 @@ export function ScheduleDialog({ error, onCancel, onConfirm }: ScheduleDialogPro
 `packages/publish/src/publish-panel.tsx`：
 
 ```tsx
-import { ThemeProvider, useOptionalTheme } from '@editorx/theme'
-import { MessagesProvider, useMessages, type CoverMode, type EditorAdapters } from '@editorx/toolbar'
-import { Modal, ToastProvider, useToast, type ToastType } from '@editorx/ui'
+import { ThemeProvider, useOptionalTheme } from '@geekx/theme'
+import { MessagesProvider, useMessages, type CoverMode, type EditorAdapters } from '@geekx/toolbar'
+import { Modal, ToastProvider, useToast, type ToastType } from '@geekx/ui'
 import { useState, type ReactNode } from 'react'
 import { PublishActions } from './actions'
 import { adapterState } from './adapter-state'
@@ -5603,7 +5603,7 @@ a.ex-pub-link:hover { text-decoration: underline; }
 - [ ] **Step 4: 运行确认通过**
 
 ```powershell
-pnpm --filter @editorx/publish test; pnpm --filter @editorx/publish typecheck; pnpm --filter @editorx/publish build; pnpm --filter @editorx/publish exec vitest run src/dist.test.ts
+pnpm --filter @geekx/publish test; pnpm --filter @geekx/publish typecheck; pnpm --filter @geekx/publish build; pnpm --filter @geekx/publish exec vitest run src/dist.test.ts
 ```
 
 预期：全部通过；`dist.test.ts` 两条在 build 之后执行而非跳过。若「组件中用到的每个 ex-pub-* 类名都有样式」报某个类缺样式，确认它是纯结构包裹（加入 `STRUCTURAL`）还是漏写样式（补 CSS）。
@@ -5629,8 +5629,8 @@ git commit -m "feat(publish): 发布设置面板与发布弹窗" -m "PublishPane
 ### Task 11: playground `/publish` + `/markdown` 接入
 
 **Files:**
-- Modify: `apps/playground/package.json`（依赖 `@editorx/publish`）、`pnpm-lock.yaml`
-- Modify: `apps/playground/app/layout.tsx`（全局引入 `@editorx/publish/styles.css`）、`apps/playground/app/page.tsx`（首页链接）
+- Modify: `apps/playground/package.json`（依赖 `@geekx/publish`）、`pnpm-lock.yaml`
+- Modify: `apps/playground/app/layout.tsx`（全局引入 `@geekx/publish/styles.css`）、`apps/playground/app/page.tsx`（首页链接）
 - Create: `apps/playground/app/publish/page.tsx`、`publish-playground.tsx`、`publish.css`、`fixture.ts`、`mock-adapters.ts`
 - Create: `apps/playground/public/publish/cover-a.svg`、`cover-b.svg`
 - Modify: `apps/playground/app/markdown/page.tsx`、`apps/playground/app/markdown/markdown-playground.tsx`
@@ -5649,18 +5649,18 @@ git commit -m "feat(publish): 发布设置面板与发布弹窗" -m "PublishPane
 
 - [ ] **Step 1: 加依赖与全局样式**
 
-`apps/playground/package.json` 的 `dependencies` 中，在 `"@editorx/markdown-core": "workspace:*",` 之后插入一行：
+`apps/playground/package.json` 的 `dependencies` 中，在 `"@geekx/markdown-core": "workspace:*",` 之后插入一行：
 
 ```json
-    "@editorx/publish": "workspace:*",
+    "@geekx/publish": "workspace:*",
 ```
 
 `apps/playground/app/layout.tsx` 把前两行改为三行（发布面板类名全部以 `ex-pub` 开头，全局引入不影响其他页面）：
 
 ```tsx
-import '@editorx/theme/styles.css'
-import '@editorx/ui/styles.css'
-import '@editorx/publish/styles.css'
+import '@geekx/theme/styles.css'
+import '@geekx/ui/styles.css'
+import '@geekx/publish/styles.css'
 ```
 
 `apps/playground/app/page.tsx` 在 `/markdown` 那一行之后追加：
@@ -5675,7 +5675,7 @@ import '@editorx/publish/styles.css'
 pnpm install
 ```
 
-预期：`pnpm-lock.yaml` 中 `apps/playground` importer 新增 `'@editorx/publish': link:../../packages/publish`。
+预期：`pnpm-lock.yaml` 中 `apps/playground` importer 新增 `'@geekx/publish': link:../../packages/publish`。
 
 - [ ] **Step 2: 正文 fixture 与封面图**
 
@@ -5694,7 +5694,7 @@ pnpm install
 `apps/playground/app/publish/fixture.ts`：
 
 ```ts
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { CSDN_TITLE } from '../markdown/csdn-sample'
 
 export const PARAGRAPHS = [
@@ -5726,7 +5726,7 @@ export const WORD_COUNT = PARAGRAPHS.join('').length
 `apps/playground/app/publish/mock-adapters.ts`：
 
 ```ts
-import type { Category, EditorAdapters, PublishOption } from '@editorx/toolbar'
+import type { Category, EditorAdapters, PublishOption } from '@geekx/toolbar'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -5809,7 +5809,7 @@ export function createPublishAdapters({ categories, onLog }: PublishMockOptions)
 
 ```tsx
 import './publish.css'
-import type { MissingAdapterPolicy } from '@editorx/toolbar'
+import type { MissingAdapterPolicy } from '@geekx/toolbar'
 import { PublishPlayground } from './publish-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
@@ -5834,10 +5834,10 @@ export default async function PublishPage({ searchParams }: { searchParams: Sear
 ```tsx
 'use client'
 
-import { PublishModal, PublishPanel } from '@editorx/publish'
-import { ThemeProvider } from '@editorx/theme'
-import type { EditorAdapters, MissingAdapterPolicy } from '@editorx/toolbar'
-import { Button, ThemeToggle } from '@editorx/ui'
+import { PublishModal, PublishPanel } from '@geekx/publish'
+import { ThemeProvider } from '@geekx/theme'
+import type { EditorAdapters, MissingAdapterPolicy } from '@geekx/toolbar'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { useMemo, useState } from 'react'
 import { INLINE_DOC, MODAL_DOC, WORD_COUNT } from './fixture'
 import { createPublishAdapters, type PublishLogKind } from './mock-adapters'
@@ -5982,11 +5982,11 @@ export function PublishPlayground(props: PublishPlaygroundProps) {
 1. import 区改为（新增 `PublishModal`、`EditorDocument`、`useEffect`、`createPublishAdapters`）：
 
 ```tsx
-import { MarkdownEditor, type MarkdownEditorHandle, type ViewMode } from '@editorx/markdown'
-import { PublishModal } from '@editorx/publish'
-import { ThemeProvider } from '@editorx/theme'
-import type { EditorAdapters, EditorDocument } from '@editorx/toolbar'
-import { Button, ThemeToggle } from '@editorx/ui'
+import { MarkdownEditor, type MarkdownEditorHandle, type ViewMode } from '@geekx/markdown'
+import { PublishModal } from '@geekx/publish'
+import { ThemeProvider } from '@geekx/theme'
+import type { EditorAdapters, EditorDocument } from '@geekx/toolbar'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { ArrowLeftRight, ChevronDown, CircleAlert } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from '../markdown-core/sample'
@@ -6046,13 +6046,13 @@ import { createMockAdapters } from './mock-adapters'
 - [ ] **Step 6: 构建与手动核对**
 
 ```powershell
-pnpm build; pnpm --filter @editorx/playground typecheck; pnpm lint
+pnpm build; pnpm --filter @geekx/playground typecheck; pnpm lint
 ```
 
 预期：全部通过。然后：
 
 ```powershell
-Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @editorx/playground start
+Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @geekx/playground start
 ```
 
 浏览器逐一打开并核对：
@@ -6404,7 +6404,7 @@ test.describe('/markdown 接入', () => {
 - [ ] **Step 2: 运行**
 
 ```powershell
-pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @editorx/playground exec playwright test e2e/publish.spec.ts --project chromium
+pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @geekx/playground exec playwright test e2e/publish.spec.ts --project chromium
 ```
 
 预期：11 个用例全部通过。若失败，先确认是测试写错还是组件行为与 Task 10 契约不符：组件问题回到对应包修复，并补一条能复现的单元测试（同一提交）。
@@ -6412,7 +6412,7 @@ pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction Sile
 再跑既有 e2e，确认 `/markdown` 改动没有破坏 3b 用例：
 
 ```powershell
-pnpm --filter @editorx/playground exec playwright test e2e/markdown.spec.ts e2e/showcase.spec.ts e2e/markdown-core.spec.ts --project chromium
+pnpm --filter @geekx/playground exec playwright test e2e/markdown.spec.ts e2e/showcase.spec.ts e2e/markdown-core.spec.ts --project chromium
 ```
 
 预期：全部通过。
@@ -6779,17 +6779,17 @@ test.describe('发布弹窗（12-36-37，2554×1312）', () => {
 - [ ] **Step 3: 先跑 parity（不生成基线）**
 
 ```powershell
-pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @editorx/playground exec playwright test e2e/publish-parity.spec.ts --project chromium
+pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @geekx/playground exec playwright test e2e/publish-parity.spec.ts --project chromium
 ```
 
-预期：2 个用例通过。若某项超出容差，回到 `packages/publish/src/styles.css`（或 `apps/playground/app/publish/publish.css` 的页面布局）修正尺寸，**不要放宽容差**；修正后重跑 `pnpm --filter @editorx/publish test` 与本命令。
+预期：2 个用例通过。若某项超出容差，回到 `packages/publish/src/styles.css`（或 `apps/playground/app/publish/publish.css` 的页面布局）修正尺寸，**不要放宽容差**；修正后重跑 `pnpm --filter @geekx/publish test` 与本命令。
 
 - [ ] **Step 4: 生成视觉基线并复核**
 
 只对 `publish-visual.spec.ts` 使用 `--update-snapshots`：
 
 ```powershell
-pnpm --filter @editorx/playground exec playwright test e2e/publish-visual.spec.ts --project chromium --update-snapshots
+pnpm --filter @geekx/playground exec playwright test e2e/publish-visual.spec.ts --project chromium --update-snapshots
 ```
 
 预期：生成 7 张 PNG。用图片查看工具逐张打开 `apps/playground/e2e/publish-visual.spec.ts-snapshots/` 下的文件，与 `public/reference/screenshot_2026-10-09_12-36-05.png`、`12-36-37.png` 对比字段顺序、文案、颜色与间距；深色两张检查没有浅色残留（白底卡片、白色操作栏）。
@@ -6797,7 +6797,7 @@ pnpm --filter @editorx/playground exec playwright test e2e/publish-visual.spec.t
 稳定性复核（不带 `--update-snapshots`，每个用例跑两遍）：
 
 ```powershell
-pnpm --filter @editorx/playground exec playwright test e2e/publish-visual.spec.ts e2e/publish-parity.spec.ts --project chromium --repeat-each 2
+pnpm --filter @geekx/playground exec playwright test e2e/publish-visual.spec.ts e2e/publish-parity.spec.ts --project chromium --repeat-each 2
 ```
 
 预期：18 次全部通过（视觉 7 + parity 2，各两遍）。
@@ -6849,9 +6849,9 @@ pnpm build; pnpm test; pnpm typecheck; pnpm lint
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium
+pnpm --filter @geekx/playground exec playwright test --project chromium
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium-perf --no-deps
+pnpm --filter @geekx/playground exec playwright test --project chromium-perf --no-deps
 ```
 
 预期：
@@ -6862,7 +6862,7 @@ pnpm --filter @editorx/playground exec playwright test --project chromium-perf -
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground start
+pnpm --filter @geekx/playground start
 ```
 
 把浏览器窗口内容区调到 2554×1310（或缩放到同等 CSS 像素），用「叠加」模式、50% 透明度逐一打开：
@@ -6890,15 +6890,15 @@ pnpm --filter @editorx/playground start
 Phase 4 HEAD: <填写 git rev-parse --short HEAD>.
 
 ## 可直接复用的 API
-- `@editorx/publish`：<PublishPanel />（内联卡片 + sticky 操作栏，slots.barStart）与 <PublishModal open onClose />（740 宽）。
+- `@geekx/publish`：<PublishPanel />（内联卡片 + sticky 操作栏，slots.barStart）与 <PublishModal open onClose />（740 宽）。
   共用 props：value/defaultValue/onChange、document、adapters、missingAdapter、rules、coverModes、templates、
   agreementLinks、onPublished、locale、theme/defaultTheme/onThemeChange/themeStorageKey、className。
   只依赖 theme/ui/toolbar，可直接接到 <RichTextEditor /> 宿主（传 editorType: 'richtext' 的 EditorDocument）。
 - 纯函数：createSettings / validatePublish / PublishRules（函数替换、false 关闭）/ extractSummary / extractImages /
   htmlToText / toLocalInputValue / fromLocalInputValue。extractImages 跳过 ex-uploading:// 占位，富文本 HTML 同样适用。
-- `@editorx/ui` 新组件：RadioGroup、Checkbox、Select（button + listbox）、ImageCropper + cropImage（16:9 等任意比例）、
+- `@geekx/ui` 新组件：RadioGroup、Checkbox、Select（button + listbox）、ImageCropper + cropImage（16:9 等任意比例）、
   Modal maskClassName。富文本的图片/视频/链接对话框可直接复用。
-- `@editorx/toolbar`：EditorAdapters 新增 getActivities / getTopics，onSaveDraft(doc, settings?)；zhCN.publish 文案桶。
+- `@geekx/toolbar`：EditorAdapters 新增 getActivities / getTopics，onSaveDraft(doc, settings?)；zhCN.publish 文案桶。
 - 主题 token：--ex-color-on-primary（主色按钮文字），--ex-color-pub-*（35 个，仅发布面板使用）。
 
 ## 性能实测（chromium-perf，/markdown，挂载关闭的 PublishModal 之后）

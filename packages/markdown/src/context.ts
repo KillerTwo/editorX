@@ -1,4 +1,4 @@
-import { htmlToMarkdown, type EditorEngine, type Renderer } from '@editorx/markdown-core'
+import { htmlToMarkdown, type EditorEngine, type Renderer } from '@geekx/markdown-core'
 import type {
   EditorAdapters,
   ExtensionContext,
@@ -6,7 +6,7 @@ import type {
   Messages,
   NotifyType,
   ToolbarDialogResult,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 import { createCommandRegistry } from './commands'
 import { registerMarkdownInternals } from './internals'
 import type { EditorStore } from './store'

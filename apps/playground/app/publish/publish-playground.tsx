@@ -1,9 +1,9 @@
 'use client'
 
-import { PublishModal, PublishPanel } from '@editorx/publish'
-import { ThemeProvider } from '@editorx/theme'
-import type { EditorAdapters, MissingAdapterPolicy } from '@editorx/toolbar'
-import { Button, ThemeToggle } from '@editorx/ui'
+import { PublishModal, PublishPanel } from '@geekx/publish'
+import { ThemeProvider } from '@geekx/theme'
+import type { EditorAdapters, MissingAdapterPolicy } from '@geekx/toolbar'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { useMemo, useState } from 'react'
 import { QuotaNotice } from '../quota-notice'
 import { INLINE_DOC, MODAL_DOC, WORD_COUNT } from './fixture'

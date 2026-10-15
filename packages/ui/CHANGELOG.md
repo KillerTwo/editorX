@@ -1,4 +1,4 @@
-# @editorx/ui
+# @geekx/ui
 
 ## 0.1.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @editorx/theme@0.1.0
+  - @geekx/theme@0.1.0

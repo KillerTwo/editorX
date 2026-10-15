@@ -4,7 +4,7 @@
 
 **Goal:** Add Changesets, a root README, and a GitHub npm publish workflow, and prove the packages pack locally without sending them to a registry.
 
-**Architecture:** Nine `@editorx/*` libraries stay publishable and version together from `0.0.0` to `0.1.0`. The repo root and `@editorx/playground` stay private. A local script runs `npm pack --dry-run --offline` only. `.github/workflows/release.yml` is the later human publish path and is not executed in this phase. Duplicate theme tokens become `var()` aliases of the tokens they already equal. `PublishBaseProps.templates` keeps its name. `@editorx/csdn` keeps `@editorx/rich-text` as a normal dependency. `MODAL_LAYER_CLASS`, `ModalLayer`, and `useModalLayerClass` leave the `@editorx/ui` public entry.
+**Architecture:** Nine `@geekx/*` libraries stay publishable and version together from `0.0.0` to `0.1.0`. The repo root and `@geekx/playground` stay private. A local script runs `npm pack --dry-run --offline` only. `.github/workflows/release.yml` is the later human publish path and is not executed in this phase. Duplicate theme tokens become `var()` aliases of the tokens they already equal. `PublishBaseProps.templates` keeps its name. `@geekx/csdn` keeps `@geekx/rich-text` as a normal dependency. `MODAL_LAYER_CLASS`, `ModalLayer`, and `useModalLayerClass` leave the `@geekx/ui` public entry.
 
 **Tech Stack:** pnpm `10.33.4`, Node `>=22`, Changesets CLI major 2, Vitest 5, `node --test` for repo-root checks, GitHub Actions `changesets/action@v1`. No new editor UI.
 
@@ -12,17 +12,17 @@
 
 ## Global Constraints
 
-- Spec §3.2, verbatim: pnpm workspace + Turborepo. tsup 构建：ESM + `.d.ts`，每包导出 `./styles.css`. 所有组件入口文件标注 `'use client'`；CKEditor、cledit 等仅在客户端懒加载. Vitest（单元/组件）、Playwright（E2E + 视觉回归）. Changesets 管理版本发布. 命名：npm scope `@editorx`，CSS 类前缀 `.ex-`，CSS 变量 `--ex-*`.
-- Root `package.json`: `"private": true`, `"packageManager": "pnpm@10.33.4"`, `"engines.node": ">=22"`. `@editorx/playground` is `"private": true`.
-- Branch `develop`. Every pnpm command is preceded by `export COREPACK_INTEGRITY_KEYS=0`. Package tests: `pnpm --filter @editorx/NAME exec vitest run <files>`. The `--` form does not narrow files. Repo-root checks that are not a package test use the exact `node --test` command in that task.
+- Spec §3.2, verbatim: pnpm workspace + Turborepo. tsup 构建：ESM + `.d.ts`，每包导出 `./styles.css`. 所有组件入口文件标注 `'use client'`；CKEditor、cledit 等仅在客户端懒加载. Vitest（单元/组件）、Playwright（E2E + 视觉回归）. Changesets 管理版本发布. 命名：npm scope `@geekx`，CSS 类前缀 `.ex-`，CSS 变量 `--ex-*`.
+- Root `package.json`: `"private": true`, `"packageManager": "pnpm@10.33.4"`, `"engines.node": ">=22"`. `@geekx/playground` is `"private": true`.
+- Branch `develop`. Every pnpm command is preceded by `export COREPACK_INTEGRITY_KEYS=0`. Package tests: `pnpm --filter @geekx/NAME exec vitest run <files>`. The `--` form does not narrow files. Repo-root checks that are not a package test use the exact `node --test` command in that task.
 - Chinese Conventional Commits with a body, via HEREDOC. `git add` lists explicit paths. No `git add .` or `git add -A`. No push, merge, rebase, or amend.
 - The implementer does not run `pnpm install` or `pnpm add`. Task 1 adds `"@changesets/cli": "^2"` to the root `devDependencies`. Major 2 is the Changesets CLI line whose current source leaves `workspace:*` and `workspace:^` unchanged and supports pnpm 10. The repo cannot pin a patch because the lockfile has no Changesets entry. The controller confirms the resolved version at the one install and commits `pnpm-lock.yaml` if that install changes it. The implementer does not commit the lockfile in Task 1.
 - Do not run `npm publish`, `npm login`, or `changeset publish`. Do not point those commands at a registry. The deliverable is the workflow file plus `node scripts/release-dry-run.mjs`.
 - Do not rename `PublishBaseProps.templates` to `articleTemplates`.
 - The only CSS edit is the four aliases in `packages/theme/src/styles.css`. Hex stays only in that file. Do not change any other token value. Do not add hex, `rgb(`, `hsl(`, or `light-dark(` in new code.
 - Do not generate or edit win32 PNGs. Do not edit `docs/superpowers/handoff/RESUME.md`, including its stale win32 filename list. Do not update e2e snapshots. No `playwright install`. Do not touch port 3100.
-- Do not mark `@editorx/theme`, `@editorx/ui`, `@editorx/toolbar`, `@editorx/markdown-core`, `@editorx/markdown`, `@editorx/rich-text`, `@editorx/publish`, `@editorx/csdn-extensions`, or `@editorx/csdn` private. Root and `@editorx/playground` stay `"private": true`.
-- Spec §3.1 says `csdn` 对 `rich-text` 声明为 optional peerDependency. That sentence is not what shipped. Keep `@editorx/rich-text` in `@editorx/csdn` `dependencies` at `workspace:*`. Do not add it to `peerDependencies` or `peerDependenciesMeta`.
+- Do not mark `@geekx/theme`, `@geekx/ui`, `@geekx/toolbar`, `@geekx/markdown-core`, `@geekx/markdown`, `@geekx/rich-text`, `@geekx/publish`, `@geekx/csdn-extensions`, or `@geekx/csdn` private. Root and `@geekx/playground` stay `"private": true`.
+- Spec §3.1 says `csdn` 对 `rich-text` 声明为 optional peerDependency. That sentence is not what shipped. Keep `@geekx/rich-text` in `@geekx/csdn` `dependencies` at `workspace:*`. Do not add it to `peerDependencies` or `peerDependenciesMeta`.
 - Do not call `fetch` from new code. Do not build the feedback tab, real history, or any editor behavior.
 - Out of scope: a `LICENSE` file, renaming packages, and running the GitHub workflow.
 
@@ -31,7 +31,7 @@
 1. A person runs the documented dry-run and expects a local tarball listing, with no publish and no registry contact. `node scripts/release-dry-run.mjs npm publish` exits 1 before packing. The success path uses `npm pack --dry-run --json --ignore-scripts --offline` only. Pinned by Task 8 `scripts/release-workflow.test.mjs` (`拒绝把 npm publish 当成 dry-run`, `offline dry-run 打包九个 0.1.0 库`).
 2. The four duplicate tokens stay equal to the colors they already have: `--ex-color-pub-option-modal` tracks `--ex-color-text-secondary`, `--ex-color-pub-text` tracks `--ex-color-mde-chrome-text`, `--ex-color-pub-link-modal` tracks `--ex-color-mde-preview-link`, and `--ex-color-pub-button-border-modal` tracks `--ex-color-border`, in the main block and all three `@supports` blocks. Neighbor tokens such as `--ex-color-primary` and `--ex-color-pub-button-border` keep their current values. Pinned by Task 3 `packages/theme/src/styles.test.ts` (`重复的发布色标是源 token 的别名`).
 3. `PublishBaseProps.templates` stays `templates?: readonly PublishOption[]`. Its JSDoc says this prop replaces the default article-template list and is not the toolbar content `Template`. Pinned by Task 4 `packages/publish/src/templates-prop.test.ts` (`templates 仍是这个名字，并说明它不是工具栏内容 Template`).
-4. Installing `@editorx/csdn` still installs `@editorx/rich-text`. The nine libraries stay publishable, and the root README says `rich-text` is a separate package that uses CKEditor 5 under GPL. Pinned by Task 2 `scripts/library-publish.test.mjs` (`九个库可发布且 csdn 依赖 rich-text`) and Task 6 `scripts/readme.test.mjs` (`README 写明 rich-text 的 GPL 和已发布的依赖`).
+4. Installing `@geekx/csdn` still installs `@geekx/rich-text`. The nine libraries stay publishable, and the root README says `rich-text` is a separate package that uses CKEditor 5 under GPL. Pinned by Task 2 `scripts/library-publish.test.mjs` (`九个库可发布且 csdn 依赖 rich-text`) and Task 6 `scripts/readme.test.mjs` (`README 写明 rich-text 的 GPL 和已发布的依赖`).
 5. Each library changelog states that `PublishSettings` gained required fields `declaration`, `backupToGitCode`, `template`, and `multiPlatform`. A host that builds those objects by hand can see the four names. Pinned by Task 7 `scripts/changelog-required-fields.test.mjs` (`九个库的 changelog 写明四个必填字段`).
 
 ## File structure
@@ -51,7 +51,7 @@
 
 The nine library names, in this order everywhere:
 
-`@editorx/theme`, `@editorx/ui`, `@editorx/toolbar`, `@editorx/markdown-core`, `@editorx/markdown`, `@editorx/rich-text`, `@editorx/publish`, `@editorx/csdn-extensions`, `@editorx/csdn`.
+`@geekx/theme`, `@geekx/ui`, `@geekx/toolbar`, `@geekx/markdown-core`, `@geekx/markdown`, `@geekx/rich-text`, `@geekx/publish`, `@geekx/csdn-extensions`, `@geekx/csdn`.
 
 ---
 
@@ -66,7 +66,7 @@ The nine library names, in this order everywhere:
 
 **Interfaces:**
 - Consumes: root `package.json` fields `"private": true` and `"packageManager": "pnpm@10.33.4"`. No `.changeset/` directory exists.
-- Produces: `devDependencies["@changesets/cli"] === "^2"`. `.changeset/config.json` has `access` `"public"`, `baseBranch` `"main"`, `commit` `false`, `changelog` `"@changesets/cli/changelog"`, `updateInternalDependencies` `"patch"`, `linked` `[]`, `ignore` `["@editorx/playground"]`, `privatePackages` `{ "version": false, "tag": false }`, and `fixed` equal to one group of the nine library names in the order above. Later tasks call `pnpm exec changeset`.
+- Produces: `devDependencies["@changesets/cli"] === "^2"`. `.changeset/config.json` has `access` `"public"`, `baseBranch` `"main"`, `commit` `false`, `changelog` `"@changesets/cli/changelog"`, `updateInternalDependencies` `"patch"`, `linked` `[]`, `ignore` `["@geekx/playground"]`, `privatePackages` `{ "version": false, "tag": false }`, and `fixed` equal to one group of the nine library names in the order above. Later tasks call `pnpm exec changeset`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -78,15 +78,15 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const PUBLISHABLE = [
-  '@editorx/theme',
-  '@editorx/ui',
-  '@editorx/toolbar',
-  '@editorx/markdown-core',
-  '@editorx/markdown',
-  '@editorx/rich-text',
-  '@editorx/publish',
-  '@editorx/csdn-extensions',
-  '@editorx/csdn',
+  '@geekx/theme',
+  '@geekx/ui',
+  '@geekx/toolbar',
+  '@geekx/markdown-core',
+  '@geekx/markdown',
+  '@geekx/rich-text',
+  '@geekx/publish',
+  '@geekx/csdn-extensions',
+  '@geekx/csdn',
 ]
 
 test('根 package.json 以主版本 2 声明 changesets CLI', () => {
@@ -104,7 +104,7 @@ test('changesets 配置公开九个库并忽略 playground', () => {
   assert.equal(config.baseBranch, 'main')
   assert.equal(config.updateInternalDependencies, 'patch')
   assert.deepEqual(config.linked, [])
-  assert.deepEqual(config.ignore, ['@editorx/playground'])
+  assert.deepEqual(config.ignore, ['@geekx/playground'])
   assert.deepEqual(config.privatePackages, { version: false, tag: false })
   assert.deepEqual(config.fixed, [PUBLISHABLE])
 })
@@ -138,22 +138,22 @@ The value is the major-2 range. Do not write a patch number. Do not run `pnpm in
   "commit": false,
   "fixed": [
     [
-      "@editorx/theme",
-      "@editorx/ui",
-      "@editorx/toolbar",
-      "@editorx/markdown-core",
-      "@editorx/markdown",
-      "@editorx/rich-text",
-      "@editorx/publish",
-      "@editorx/csdn-extensions",
-      "@editorx/csdn"
+      "@geekx/theme",
+      "@geekx/ui",
+      "@geekx/toolbar",
+      "@geekx/markdown-core",
+      "@geekx/markdown",
+      "@geekx/rich-text",
+      "@geekx/publish",
+      "@geekx/csdn-extensions",
+      "@geekx/csdn"
     ]
   ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@editorx/playground"],
+  "ignore": ["@geekx/playground"],
   "privatePackages": {
     "version": false,
     "tag": false
@@ -219,7 +219,7 @@ The controller confirms the resolved `@changesets/cli` version is major 2 and, i
 - Test: `scripts/library-publish.test.mjs`
 
 **Interfaces:**
-- Consumes: each library `package.json` already has `"version": "0.0.0"` and no `private` key. `@editorx/csdn` `dependencies["@editorx/rich-text"]` is `workspace:*`. Its `peerDependencies` are only `react` and `react-dom`. Root `name` is `editorx`. Playground `name` is `@editorx/playground`.
+- Consumes: each library `package.json` already has `"version": "0.0.0"` and no `private` key. `@geekx/csdn` `dependencies["@geekx/rich-text"]` is `workspace:*`. Its `peerDependencies` are only `react` and `react-dom`. Root `name` is `editorx`. Playground `name` is `@geekx/playground`.
 - Produces: each library has `publishConfig: { access: "public" }` and still has no `private` key. Dependency ranges are unchanged. Task 7 later sets `version` to `0.1.0` and this test still passes because it does not read `version`.
 
 - [ ] **Step 1: Write the failing test**
@@ -232,15 +232,15 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const PUBLISHABLE = [
-  ['@editorx/theme', 'packages/theme/package.json'],
-  ['@editorx/ui', 'packages/ui/package.json'],
-  ['@editorx/toolbar', 'packages/toolbar/package.json'],
-  ['@editorx/markdown-core', 'packages/markdown-core/package.json'],
-  ['@editorx/markdown', 'packages/markdown/package.json'],
-  ['@editorx/rich-text', 'packages/rich-text/package.json'],
-  ['@editorx/publish', 'packages/publish/package.json'],
-  ['@editorx/csdn-extensions', 'packages/csdn-extensions/package.json'],
-  ['@editorx/csdn', 'packages/csdn/package.json'],
+  ['@geekx/theme', 'packages/theme/package.json'],
+  ['@geekx/ui', 'packages/ui/package.json'],
+  ['@geekx/toolbar', 'packages/toolbar/package.json'],
+  ['@geekx/markdown-core', 'packages/markdown-core/package.json'],
+  ['@geekx/markdown', 'packages/markdown/package.json'],
+  ['@geekx/rich-text', 'packages/rich-text/package.json'],
+  ['@geekx/publish', 'packages/publish/package.json'],
+  ['@geekx/csdn-extensions', 'packages/csdn-extensions/package.json'],
+  ['@geekx/csdn', 'packages/csdn/package.json'],
 ]
 
 function readJson(relativePath) {
@@ -256,15 +256,15 @@ test('九个库可发布且 csdn 依赖 rich-text', () => {
   }
 
   const csdn = readJson('packages/csdn/package.json')
-  assert.equal(csdn.dependencies['@editorx/rich-text'], 'workspace:*')
-  assert.equal(csdn.peerDependencies['@editorx/rich-text'], undefined)
+  assert.equal(csdn.dependencies['@geekx/rich-text'], 'workspace:*')
+  assert.equal(csdn.peerDependencies['@geekx/rich-text'], undefined)
   assert.equal(csdn.peerDependenciesMeta, undefined)
 
   const root = readJson('package.json')
   const playground = readJson('apps/playground/package.json')
   assert.equal(root.name, 'editorx')
   assert.equal(root.private, true)
-  assert.equal(playground.name, '@editorx/playground')
+  assert.equal(playground.name, '@geekx/playground')
   assert.equal(playground.private, true)
   assert.equal(playground.publishConfig, undefined)
 })
@@ -278,11 +278,11 @@ Run:
 node --test scripts/library-publish.test.mjs
 ```
 
-Expected: FAIL with `undefined !== 'public'` for `@editorx/theme` (or the first library missing `publishConfig.access`).
+Expected: FAIL with `undefined !== 'public'` for `@geekx/theme` (or the first library missing `publishConfig.access`).
 
 - [ ] **Step 3: Write minimal implementation**
 
-In each of the nine library `package.json` files, insert this object immediately after the `"version": "0.0.0",` line. Do not add `"private"`. Do not move `@editorx/rich-text`.
+In each of the nine library `package.json` files, insert this object immediately after the `"version": "0.0.0",` line. Do not add `"private"`. Do not move `@geekx/rich-text`.
 
 ```json
   "publishConfig": {
@@ -319,7 +319,7 @@ git add packages/theme/package.json packages/ui/package.json packages/toolbar/pa
 git commit -m "$(cat <<'EOF'
 build: 声明库包的公开 publishConfig
 
-九个 @editorx 库保持可发布。仓库根和 playground 继续 private，csdn 对 rich-text 仍是普通依赖。
+九个 @geekx 库保持可发布。仓库根和 playground 继续 private，csdn 对 rich-text 仍是普通依赖。
 
 EOF
 )"
@@ -402,7 +402,7 @@ Run:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/theme exec vitest run src/styles.test.ts
+pnpm --filter @geekx/theme exec vitest run src/styles.test.ts
 ```
 
 Expected: FAIL. `expected 'light-dark(#555666, #b8b9c4)' to be 'var(--ex-color-text-secondary)'` on `--ex-color-pub-option-modal`.
@@ -434,7 +434,7 @@ Run:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/theme exec vitest run src/styles.test.ts
+pnpm --filter @geekx/theme exec vitest run src/styles.test.ts
 ```
 
 Expected: PASS. Do not run Playwright and do not update snapshots.
@@ -462,7 +462,7 @@ EOF
 - Test: `packages/publish/src/templates-prop.test.ts`
 
 **Interfaces:**
-- Consumes: `PublishBaseProps.templates?: readonly PublishOption[]` in `packages/publish/src/types.ts`. The current comment says `传入 templates 则整表替换默认列表` and does not mention the toolbar content `Template`. `PublishOption` is imported from `@editorx/toolbar`.
+- Consumes: `PublishBaseProps.templates?: readonly PublishOption[]` in `packages/publish/src/types.ts`. The current comment says `传入 templates 则整表替换默认列表` and does not mention the toolbar content `Template`. `PublishOption` is imported from `@geekx/toolbar`.
 - Produces: the same property name and type. The JSDoc block directly above it contains `这个属性替换默认文章模板列表` and `这不是工具栏内容 Template`. The identifier `articleTemplates` does not appear in the file.
 
 - [ ] **Step 1: Write the failing test**
@@ -492,7 +492,7 @@ Run:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/publish exec vitest run src/templates-prop.test.ts
+pnpm --filter @geekx/publish exec vitest run src/templates-prop.test.ts
 ```
 
 Expected: FAIL because the doc does not contain `这个属性替换默认文章模板列表`.
@@ -519,7 +519,7 @@ Run:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/publish exec vitest run src/templates-prop.test.ts
+pnpm --filter @geekx/publish exec vitest run src/templates-prop.test.ts
 ```
 
 Expected: PASS.
@@ -549,7 +549,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `packages/ui/src/layer.tsx` exports `MODAL_LAYER_CLASS`, `ModalLayer`, and `useModalLayerClass`. In-package files import them from `./layer`. Planner check on 2026-10-13: ripgrep `MODAL_LAYER_CLASS|ModalLayer|useModalLayerClass` over the repo. TypeScript matches are only under `packages/ui/src/`. No file outside that package imports the three names. Docs mention them; product code outside the package does not.
-- Produces: `packages/ui/src/index.ts` does not re-export the three names. A comment in that file records the check. `layer.tsx` still exports them. `dist/index.d.ts` after `pnpm --filter @editorx/ui build` does not contain `MODAL_LAYER_CLASS`. README Task 6 repeats one consumer-facing sentence; this task's comment is the source of record.
+- Produces: `packages/ui/src/index.ts` does not re-export the three names. A comment in that file records the check. `layer.tsx` still exports them. `dist/index.d.ts` after `pnpm --filter @geekx/ui build` does not contain `MODAL_LAYER_CLASS`. README Task 6 repeats one consumer-facing sentence; this task's comment is the source of record.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -572,7 +572,7 @@ function walk(dir: string, out: string[]) {
   }
 }
 
-describe('@editorx/ui 公开入口', () => {
+describe('@geekx/ui 公开入口', () => {
   it('不导出模态层辅助函数，包外也没有引用', () => {
     expect(api).not.toHaveProperty('MODAL_LAYER_CLASS')
     expect(api).not.toHaveProperty('ModalLayer')
@@ -612,7 +612,7 @@ Run:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/ui exec vitest run src/public-entry.test.ts
+pnpm --filter @geekx/ui exec vitest run src/public-entry.test.ts
 ```
 
 Expected: FAIL with a message that the module has property `MODAL_LAYER_CLASS`.
@@ -640,8 +640,8 @@ Run:
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/ui build
-pnpm --filter @editorx/ui exec vitest run src/public-entry.test.ts src/layer.test.tsx
+pnpm --filter @geekx/ui build
+pnpm --filter @geekx/ui exec vitest run src/public-entry.test.ts src/layer.test.tsx
 ```
 
 Expected: PASS. `dist/` is gitignored. Do not `git add` it.
@@ -684,14 +684,14 @@ import test from 'node:test'
 test('README 写明 rich-text 的 GPL 和已发布的依赖', () => {
   const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8')
   const sentences = [
-    '@editorx/rich-text` 是单独的包，使用 CKEditor 5，`licenseKey` 为 `GPL`。',
-    '@editorx/csdn` 把 `@editorx/rich-text` 放在 `dependencies`，版本范围是 `workspace:*`。这是普通依赖，不是 optional peerDependency。',
-    '@editorx/csdn-extensions` 的运行时依赖是 `@editorx/toolbar`、`@editorx/ui`、`@editorx/theme`、`lucide-react`。',
-    '它不依赖 `@editorx/csdn`、`@editorx/markdown`、`@editorx/rich-text`、`@editorx/markdown-core`、`@editorx/publish`。',
-    '@editorx/markdown` 和 `@editorx/rich-text` 不依赖 `@editorx/csdn-extensions`。',
-    '@editorx/csdn` 依赖 `@editorx/csdn-extensions`。',
+    '@geekx/rich-text` 是单独的包，使用 CKEditor 5，`licenseKey` 为 `GPL`。',
+    '@geekx/csdn` 把 `@geekx/rich-text` 放在 `dependencies`，版本范围是 `workspace:*`。这是普通依赖，不是 optional peerDependency。',
+    '@geekx/csdn-extensions` 的运行时依赖是 `@geekx/toolbar`、`@geekx/ui`、`@geekx/theme`、`lucide-react`。',
+    '它不依赖 `@geekx/csdn`、`@geekx/markdown`、`@geekx/rich-text`、`@geekx/markdown-core`、`@geekx/publish`。',
+    '@geekx/markdown` 和 `@geekx/rich-text` 不依赖 `@geekx/csdn-extensions`。',
+    '@geekx/csdn` 依赖 `@geekx/csdn-extensions`。',
     'PublishBaseProps.templates` 替换默认文章模板列表，不是工具栏内容 `Template`。',
-    '@editorx/ui` 的公开入口不导出 `MODAL_LAYER_CLASS`、`ModalLayer`、`useModalLayerClass`。',
+    '@geekx/ui` 的公开入口不导出 `MODAL_LAYER_CLASS`、`ModalLayer`、`useModalLayerClass`。',
     'PublishSettings` 增加了必填字段 `declaration`、`backupToGitCode`、`template`、`multiPlatform`。',
     'pnpm release:dry-run',
     'npm pack --dry-run --offline',
@@ -719,46 +719,46 @@ Create root `README.md`. The block below uses four backticks so the `sh` fences 
 ````md
 # EditorX
 
-EditorX 是一组 `@editorx/*` npm 包，用来在多个项目里复用 CSDN 博客发布编辑器：Markdown 编辑器、富文本编辑器、发布设置。包管理是 pnpm workspace，构建是 Turborepo 和 tsup（ESM 与 `.d.ts`，每个库导出 `./styles.css`）。CSS 类前缀是 `.ex-`，颜色变量是 `--ex-*`。
+EditorX 是一组 `@geekx/*` npm 包，用来在多个项目里复用 CSDN 博客发布编辑器：Markdown 编辑器、富文本编辑器、发布设置。包管理是 pnpm workspace，构建是 Turborepo 和 tsup（ESM 与 `.d.ts`，每个库导出 `./styles.css`）。CSS 类前缀是 `.ex-`，颜色变量是 `--ex-*`。
 
 ## 包
 
 | 包 | 说明 |
 |---|---|
-| `@editorx/theme` | 主题 token |
-| `@editorx/ui` | 界面组件 |
-| `@editorx/toolbar` | 工具栏与共享类型，含 `PublishSettings` |
-| `@editorx/markdown-core` | Markdown 渲染与命令，不依赖 React |
-| `@editorx/markdown` | `<MarkdownEditor />` |
-| `@editorx/rich-text` | `<RichTextEditor />` |
-| `@editorx/publish` | `<PublishPanel />` 与 `<PublishModal />` |
-| `@editorx/csdn-extensions` | AI、投票、视频、资源、InsCode、模板 |
-| `@editorx/csdn` | `<CsdnEditor />` |
-| `@editorx/playground` | Next.js 演示，不发布 |
+| `@geekx/theme` | 主题 token |
+| `@geekx/ui` | 界面组件 |
+| `@geekx/toolbar` | 工具栏与共享类型，含 `PublishSettings` |
+| `@geekx/markdown-core` | Markdown 渲染与命令，不依赖 React |
+| `@geekx/markdown` | `<MarkdownEditor />` |
+| `@geekx/rich-text` | `<RichTextEditor />` |
+| `@geekx/publish` | `<PublishPanel />` 与 `<PublishModal />` |
+| `@geekx/csdn-extensions` | AI、投票、视频、资源、InsCode、模板 |
+| `@geekx/csdn` | `<CsdnEditor />` |
+| `@geekx/playground` | Next.js 演示，不发布 |
 
 ## 依赖
 
-`@editorx/markdown-core` 不依赖 React，也不依赖其他 `@editorx/*` 包。
+`@geekx/markdown-core` 不依赖 React，也不依赖其他 `@geekx/*` 包。
 
-`@editorx/ui` 使用 `@editorx/theme`。`@editorx/toolbar` 使用 `@editorx/theme` 和 `@editorx/ui`。`@editorx/markdown` 依赖 `@editorx/markdown-core`，并使用 `@editorx/theme`、`@editorx/toolbar`、`@editorx/ui`。
+`@geekx/ui` 使用 `@geekx/theme`。`@geekx/toolbar` 使用 `@geekx/theme` 和 `@geekx/ui`。`@geekx/markdown` 依赖 `@geekx/markdown-core`，并使用 `@geekx/theme`、`@geekx/toolbar`、`@geekx/ui`。
 
-`@editorx/rich-text` 是单独的包，使用 CKEditor 5，`licenseKey` 为 `GPL`。它使用 `@editorx/theme`、`@editorx/toolbar`、`@editorx/ui`。它不依赖 `@editorx/csdn` 或 `@editorx/csdn-extensions`。
+`@geekx/rich-text` 是单独的包，使用 CKEditor 5，`licenseKey` 为 `GPL`。它使用 `@geekx/theme`、`@geekx/toolbar`、`@geekx/ui`。它不依赖 `@geekx/csdn` 或 `@geekx/csdn-extensions`。
 
-`@editorx/publish` 使用 `@editorx/theme`、`@editorx/toolbar`、`@editorx/ui`。
+`@geekx/publish` 使用 `@geekx/theme`、`@geekx/toolbar`、`@geekx/ui`。
 
-`@editorx/csdn-extensions` 的运行时依赖是 `@editorx/toolbar`、`@editorx/ui`、`@editorx/theme`、`lucide-react`。它不依赖 `@editorx/csdn`、`@editorx/markdown`、`@editorx/rich-text`、`@editorx/markdown-core`、`@editorx/publish`。
+`@geekx/csdn-extensions` 的运行时依赖是 `@geekx/toolbar`、`@geekx/ui`、`@geekx/theme`、`lucide-react`。它不依赖 `@geekx/csdn`、`@geekx/markdown`、`@geekx/rich-text`、`@geekx/markdown-core`、`@geekx/publish`。
 
-`@editorx/markdown` 和 `@editorx/rich-text` 不依赖 `@editorx/csdn-extensions`。
+`@geekx/markdown` 和 `@geekx/rich-text` 不依赖 `@geekx/csdn-extensions`。
 
-`@editorx/csdn` 依赖 `@editorx/csdn-extensions`。`@editorx/csdn` 还依赖 `@editorx/markdown`、`@editorx/markdown-core`、`@editorx/publish`、`@editorx/rich-text`、`@editorx/theme`、`@editorx/toolbar`、`@editorx/ui`。
+`@geekx/csdn` 依赖 `@geekx/csdn-extensions`。`@geekx/csdn` 还依赖 `@geekx/markdown`、`@geekx/markdown-core`、`@geekx/publish`、`@geekx/rich-text`、`@geekx/theme`、`@geekx/toolbar`、`@geekx/ui`。
 
-`@editorx/csdn` 把 `@editorx/rich-text` 放在 `dependencies`，版本范围是 `workspace:*`。这是普通依赖，不是 optional peerDependency。
+`@geekx/csdn` 把 `@geekx/rich-text` 放在 `dependencies`，版本范围是 `workspace:*`。这是普通依赖，不是 optional peerDependency。
 
-`@editorx/markdown`、`@editorx/rich-text`、`@editorx/publish` 可以不通过 `@editorx/csdn` 单独使用。
+`@geekx/markdown`、`@geekx/rich-text`、`@geekx/publish` 可以不通过 `@geekx/csdn` 单独使用。
 
 ## 公开 API
 
-`@editorx/ui` 的公开入口不导出 `MODAL_LAYER_CLASS`、`ModalLayer`、`useModalLayerClass`。写阶段 8 计划时检索了仓库里的 ts/tsx：包外没有文件 import 这三个名字。包内仍从 `./layer` 使用。
+`@geekx/ui` 的公开入口不导出 `MODAL_LAYER_CLASS`、`ModalLayer`、`useModalLayerClass`。写阶段 8 计划时检索了仓库里的 ts/tsx：包外没有文件 import 这三个名字。包内仍从 `./layer` 使用。
 
 `PublishBaseProps.templates` 替换默认文章模板列表，不是工具栏内容 `Template`。
 
@@ -776,7 +776,7 @@ pnpm test
 
 ## 发布
 
-九个库可以发布到 npm，`publishConfig.access` 为 `public`。仓库根包 `editorx` 和 `@editorx/playground` 保持 `"private": true`。
+九个库可以发布到 npm，`publishConfig.access` 为 `public`。仓库根包 `editorx` 和 `@geekx/playground` 保持 `"private": true`。
 
 本地检查打包内容：
 
@@ -833,7 +833,7 @@ EOF
 - Test: `scripts/changelog-required-fields.test.mjs`
 
 **Interfaces:**
-- Consumes: Task 1 config. `pnpm exec changeset` works because the controller installed `@changesets/cli`. Every library `version` is `0.0.0`. `@editorx/*` keys under `dependencies` and `devDependencies` are `workspace:*`. `@editorx/*` keys under `peerDependencies` are `workspace:^`. Current Changesets `getDependencyVersionEdits` returns early for workspace ranges `*`, `^`, and `~`, so those strings stay.
+- Consumes: Task 1 config. `pnpm exec changeset` works because the controller installed `@changesets/cli`. Every library `version` is `0.0.0`. `@geekx/*` keys under `dependencies` and `devDependencies` are `workspace:*`. `@geekx/*` keys under `peerDependencies` are `workspace:^`. Current Changesets `getDependencyVersionEdits` returns early for workspace ranges `*`, `^`, and `~`, so those strings stay.
 - Produces: each library `version` is `0.1.0`. Each `packages/<dir>/CHANGELOG.md` contains the sentence `` `PublishSettings` 增加必填字段 `declaration`、`backupToGitCode`、`template`、`multiPlatform`。手工构造 `PublishSettings` 或 `PublishPayload` 的宿主需要补上这四个字段。 `` Playground and the repo root have no `CHANGELOG.md`. Playground `version` stays `0.0.0`. The changeset markdown is gone. `commit` is `false`, so this command does not create a git commit.
 
 - [ ] **Step 1: Write the failing test**
@@ -846,15 +846,15 @@ import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const PUBLISHABLE = [
-  ['@editorx/theme', 'packages/theme'],
-  ['@editorx/ui', 'packages/ui'],
-  ['@editorx/toolbar', 'packages/toolbar'],
-  ['@editorx/markdown-core', 'packages/markdown-core'],
-  ['@editorx/markdown', 'packages/markdown'],
-  ['@editorx/rich-text', 'packages/rich-text'],
-  ['@editorx/publish', 'packages/publish'],
-  ['@editorx/csdn-extensions', 'packages/csdn-extensions'],
-  ['@editorx/csdn', 'packages/csdn'],
+  ['@geekx/theme', 'packages/theme'],
+  ['@geekx/ui', 'packages/ui'],
+  ['@geekx/toolbar', 'packages/toolbar'],
+  ['@geekx/markdown-core', 'packages/markdown-core'],
+  ['@geekx/markdown', 'packages/markdown'],
+  ['@geekx/rich-text', 'packages/rich-text'],
+  ['@geekx/publish', 'packages/publish'],
+  ['@geekx/csdn-extensions', 'packages/csdn-extensions'],
+  ['@geekx/csdn', 'packages/csdn'],
 ]
 
 const SENTENCE =
@@ -870,7 +870,7 @@ test('九个库的 changelog 写明四个必填字段', () => {
     for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
       const block = pkg[depType] ?? {}
       for (const [dep, range] of Object.entries(block)) {
-        if (!dep.startsWith('@editorx/')) continue
+        if (!dep.startsWith('@geekx/')) continue
         assert.equal(range, depType === 'peerDependencies' ? 'workspace:^' : 'workspace:*', `${name} ${depType} ${dep}`)
       }
     }
@@ -904,15 +904,15 @@ Expected: FAIL. `version` is `0.0.0`, or reading a `CHANGELOG.md` throws `ENOENT
 
 ```md
 ---
-"@editorx/theme": minor
-"@editorx/ui": minor
-"@editorx/toolbar": minor
-"@editorx/markdown-core": minor
-"@editorx/markdown": minor
-"@editorx/rich-text": minor
-"@editorx/publish": minor
-"@editorx/csdn-extensions": minor
-"@editorx/csdn": minor
+"@geekx/theme": minor
+"@geekx/ui": minor
+"@geekx/toolbar": minor
+"@geekx/markdown-core": minor
+"@geekx/markdown": minor
+"@geekx/rich-text": minor
+"@geekx/publish": minor
+"@geekx/csdn-extensions": minor
+"@geekx/csdn": minor
 ---
 
 `PublishSettings` 增加必填字段 `declaration`、`backupToGitCode`、`template`、`multiPlatform`。手工构造 `PublishSettings` 或 `PublishPayload` 的宿主需要补上这四个字段。
@@ -931,11 +931,11 @@ pnpm exec changeset status
 pnpm exec changeset version
 ```
 
-Expected for `changeset status`: it lists `@editorx/publish` and does not say `No unreleased changesets`.
+Expected for `changeset status`: it lists `@geekx/publish` and does not say `No unreleased changesets`.
 
 Expected for `changeset version`: it deletes `.changeset/publish-settings-required-fields.md`, writes the nine `CHANGELOG.md` files, and sets each library `version` to `0.1.0`. It does not create a git commit. It does not publish.
 
-Then set every `@editorx/*` value under `dependencies` and `devDependencies` back to `workspace:*`, and every `@editorx/*` value under `peerDependencies` back to `workspace:^`, if any line differs. Leave `version` at `0.1.0`. Leave `publishConfig`. Do not add a changelog for the repo root or `apps/playground`.
+Then set every `@geekx/*` value under `dependencies` and `devDependencies` back to `workspace:*`, and every `@geekx/*` value under `peerDependencies` back to `workspace:^`, if any line differs. Leave `version` at `0.1.0`. Leave `publishConfig`. Do not add a changelog for the repo root or `apps/playground`.
 
 - [ ] **Step 5: Run test to verify it passes**
 
@@ -1070,15 +1070,15 @@ import path from 'node:path'
 
 const root = path.resolve(import.meta.dirname, '..')
 const libs = [
-  ['@editorx/theme', 'theme'],
-  ['@editorx/ui', 'ui'],
-  ['@editorx/toolbar', 'toolbar'],
-  ['@editorx/markdown-core', 'markdown-core'],
-  ['@editorx/markdown', 'markdown'],
-  ['@editorx/rich-text', 'rich-text'],
-  ['@editorx/publish', 'publish'],
-  ['@editorx/csdn-extensions', 'csdn-extensions'],
-  ['@editorx/csdn', 'csdn'],
+  ['@geekx/theme', 'theme'],
+  ['@geekx/ui', 'ui'],
+  ['@geekx/toolbar', 'toolbar'],
+  ['@geekx/markdown-core', 'markdown-core'],
+  ['@geekx/markdown', 'markdown'],
+  ['@geekx/rich-text', 'rich-text'],
+  ['@geekx/publish', 'publish'],
+  ['@geekx/csdn-extensions', 'csdn-extensions'],
+  ['@geekx/csdn', 'csdn'],
 ]
 
 const haystack = process.argv.slice(2).join(' ')
@@ -1202,7 +1202,7 @@ Build the nine libraries so `dist/` is present, then run the test. This build do
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/theme --filter @editorx/ui --filter @editorx/toolbar --filter @editorx/markdown-core --filter @editorx/markdown --filter @editorx/rich-text --filter @editorx/publish --filter @editorx/csdn-extensions --filter @editorx/csdn build
+pnpm --filter @geekx/theme --filter @geekx/ui --filter @geekx/toolbar --filter @geekx/markdown-core --filter @geekx/markdown --filter @geekx/rich-text --filter @geekx/publish --filter @geekx/csdn-extensions --filter @geekx/csdn build
 node --test scripts/release-workflow.test.mjs
 ```
 

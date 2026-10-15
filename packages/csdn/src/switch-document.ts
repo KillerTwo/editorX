@@ -1,5 +1,5 @@
-import { htmlToMarkdown } from '@editorx/markdown-core'
-import type { EditorDocument } from '@editorx/toolbar'
+import { htmlToMarkdown } from '@geekx/markdown-core'
+import type { EditorDocument } from '@geekx/toolbar'
 
 export function switchedDocument(doc: EditorDocument): EditorDocument {
   if (doc.editorType === 'markdown') {

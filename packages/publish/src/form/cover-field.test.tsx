@@ -1,5 +1,5 @@
-import type { PublishCover } from '@editorx/toolbar'
-import { cropImage } from '@editorx/ui'
+import type { PublishCover } from '@geekx/toolbar'
+import { cropImage } from '@geekx/ui'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../test-utils'
 import { CoverField, type CoverFieldProps } from './cover-field'
 
-vi.mock('@editorx/ui', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@editorx/ui')>()),
+vi.mock('@geekx/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@geekx/ui')>()),
   cropImage: vi.fn(async () => new Blob(['png'], { type: 'image/png' })),
 }))
 

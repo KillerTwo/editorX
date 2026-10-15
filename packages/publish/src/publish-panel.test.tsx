@@ -1,4 +1,4 @@
-import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@editorx/toolbar'
+import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@geekx/toolbar'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'

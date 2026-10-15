@@ -1,5 +1,5 @@
-import type { ExtensionContext } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { ExtensionContext } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { Upload } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { getMarkdownInternals } from '../internals'

@@ -1,4 +1,4 @@
-import { safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
+import { safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@geekx/toolbar'
 import { useEffect, useRef } from 'react'
 import { cx } from '../cx'
 import { PanelToggleIcon } from '../icons'

@@ -6,8 +6,8 @@ import {
   type Messages,
   type PublishPayload,
   type PublishSettings,
-} from '@editorx/toolbar'
-import type { ToastType } from '@editorx/ui'
+} from '@geekx/toolbar'
+import type { ToastType } from '@geekx/ui'
 import { useCallback, useLayoutEffect, useReducer, useRef, useState } from 'react'
 import { htmlToText } from './extract'
 import { formatScheduleTime, type ScheduleRange } from './schedule'

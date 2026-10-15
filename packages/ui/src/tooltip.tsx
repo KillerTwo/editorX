@@ -13,7 +13,7 @@ import {
   useRole,
   type Placement,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { cloneElement, useState, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 import { useModalLayerClass } from './layer'

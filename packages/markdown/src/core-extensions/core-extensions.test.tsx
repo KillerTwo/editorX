@@ -1,13 +1,13 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderDiagrams } from '@editorx/markdown-core'
-import type { EditorExtension } from '@editorx/toolbar'
+import { renderDiagrams } from '@geekx/markdown-core'
+import type { EditorExtension } from '@geekx/toolbar'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { editorContent, editorRoot, previewEl, renderEditor } from '../test-utils'
 import { linkExtension, markdownCoreExtensions } from '.'
 
-vi.mock('@editorx/markdown-core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@editorx/markdown-core')>()),
+vi.mock('@geekx/markdown-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@geekx/markdown-core')>()),
   renderDiagrams: vi.fn(async (container: HTMLElement, { theme }: { theme: string }) => {
     for (const block of container.querySelectorAll<HTMLElement>('[data-ex-diagram]')) {
       if (block.dataset.exRenderedTheme === theme) continue

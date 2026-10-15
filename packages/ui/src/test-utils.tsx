@@ -1,5 +1,5 @@
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react'
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import type { ReactElement, ReactNode } from 'react'
 
 function Wrapper({ children }: { children: ReactNode }) {

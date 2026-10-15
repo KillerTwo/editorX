@@ -1,4 +1,4 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { SyntaxIcon, TocIcon } from '../icons'
 import { SyntaxPanel } from '../panels/syntax-panel'
 import { TocPanel } from '../panels/toc-panel'

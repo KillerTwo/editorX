@@ -8,7 +8,7 @@
 
 **Architecture:** 所有新 UI 都是 `EditorShell` 内部的小组件，通过 3a 的 `EditorStore`（`useSyncExternalStore`）订阅各自字段，按键路径仍只有 rAF 合批的 store 更新。面板是扩展：`PanelDef` 经 `resolvePanels` 解析后，由 `PanelHost`（内容）和 `SideRail`（图标栏）渲染，内置的目录、语法面板与宿主的 `csdn:*` 演示面板地位相同。保存草稿由框架无关的 `createDraftSaver` 负责：只在内容变化时保存，同一时刻只有一次保存在进行。CSDN 外观只靠 `styles.css` 和新增的 `--ex-color-mde-*` token 实现，不在组件里写尺寸。
 
-**Tech Stack:** React 19、`@editorx/toolbar`/`@editorx/markdown`（3a）、lucide-react 1.53、Vitest + jsdom + Testing Library、Next 16 playground、Playwright 1.64（`chromium` / `chromium-perf` 两个 project，截图基线 `*-chromium-win32.png`）。
+**Tech Stack:** React 19、`@geekx/toolbar`/`@geekx/markdown`（3a）、lucide-react 1.53、Vitest + jsdom + Testing Library、Next 16 playground、Playwright 1.64（`chromium` / `chromium-perf` 两个 project，截图基线 `*-chromium-win32.png`）。
 
 **Spec:** `docs/superpowers/specs/2026-10-09-csdn-editor-design.md` §6.1（状态栏、分隔条、目录/语法面板、`autoSaveInterval`）、§8（视觉还原）、§9（测试）。绑定输入：
 - `.superpowers/phase3-notes-from-2.md`：性能门槛与视觉差距清单；
@@ -85,7 +85,7 @@ packages/markdown/src/
   styles.css                      # Task 4 全文替换为 CSDN 外壳
   styles.test.ts                  # 修改：关键尺寸断言
 apps/playground/
-  package.json                    # 修改：@editorx/markdown、@editorx/toolbar
+  package.json                    # 修改：@geekx/markdown、@geekx/toolbar
   app/page.tsx                    # 修改：/markdown 链接
   app/markdown/page.tsx           # 新增：解析 fixture/view/panel/autosave
   app/markdown/markdown-playground.tsx
@@ -145,7 +145,7 @@ apps/playground/
 `packages/markdown/src/autosave.test.ts`：
 
 ```ts
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { createDraftSaver } from './autosave'
 import { createEditorStore } from './store'
@@ -311,7 +311,7 @@ describe('autoSaveInterval', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/autosave.test.ts src/status-bar.test.tsx`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/autosave.test.ts src/status-bar.test.tsx`
 Expected: FAIL —— `./autosave`、`./status-bar` 不存在。
 
 - [ ] **Step 3: 实现**
@@ -319,7 +319,7 @@ Expected: FAIL —— `./autosave`、`./status-bar` 不存在。
 `packages/markdown/src/autosave.ts`：
 
 ```ts
-import type { EditorAdapters, EditorDocument } from '@editorx/toolbar'
+import type { EditorAdapters, EditorDocument } from '@geekx/toolbar'
 import type { EditorStore } from './store'
 
 export interface DraftSaverDeps {
@@ -382,7 +382,7 @@ export function createDraftSaver(deps: DraftSaverDeps): DraftSaver {
 `packages/markdown/src/status-bar.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import type { ReactNode } from 'react'
 import { useEditorState, type EditorStore } from './store'
 import type { ViewMode } from './types'
@@ -515,7 +515,7 @@ export function StatusBar({
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run; pnpm --filter @editorx/markdown typecheck; pnpm lint`
+Run: `pnpm --filter @geekx/markdown exec vitest run; pnpm --filter @geekx/markdown typecheck; pnpm lint`
 Expected: 全部 PASS（含 3a 既有用例）；类型检查与 lint 无错误。
 
 - [ ] **Step 5: 提交**
@@ -561,7 +561,7 @@ git commit -m "feat(markdown): 状态栏与自动保存草稿" -m "StatusBar 订
 `packages/markdown/src/panels/scroll-to-heading.test.ts`：
 
 ```ts
-import type { EditorEngine, SectionOffset } from '@editorx/markdown-core'
+import type { EditorEngine, SectionOffset } from '@geekx/markdown-core'
 import { describe, expect, it, vi } from 'vitest'
 import { scrollToHeading } from './scroll-to-heading'
 
@@ -624,7 +624,7 @@ describe('scrollToHeading', () => {
 ```tsx
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { resolvePanels, type EditorExtension } from '@editorx/toolbar'
+import { resolvePanels, type EditorExtension } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { markdownCoreExtensions } from '../core-extensions'
 import { renderEditor } from '../test-utils'
@@ -722,7 +722,7 @@ describe('面板', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/panels`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/panels`
 Expected: FAIL —— `./scroll-to-heading` 不存在；侧边栏 navigation 不存在。
 
 - [ ] **Step 3: 实现**
@@ -730,7 +730,7 @@ Expected: FAIL —— `./scroll-to-heading` 不存在；侧边栏 navigation 不
 `packages/markdown/src/panels/scroll-to-heading.ts`：
 
 ```ts
-import type { EditorEngine } from '@editorx/markdown-core'
+import type { EditorEngine } from '@geekx/markdown-core'
 import type { ViewMode } from '../types'
 
 export interface ScrollToHeadingTarget {
@@ -781,7 +781,7 @@ export function scrollToHeading({ id, viewMode, engine, editorHost, previewEl, p
 `packages/markdown/src/panels/panel-host.tsx`：
 
 ```tsx
-import { ExtensionErrorBoundary, safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
+import { ExtensionErrorBoundary, safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@geekx/toolbar'
 import { cx } from '../cx'
 import { useEditorState, type EditorStore } from '../store'
 
@@ -822,7 +822,7 @@ export function PanelHost({
 `packages/markdown/src/panels/side-rail.tsx`：
 
 ```tsx
-import { safeResolveText, useMessages, type ResolvedPanel } from '@editorx/toolbar'
+import { safeResolveText, useMessages, type ResolvedPanel } from '@geekx/toolbar'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { cx } from '../cx'
@@ -885,7 +885,7 @@ export function SideRail({ panels, store }: { panels: readonly ResolvedPanel[]; 
 `packages/markdown/src/panels/toc-panel.tsx`：
 
 ```tsx
-import { useMessages, type ExtensionContext } from '@editorx/toolbar'
+import { useMessages, type ExtensionContext } from '@geekx/toolbar'
 import { getMarkdownInternals } from '../internals'
 import { createEditorStore, useEditorState } from '../store'
 
@@ -923,7 +923,7 @@ export function TocPanel({ ctx }: { ctx: ExtensionContext }) {
 `packages/markdown/src/panels/syntax-panel.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 
 export function SyntaxPanel() {
   const m = useMessages()
@@ -948,7 +948,7 @@ export function SyntaxPanel() {
 `packages/markdown/src/core-extensions/panels.tsx`：
 
 ```tsx
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { BookOpen, ListTree } from 'lucide-react'
 import { SyntaxPanel } from '../panels/syntax-panel'
 import { TocPanel } from '../panels/toc-panel'
@@ -1039,7 +1039,7 @@ export const syntaxPanelExtension: EditorExtension = {
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run; pnpm --filter @editorx/markdown typecheck; pnpm lint`
+Run: `pnpm --filter @geekx/markdown exec vitest run; pnpm --filter @geekx/markdown typecheck; pnpm lint`
 Expected:
 - 全部 PASS，包括 3a 的 `core-extensions.test.tsx`：工具栏分组断言只在 `role=toolbar` 内查询，不受图标栏影响；
 - 类型检查与 lint 无错误。
@@ -1152,7 +1152,7 @@ describe('分隔条', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/splitter.test.tsx`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/splitter.test.tsx`
 Expected: FAIL —— `./splitter` 不存在。
 
 - [ ] **Step 3: 实现**
@@ -1160,7 +1160,7 @@ Expected: FAIL —— `./splitter` 不存在。
 `packages/markdown/src/splitter.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import type { KeyboardEvent, PointerEvent, RefObject } from 'react'
 
 export const SPLIT_MIN = 0.2
@@ -1251,8 +1251,8 @@ export function Splitter({
 `packages/markdown/src/markdown-editor.tsx` 全文替换为（包含 3a 与本计划 Task 1–3 的全部改动）：
 
 ```tsx
-import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
-import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
+import { ClEditEngine, type EditorEngine, type RendererOptions } from '@geekx/markdown-core'
+import { ThemeProvider, useOptionalTheme, useTheme } from '@geekx/theme'
 import {
   collectShortcuts,
   errorMessage,
@@ -1268,8 +1268,8 @@ import {
   useStableArray,
   type EditorAdapters,
   type EditorExtension,
-} from '@editorx/toolbar'
-import { ToastProvider, useToast } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { ToastProvider, useToast } from '@geekx/ui'
 import {
   useCallback,
   useEffect,
@@ -1592,7 +1592,7 @@ function EditorShell({
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run; pnpm --filter @editorx/markdown typecheck; pnpm lint`
+Run: `pnpm --filter @geekx/markdown exec vitest run; pnpm --filter @geekx/markdown typecheck; pnpm lint`
 Expected: 全部 PASS（包括 3a 的 StrictMode、SSR、受控用例以及 Task 1–2 的用例）；类型检查与 lint 无错误。
 
 - [ ] **Step 5: 提交**
@@ -1702,7 +1702,7 @@ describe('CSDN 外壳 token', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/theme exec vitest run src/styles.test.ts; pnpm --filter @editorx/markdown exec vitest run src/styles.test.ts`
+Run: `pnpm --filter @geekx/theme exec vitest run src/styles.test.ts; pnpm --filter @geekx/markdown exec vitest run src/styles.test.ts`
 Expected: FAIL —— token 未定义；外壳尺寸断言不匹配。
 
 - [ ] **Step 3: 实现**
@@ -1777,7 +1777,7 @@ Expected: FAIL —— token 未定义；外壳尺寸断言不匹配。
 `packages/markdown/src/styles.css` 全文替换为：
 
 ```css
-/* @editorx/markdown：CSDN Markdown 编辑器外壳（尺寸按 2558×1308 参考截图实测） */
+/* @geekx/markdown：CSDN Markdown 编辑器外壳（尺寸按 2558×1308 参考截图实测） */
 .ex-mde-theme { display: contents; }
 
 .ex-mde {
@@ -2137,10 +2137,10 @@ Expected: FAIL —— token 未定义；外壳尺寸断言不匹配。
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/theme exec vitest run; pnpm --filter @editorx/markdown exec vitest run`
+Run: `pnpm --filter @geekx/theme exec vitest run; pnpm --filter @geekx/markdown exec vitest run`
 Expected: 全部 PASS。theme 的兜底块一致性用例会自动覆盖新 token（三个兜底块各 16 项，值与 `light-dark()` 一致）；markdown 样式用例中，「只引用已定义变量」「不写死颜色」「类名前缀」以及新增的尺寸断言均通过。
 
-Run: `pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @editorx/playground exec playwright test e2e/showcase.spec.ts e2e/markdown-core.spec.ts --project chromium`
+Run: `pnpm build; Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; pnpm --filter @geekx/playground exec playwright test e2e/showcase.spec.ts e2e/markdown-core.spec.ts --project chromium`
 Expected: 既有截图 `showcase-*`、`markdown-core-*` 无差异（只新增了 token，没有改动已有选择器）。
 
 - [ ] **Step 5: 提交**
@@ -2163,8 +2163,8 @@ git commit -m "style(markdown): 按 CSDN 参考截图还原编辑器外壳" -m "
 
 **Interfaces:**
 - Consumes：
-  - `MarkdownEditor`、`MarkdownEditorHandle`、`ViewMode`（`@editorx/markdown`）；
-  - `EditorExtension`、`EditorAdapters`、`Template`（`@editorx/toolbar`）；
+  - `MarkdownEditor`、`MarkdownEditorHandle`、`ViewMode`（`@geekx/markdown`）；
+  - `EditorExtension`、`EditorAdapters`、`Template`（`@geekx/toolbar`）；
   - `generateLargeDoc`、`SAMPLE`（`../markdown-core/sample`）。
 - Produces：
   - 路由 `/markdown?fixture=sample|csdn&view=edit|split|preview&panel=<id>&autosave=<ms>`，默认依次为 `sample`、`split`、无面板、`30000`。
@@ -2186,10 +2186,10 @@ git commit -m "style(markdown): 按 CSDN 参考截图还原编辑器外壳" -m "
 
 - [ ] **Step 1: 依赖与首页链接**
 
-`apps/playground/package.json` 的 `dependencies` 中，在 `"@editorx/markdown-core": "workspace:*",` 之前加入 `"@editorx/markdown": "workspace:*",`；在 `"@editorx/theme": "workspace:*",` 之后加入 `"@editorx/toolbar": "workspace:*",`。
+`apps/playground/package.json` 的 `dependencies` 中，在 `"@geekx/markdown-core": "workspace:*",` 之前加入 `"@geekx/markdown": "workspace:*",`；在 `"@geekx/theme": "workspace:*",` 之后加入 `"@geekx/toolbar": "workspace:*",`。
 
 Run: `pnpm install`
-Expected: lockfile 更新，`apps/playground/node_modules/@editorx/{markdown,toolbar}` 链接到工作区。
+Expected: lockfile 更新，`apps/playground/node_modules/@geekx/{markdown,toolbar}` 链接到工作区。
 
 `apps/playground/app/page.tsx` 中 `<li><Link href="/markdown-core">编辑引擎 /markdown-core</Link></li>` 之后加入：
 
@@ -2396,7 +2396,7 @@ export const CSDN_SAMPLE = [
 `apps/playground/app/markdown/mock-adapters.ts`：
 
 ```ts
-import type { EditorAdapters, EditorDocument, Template } from '@editorx/toolbar'
+import type { EditorAdapters, EditorDocument, Template } from '@geekx/toolbar'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -2441,8 +2441,8 @@ export function createMockAdapters(onSaved: (doc: EditorDocument) => void): Edit
 `apps/playground/app/markdown/csdn-demo-extensions.tsx`：
 
 ```tsx
-import { errorMessage, type EditorExtension, type ExtensionContext, type Template } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import { errorMessage, type EditorExtension, type ExtensionContext, type Template } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { Bot, History, LayoutTemplate, Megaphone } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -2572,9 +2572,9 @@ export const csdnDemoExtensions: readonly EditorExtension[] = [
 ```tsx
 'use client'
 
-import { MarkdownEditor, type MarkdownEditorHandle, type ViewMode } from '@editorx/markdown'
-import { ThemeProvider } from '@editorx/theme'
-import { Button, ThemeToggle } from '@editorx/ui'
+import { MarkdownEditor, type MarkdownEditorHandle, type ViewMode } from '@geekx/markdown'
+import { ThemeProvider } from '@geekx/theme'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { ArrowLeftRight, ChevronDown, CircleAlert } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from '../markdown-core/sample'
@@ -2670,12 +2670,12 @@ export function MarkdownPlayground(props: MarkdownPlaygroundProps) {
 `apps/playground/app/markdown/page.tsx`：
 
 ```tsx
-import '@editorx/markdown-core/styles.css'
-import '@editorx/toolbar/styles.css'
-import '@editorx/markdown/styles.css'
+import '@geekx/markdown-core/styles.css'
+import '@geekx/toolbar/styles.css'
+import '@geekx/markdown/styles.css'
 import 'katex/dist/katex.min.css'
 import './markdown.css'
-import type { ViewMode } from '@editorx/markdown'
+import type { ViewMode } from '@geekx/markdown'
 import { MarkdownPlayground } from './markdown-playground'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
@@ -2801,12 +2801,12 @@ export default async function MarkdownPage({ searchParams }: { searchParams: Sea
 
 - [ ] **Step 5: 构建与人工冒烟**
 
-Run: `pnpm build; pnpm --filter @editorx/playground typecheck; pnpm lint`
+Run: `pnpm build; pnpm --filter @geekx/playground typecheck; pnpm lint`
 Expected: 构建成功（`/markdown` 为动态路由）；类型检查与 lint 无错误。
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground start
+pnpm --filter @geekx/playground start
 ```
 
 在浏览器打开 `http://localhost:3100/markdown?fixture=csdn&view=edit&panel=csdn:ai`，确认以下各项（之后 Ctrl+C 停止服务）：
@@ -2919,7 +2919,7 @@ export async function latencyStats(page: Page): Promise<LatencyStats> {
 2. 删除 `type LatencyWindow = ...` 到 `async function latencyStats(...) { ... }` 的整段（原第 286–319 行，含两行注释）。
 3. 在 `10k 行文档单次按键延迟` 用例中，把 `await page.evaluate(() => { const w = window as unknown as LatencyWindow ... { capture: true }, ) })`（原第 329–341 行）整段替换为 `await installKeyLatencyProbe(page)`。
 
-Run: `pnpm --filter @editorx/playground typecheck`
+Run: `pnpm --filter @geekx/playground typecheck`
 Expected: 无错误（`markdown-core.spec.ts` 中不再引用 `LatencyWindow`）。
 
 - [ ] **Step 2: 写 `markdown.spec.ts`**
@@ -3245,9 +3245,9 @@ test.describe('性能（MarkdownEditor）', () => {
 ```powershell
 pnpm build
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test e2e/markdown.spec.ts e2e/markdown-core.spec.ts --project chromium
+pnpm --filter @geekx/playground exec playwright test e2e/markdown.spec.ts e2e/markdown-core.spec.ts --project chromium
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium-perf --no-deps
+pnpm --filter @geekx/playground exec playwright test --project chromium-perf --no-deps
 ```
 
 Expected：
@@ -3416,9 +3416,9 @@ test('比对模式：编辑区宽度与预览底色', async ({ page }) => {
 ```powershell
 pnpm build
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test e2e/markdown-visual.spec.ts --project chromium --update-snapshots
+pnpm --filter @geekx/playground exec playwright test e2e/markdown-visual.spec.ts --project chromium --update-snapshots
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test e2e/markdown-visual.spec.ts e2e/markdown-parity.spec.ts --project chromium --repeat-each 2
+pnpm --filter @geekx/playground exec playwright test e2e/markdown-visual.spec.ts e2e/markdown-parity.spec.ts --project chromium --repeat-each 2
 ```
 
 Expected：
@@ -3470,9 +3470,9 @@ Expected:
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium
+pnpm --filter @geekx/playground exec playwright test --project chromium
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium-perf --no-deps
+pnpm --filter @geekx/playground exec playwright test --project chromium-perf --no-deps
 ```
 
 Expected：
@@ -3483,7 +3483,7 @@ Expected：
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground start
+pnpm --filter @geekx/playground start
 ```
 
 把浏览器窗口内容区调到 2558×1308（或缩放到同等 CSS 像素），逐一打开以下页面，用「叠加」模式、50% 透明度对比：
@@ -3511,9 +3511,9 @@ pnpm --filter @editorx/playground start
 Phase 3 = plans 3a + 3b. 3b HEAD: <填写 git rev-parse --short HEAD>.
 
 ## 可直接复用的 API
-- `@editorx/toolbar`：EditorExtension / ToolbarItem / PanelDef / ExtensionContext、resolveToolbar / resolvePanels、
+- `@geekx/toolbar`：EditorExtension / ToolbarItem / PanelDef / ExtensionContext、resolveToolbar / resolvePanels、
   collectShortcuts / handleShortcut、<Toolbar>、MessagesProvider / useMessages、zhCN、EditorAdapters / PublishSettings（暂定形状）。
-- `@editorx/markdown`：<MarkdownEditor />（props：value/defaultValue/onChange/adapters/extensions/coreExtensions/
+- `@geekx/markdown`：<MarkdownEditor />（props：value/defaultValue/onChange/adapters/extensions/coreExtensions/
   toolbarLayout/missingAdapter/autoSaveInterval/viewMode/defaultPanel/showRail/defaultSplit/theme/locale/readOnly/
   placeholder/height/slots{headerEnd,statusCenter,statusEnd}）；ref：focus/getValue/setValue/getHtml/getDocument/
   runCommand/insert/saveDraft/getEngine。

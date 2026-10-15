@@ -1,4 +1,4 @@
-import type { AdapterName, EditorAdapters, MissingAdapterPolicy } from '@editorx/toolbar'
+import type { AdapterName, EditorAdapters, MissingAdapterPolicy } from '@geekx/toolbar'
 
 export type AdapterState = 'enabled' | 'disabled' | 'hidden'
 

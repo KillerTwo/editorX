@@ -1,4 +1,4 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { render, screen } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { describe, expect, it } from 'vitest'

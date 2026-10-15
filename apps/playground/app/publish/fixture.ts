@@ -1,4 +1,4 @@
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { CSDN_TITLE } from '../markdown/csdn-sample'
 
 export const PARAGRAPHS = [

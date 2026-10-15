@@ -1,5 +1,5 @@
 {
-  "name": "@editorx/csdn-extensions",
+  "name": "@geekx/csdn-extensions",
   "version": "0.1.0",
   "publishConfig": {
     "access": "public"
@@ -26,16 +26,16 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "dependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "lucide-react": "^1.53.0"
   }
 }

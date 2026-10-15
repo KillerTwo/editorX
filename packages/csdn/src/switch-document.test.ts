@@ -1,4 +1,4 @@
-import { htmlToMarkdown } from '@editorx/markdown-core'
+import { htmlToMarkdown } from '@geekx/markdown-core'
 import { describe, expect, it } from 'vitest'
 import { switchedDocument } from './switch-document'
 

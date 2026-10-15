@@ -1,4 +1,4 @@
-import type { EditorAdapters, EditorDocument, Template } from '@editorx/toolbar'
+import type { EditorAdapters, EditorDocument, Template } from '@geekx/toolbar'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 

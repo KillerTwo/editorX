@@ -1,4 +1,4 @@
-import type { EditorExtension, ExtensionContext, Messages } from '@editorx/toolbar'
+import type { EditorExtension, ExtensionContext, Messages } from '@geekx/toolbar'
 import { Bold, Heading, Italic } from 'lucide-react'
 import { detectFormats } from '../formats'
 import { StrikeIcon } from '../icons'

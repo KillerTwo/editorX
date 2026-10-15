@@ -1,5 +1,5 @@
-import { errorMessage, type EditorExtension, type ExtensionContext, type Template } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import { errorMessage, type EditorExtension, type ExtensionContext, type Template } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { History } from 'lucide-react'
 import { useEffect, useState } from 'react'
 

@@ -11,9 +11,9 @@ import {
   type HtmlCount,
   type RenderedSection,
   type WordCount,
-} from '@editorx/markdown-core'
-import { ThemeProvider, useTheme } from '@editorx/theme'
-import { Button, ThemeToggle } from '@editorx/ui'
+} from '@geekx/markdown-core'
+import { ThemeProvider, useTheme } from '@geekx/theme'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { useEffect, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from './sample'
 

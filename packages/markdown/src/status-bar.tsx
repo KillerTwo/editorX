@@ -1,4 +1,4 @@
-import { formatMessage, useMessages } from '@editorx/toolbar'
+import { formatMessage, useMessages } from '@geekx/toolbar'
 import { Fragment, type ReactNode } from 'react'
 import { useEditorState, type EditorStore } from './store'
 import type { ViewMode } from './types'

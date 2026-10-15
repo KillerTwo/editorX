@@ -1,5 +1,5 @@
-import { useMessages, type ArticleType, type PublishOption } from '@editorx/toolbar'
-import { Checkbox, RadioGroup, Select } from '@editorx/ui'
+import { useMessages, type ArticleType, type PublishOption } from '@geekx/toolbar'
+import { Checkbox, RadioGroup, Select } from '@geekx/ui'
 import type { AdapterState } from '../adapter-state'
 import { VerifiedIcon } from '../icons'
 import type { AgreementLinks } from '../types'

@@ -1,5 +1,5 @@
-import { createSettings } from '@editorx/publish'
-import { zhCN, type EditorDocument } from '@editorx/toolbar'
+import { createSettings } from '@geekx/publish'
+import { zhCN, type EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { submitPublish } from './submit-publish'
 

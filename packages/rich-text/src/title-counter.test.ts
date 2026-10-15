@@ -1,4 +1,4 @@
-import { zhCN } from '@editorx/toolbar'
+import { zhCN } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import { titleCounter } from './title-counter'
 

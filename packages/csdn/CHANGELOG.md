@@ -1,4 +1,4 @@
-# @editorx/csdn
+# @geekx/csdn
 
 ## 0.1.0
 
@@ -9,11 +9,11 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @editorx/theme@0.1.0
-  - @editorx/ui@0.1.0
-  - @editorx/toolbar@0.1.0
-  - @editorx/markdown-core@0.1.0
-  - @editorx/markdown@0.1.0
-  - @editorx/rich-text@0.1.0
-  - @editorx/publish@0.1.0
-  - @editorx/csdn-extensions@0.1.0
+  - @geekx/theme@0.1.0
+  - @geekx/ui@0.1.0
+  - @geekx/toolbar@0.1.0
+  - @geekx/markdown-core@0.1.0
+  - @geekx/markdown@0.1.0
+  - @geekx/rich-text@0.1.0
+  - @geekx/publish@0.1.0
+  - @geekx/csdn-extensions@0.1.0

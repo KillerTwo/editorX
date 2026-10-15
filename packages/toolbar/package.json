@@ -1,5 +1,5 @@
 {
-  "name": "@editorx/toolbar",
+  "name": "@geekx/toolbar",
   "version": "0.1.0",
   "publishConfig": {
     "access": "public"
@@ -26,14 +26,14 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
-    "@editorx/theme": "workspace:^",
-    "@editorx/ui": "workspace:^",
+    "@geekx/theme": "workspace:^",
+    "@geekx/ui": "workspace:^",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

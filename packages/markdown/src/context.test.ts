@@ -1,5 +1,5 @@
-import { ClEditEngine, createRenderer } from '@editorx/markdown-core'
-import { zhCN } from '@editorx/toolbar'
+import { ClEditEngine, createRenderer } from '@geekx/markdown-core'
+import { zhCN } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { createMarkdownContext } from './context'
 import { getMarkdownInternals } from './internals'

@@ -1,4 +1,4 @@
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { X } from 'lucide-react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'

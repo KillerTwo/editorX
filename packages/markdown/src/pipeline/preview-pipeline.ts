@@ -1,4 +1,4 @@
-import { patchPreview, renderDiagrams, type EditorEngine, type RenderResult, type Renderer } from '@editorx/markdown-core'
+import { patchPreview, renderDiagrams, type EditorEngine, type RenderResult, type Renderer } from '@geekx/markdown-core'
 import { whenIdle, yieldToMain } from './scheduler'
 import { createStatsCounter, type PreviewStats } from './stats-counter'
 

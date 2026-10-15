@@ -1,4 +1,4 @@
-import type { EditorAdapters, EmbedDef } from '@editorx/toolbar'
+import type { EditorAdapters, EmbedDef } from '@geekx/toolbar'
 import type { Editor } from 'ckeditor5'
 import { registerExEmbed } from './embed-plugin'
 import { createUploadAdapter } from './upload-adapter'

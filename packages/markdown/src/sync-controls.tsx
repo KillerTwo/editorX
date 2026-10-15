@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { LocateIcon, SyncScrollIcon } from './icons'
 
 export interface SyncControlsProps {

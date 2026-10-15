@@ -4,9 +4,9 @@
 
 > **拆分说明**：阶段 3 超过 10 个任务，拆为两份计划。本文件为 **3a**（扩展 API + React 包装核心，10 个任务）；**3b** 见 `docs/superpowers/plans/2026-10-09-phase3b-markdown-csdn-chrome.md`（CSDN 外壳像素级还原、playground、e2e/性能/视觉基线，8 个任务）。3b 依赖 3a 全部完成。用户指定的单文件名 `2026-10-09-phase3-markdown-editor.md` 因拆分不再使用。
 
-**Goal:** 交付 `@editorx/toolbar`（扩展协议、布局解析、快捷键、溢出、i18n、`<Toolbar>`）与 `@editorx/markdown`（`<MarkdownEditor />`：受控/非受控、三种视图、预览流水线、命令/扩展、图片上传、命令式 ref），并补齐阶段 1 遗留的浮层/主题/Toast 能力。
+**Goal:** 交付 `@geekx/toolbar`（扩展协议、布局解析、快捷键、溢出、i18n、`<Toolbar>`）与 `@geekx/markdown`（`<MarkdownEditor />`：受控/非受控、三种视图、预览流水线、命令/扩展、图片上传、命令式 ref），并补齐阶段 1 遗留的浮层/主题/Toast 能力。
 
-**Architecture:** `@editorx/toolbar` 是与编辑器无关的纯 React 层：扩展定义 → `resolveToolbar` 解析为分组 → `<Toolbar>` 渲染（`@editorx/ui` 的 Dropdown/Popover/Modal/Tooltip，浮层挂 `.ex-portal`）。`@editorx/markdown` 把 `markdown-core` 的 `ClEditEngine` + 渲染器 + `patchPreview` + `createScrollSync` 包进一个 StrictMode 安全的 React 组件：引擎由 `useState` 工厂创建一次、在 effect 中 mount/destroy；预览流水线（200ms 防抖 → `yieldToMain` → `patchPreview` → rAF 刷新同步滚动 → 图表 → 空闲统计，带代次丢弃）从 playground demo 移植为框架无关模块；UI 状态（光标、格式、统计、目录、面板、上传失败）放在 `useSyncExternalStore` 小 store 中，按键路径不触发整树渲染。内置功能全部以 `markdownCoreExtensions` 实现，与第三方扩展同等地位。
+**Architecture:** `@geekx/toolbar` 是与编辑器无关的纯 React 层：扩展定义 → `resolveToolbar` 解析为分组 → `<Toolbar>` 渲染（`@geekx/ui` 的 Dropdown/Popover/Modal/Tooltip，浮层挂 `.ex-portal`）。`@geekx/markdown` 把 `markdown-core` 的 `ClEditEngine` + 渲染器 + `patchPreview` + `createScrollSync` 包进一个 StrictMode 安全的 React 组件：引擎由 `useState` 工厂创建一次、在 effect 中 mount/destroy；预览流水线（200ms 防抖 → `yieldToMain` → `patchPreview` → rAF 刷新同步滚动 → 图表 → 空闲统计，带代次丢弃）从 playground demo 移植为框架无关模块；UI 状态（光标、格式、统计、目录、面板、上传失败）放在 `useSyncExternalStore` 小 store 中，按键路径不触发整树渲染。内置功能全部以 `markdownCoreExtensions` 实现，与第三方扩展同等地位。
 
 **Tech Stack:** React 19（`ref` 作为 prop）、`@floating-ui/react` 0.27（FloatingTree/useListNavigation）、lucide-react 1.53、tsup（ESM + d.ts，React 包首行 `'use client';`）、Vitest 5 + jsdom + Testing Library、Playwright（仅回归既有用例）。
 
@@ -16,11 +16,11 @@
 
 ## Global Constraints
 
-- **只在 React 包加 `'use client'`**：`@editorx/theme`（已有）、`@editorx/ui`（已有）、`@editorx/toolbar`、`@editorx/markdown` 的 `dist/index.js` 首行为 `'use client';`（tsup `banner`）；`@editorx/markdown-core` 永不加。源码文件不写 `'use client'`。
+- **只在 React 包加 `'use client'`**：`@geekx/theme`（已有）、`@geekx/ui`（已有）、`@geekx/toolbar`、`@geekx/markdown` 的 `dist/index.js` 首行为 `'use client';`（tsup `banner`）；`@geekx/markdown-core` 永不加。源码文件不写 `'use client'`。
 - **SSR 安全**：模块顶层与 render 期间不访问 `window`/`document`/`navigator`（`isMacPlatform` 内部判空）；引擎、渲染器、图表只在 effect 中创建/调用；`ThemeProvider` 首帧 `ready=false`，图表在 `ready` 后才绘制。
 - **StrictMode 生命周期（phase3-notes 规则）**：引擎由 `useState(() => factory())` 创建一次；mount effect 首次用 `value ?? defaultValue`，之后的 remount 用 `engine.getValue()`（保留撤销历史）；cleanup 先退订全部监听再 `engine.destroy()`；滚动同步在独立 effect 中创建，声明在 mount effect 之后；`readOnly`/`placeholder`/`ariaLabel` 用引擎的原地 setter，绝不重建引擎。
 - **onChange 语义**：`onChange(markdown, html)` 在防抖渲染完成后调用（与预览同一次渲染，html 即该次 `RenderResult.html`）；挂载、`ref.setValue`、受控 `value` 写入都不触发；受控 `value` 仅在与最后一次发出/写入的值不同时写入引擎。
-- **context 拥有者包是 peerDependency**：`@editorx/toolbar` peer `@editorx/theme`、`@editorx/ui`、`react`、`react-dom`；`@editorx/markdown` peer `@editorx/theme`、`@editorx/ui`、`@editorx/toolbar`、`react`、`react-dom`，`dependencies` 只有 `@editorx/markdown-core`（`workspace:*`）与 `lucide-react`。devDependencies 用 `workspace:*` 镜像 peer。
+- **context 拥有者包是 peerDependency**：`@geekx/toolbar` peer `@geekx/theme`、`@geekx/ui`、`react`、`react-dom`；`@geekx/markdown` peer `@geekx/theme`、`@geekx/ui`、`@geekx/toolbar`、`react`、`react-dom`，`dependencies` 只有 `@geekx/markdown-core`（`workspace:*`）与 `lucide-react`。devDependencies 用 `workspace:*` 镜像 peer。
 - **样式**：原生 CSS，类名前缀 `.ex-`；新外壳类统一 `ex-mde-*`（`ex-md-*` 已被语法高亮 token 占用），工具栏 `ex-toolbar*`；只用 `var(--ex-*)`，不写颜色字面量；组件私有变量用 `--ex-mde-*`。新增颜色 token 必须同时写入 `light-dark()` 主块和三个 `@supports not` 兜底块（`packages/theme/src/styles.test.ts` 校验）。
 - **浮层**：所有 Dropdown/Popover/Modal 渲染到 `useTheme().portalRoot`（`.ex-portal`）；嵌套浮层通过 FloatingTree 共享父子关系（Esc 只关最内层、子浮层内点击不算父浮层外部点击）。
 - **i18n**：所有可见文案来自 `Messages`（默认 `zhCN`），组件经 `useMessages()` 读取；扩展的 `title`/`label` 可为字符串或 `(m: Messages) => string`。
@@ -56,7 +56,7 @@ packages/markdown-core/src/
   commands/registry.ts        # 修改：注册上述命令
   commands/commands.test.ts   # 修改
 packages/markdown-core/vitest.config.ts  # 修改：restoreMocks
-packages/toolbar/             # 新包 @editorx/toolbar
+packages/toolbar/             # 新包 @geekx/toolbar
   package.json  tsconfig.json  tsup.config.ts  vitest.config.ts
   src/index.ts
   src/types.ts                # EditorType/EditorDocument/EditorAdapters/PublishSettings…
@@ -72,7 +72,7 @@ packages/toolbar/             # 新包 @editorx/toolbar
   src/cx.ts
   src/styles.css
   src/*.test.ts(x)
-packages/markdown/            # 新包 @editorx/markdown
+packages/markdown/            # 新包 @geekx/markdown
   package.json  tsconfig.json  tsup.config.ts  vitest.config.ts
   src/index.ts
   src/types.ts                # MarkdownEditorProps/Handle/ViewMode
@@ -100,10 +100,10 @@ packages/markdown/            # 新包 @editorx/markdown
 
 1. 主题：`useOptionalTheme`、`ready`、body 级 portal、切换时禁用 transition、`restoreMocks`
 2. ui：FloatingTree 嵌套浮层、Dropdown 菜单语义与方向键、Modal `ariaLabel`、Toast `alert`/关闭按钮
-3. `@editorx/toolbar` 脚手架：共享类型、`Messages` 字典、`MessagesProvider`
+3. `@geekx/toolbar` 脚手架：共享类型、`Messages` 字典、`MessagesProvider`
 4. 扩展协议与纯逻辑：布局解析、面板解析、快捷键、溢出计算
 5. `<Toolbar>` 组件：分组/分隔、tooltip+快捷键、状态、溢出「更多」、弹层插槽、错误隔离、`useExtensionSetup`
-6. markdown-core 新命令 + `@editorx/markdown` 脚手架 + 预览流水线
+6. markdown-core 新命令 + `@geekx/markdown` 脚手架 + 预览流水线
 7. `<MarkdownEditor />` 核心：store、格式检测、运行时生命周期、视图模式、受控/非受控、ref、SSR
 8. 图片上传：占位符、上传器、粘贴/拖拽、失败重试/删除
 9. 扩展接入：`ExtensionContext`、内置扩展（CSDN 工具栏布局）、对话框、快捷键、全屏
@@ -236,7 +236,7 @@ describe('styles.css 主题切换', () => {
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/theme exec vitest run`
+Run: `pnpm --filter @geekx/theme exec vitest run`
 Expected: FAIL —— `useOptionalTheme` 未导出、`bodyPortalRoot`/`ready` 为 undefined、样式断言失败。
 
 - [ ] **Step 3: 实现**
@@ -435,12 +435,12 @@ export default defineConfig({
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/theme exec vitest run; pnpm --filter @editorx/ui exec vitest run; pnpm --filter @editorx/markdown-core exec vitest run`
+Run: `pnpm --filter @geekx/theme exec vitest run; pnpm --filter @geekx/ui exec vitest run; pnpm --filter @geekx/markdown-core exec vitest run`
 Expected: 三个包全部 PASS（`restoreMocks` 不应使既有用例失败；若某个用例依赖跨用例保留的 mock，改为在该用例内重新 mock）。
 
 - [ ] **Step 5: 类型检查**
 
-Run: `pnpm --filter @editorx/theme typecheck`
+Run: `pnpm --filter @geekx/theme typecheck`
 Expected: 无错误。
 
 - [ ] **Step 6: 提交**
@@ -613,7 +613,7 @@ import { Tooltip } from './tooltip'
 
 - [ ] **Step 2: 运行测试确认失败**
 
-Run: `pnpm --filter @editorx/ui exec vitest run`
+Run: `pnpm --filter @geekx/ui exec vitest run`
 Expected: FAIL —— 菜单没有名称/分隔线、方向键无效、Modal 内 Esc 同时关闭两层（或点菜单项关闭 Modal）、无 `ariaLabel`、Toast 无 alert/关闭按钮。
 
 - [ ] **Step 3: 实现**
@@ -666,7 +666,7 @@ import {
   type OpenChangeReason,
   type Placement,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { cloneElement, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'
@@ -754,7 +754,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { X } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
 import { cx } from './cx'
@@ -857,7 +857,7 @@ import {
   useRole,
   type Placement,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { cloneElement, useRef, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'
@@ -964,7 +964,7 @@ export const Dropdown = withFloatingTree(DropdownInner, 'Dropdown')
 `packages/ui/src/toast.tsx` 全文替换为：
 
 ```tsx
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { X } from 'lucide-react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
@@ -1093,18 +1093,18 @@ export function useToast(): ToastApi {
 
 - [ ] **Step 4: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/ui exec vitest run`
+Run: `pnpm --filter @geekx/ui exec vitest run`
 Expected: 全部 PASS（含原有 Dropdown/Popover/Modal/Toast/Tooltip 用例）。
 
 - [ ] **Step 5: 类型检查 + 展示页基线回归**
 
-Run: `pnpm --filter @editorx/ui typecheck; pnpm --filter @editorx/ui build`
+Run: `pnpm --filter @geekx/ui typecheck; pnpm --filter @geekx/ui build`
 Expected: 无错误。
 
 Run（先释放端口）:
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground build; pnpm --filter @editorx/playground exec playwright test e2e/showcase.spec.ts --project chromium
+pnpm --filter @geekx/playground build; pnpm --filter @geekx/playground exec playwright test e2e/showcase.spec.ts --project chromium
 ```
 Expected: showcase 全部通过，`showcase-{light,dark}` 截图无差异（展示页默认不展开菜单/Toast；若失败说明默认态样式被改动，回到 Step 3 修正而不是更新基线）。
 
@@ -1125,7 +1125,7 @@ git commit -m "feat(ui): 嵌套浮层 FloatingTree、菜单键盘导航与 Toast
 
 ---
 
-### Task 3: `@editorx/toolbar` 脚手架：共享类型、`Messages` 字典、`MessagesProvider`
+### Task 3: `@geekx/toolbar` 脚手架：共享类型、`Messages` 字典、`MessagesProvider`
 
 **Files:**
 - Create: `packages/toolbar/package.json`、`packages/toolbar/tsconfig.json`、`packages/toolbar/tsup.config.ts`、`packages/toolbar/vitest.config.ts`
@@ -1159,7 +1159,7 @@ git commit -m "feat(ui): 嵌套浮层 FloatingTree、菜单键盘导航与 Toast
 
 ```json
 {
-  "name": "@editorx/toolbar",
+  "name": "@geekx/toolbar",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": [
@@ -1183,14 +1183,14 @@ git commit -m "feat(ui): 嵌套浮层 FloatingTree、菜单键盘导航与 Toast
     "typecheck": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
-    "@editorx/theme": "workspace:^",
-    "@editorx/ui": "workspace:^",
+    "@geekx/theme": "workspace:^",
+    "@geekx/ui": "workspace:^",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
@@ -1258,11 +1258,11 @@ export function cx(...names: Array<string | false | null | undefined>): string {
 `packages/toolbar/src/styles.css`（Task 5 填充）：
 
 ```css
-/* @editorx/toolbar：工具栏样式（Task 5） */
+/* @geekx/toolbar：工具栏样式（Task 5） */
 ```
 
 Run: `pnpm install`
-Expected: 成功，`packages/toolbar/node_modules/@editorx/{theme,ui}` 为工作区链接。
+Expected: 成功，`packages/toolbar/node_modules/@geekx/{theme,ui}` 为工作区链接。
 
 - [ ] **Step 2: 写失败测试**
 
@@ -1332,7 +1332,7 @@ describe.skipIf(!existsSync(dist))('构建产物 directive（需先 build）', (
 })
 ```
 
-Run: `pnpm --filter @editorx/toolbar exec vitest run`
+Run: `pnpm --filter @geekx/toolbar exec vitest run`
 Expected: FAIL —— `./messages`、`./messages-context` 不存在。
 
 - [ ] **Step 3: 实现**
@@ -1627,10 +1627,10 @@ export type { MessagesProviderProps } from './messages-context'
 
 - [ ] **Step 4: 运行测试确认通过 + 构建**
 
-Run: `pnpm --filter @editorx/toolbar exec vitest run`
+Run: `pnpm --filter @geekx/toolbar exec vitest run`
 Expected: `messages.test.tsx` 4 个用例 PASS；`dist.test.ts` 因无 dist 跳过。
 
-Run: `pnpm --filter @editorx/toolbar build; pnpm --filter @editorx/toolbar exec vitest run; pnpm --filter @editorx/toolbar typecheck`
+Run: `pnpm --filter @geekx/toolbar build; pnpm --filter @geekx/toolbar exec vitest run; pnpm --filter @geekx/toolbar typecheck`
 Expected: 构建生成 `dist/index.js`（首行 `'use client';`）、`dist/index.d.ts`、`dist/styles.css`；`dist.test.ts` PASS；类型检查无错误。
 
 - [ ] **Step 5: 提交**
@@ -1649,7 +1649,7 @@ git add packages/toolbar/src/styles.css
 git add packages/toolbar/src/messages.test.tsx
 git add packages/toolbar/src/dist.test.ts
 git add pnpm-lock.yaml
-git commit -m "feat(toolbar): 新建 @editorx/toolbar 包与共享类型、文案字典" -m "定义 EditorType/EditorDocument/EditorAdapters/PublishSettings 等跨编辑器共享类型（spec §5.1、§6.3）。" -m "新增默认 zhCN 文案字典、DeepPartial 覆盖与 mergeMessages/formatMessage，MessagesProvider 逐层叠加父级文案。" -m "React 包产物首行 'use client'，theme/ui 为 peerDependency。"
+git commit -m "feat(toolbar): 新建 @geekx/toolbar 包与共享类型、文案字典" -m "定义 EditorType/EditorDocument/EditorAdapters/PublishSettings 等跨编辑器共享类型（spec §5.1、§6.3）。" -m "新增默认 zhCN 文案字典、DeepPartial 覆盖与 mergeMessages/formatMessage，MessagesProvider 逐层叠加父级文案。" -m "React 包产物首行 'use client'，theme/ui 为 peerDependency。"
 ```
 
 ---
@@ -1982,7 +1982,7 @@ describe('collectShortcuts / handleShortcut', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/toolbar exec vitest run`
+Run: `pnpm --filter @geekx/toolbar exec vitest run`
 Expected: FAIL —— `./extension`、`./layout`、`./shortcuts` 不存在。
 
 - [ ] **Step 2: 实现**
@@ -2554,7 +2554,7 @@ export { isItemActive, isItemDisabled } from './item-state'
 
 - [ ] **Step 3: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/toolbar exec vitest run; pnpm --filter @editorx/toolbar typecheck`
+Run: `pnpm --filter @geekx/toolbar exec vitest run; pnpm --filter @geekx/toolbar typecheck`
 Expected: `layout.test.ts`、`shortcuts.test.ts` 全部 PASS；类型检查无错误。
 
 - [ ] **Step 4: 提交**
@@ -2607,8 +2607,8 @@ git commit -m "feat(toolbar): 扩展协议、布局解析与快捷键" -m "定�
 ```tsx
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ThemeProvider } from '@editorx/theme'
-import { ToastProvider } from '@editorx/ui'
+import { ThemeProvider } from '@geekx/theme'
+import { ToastProvider } from '@geekx/ui'
 import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { EditorExtension, ExtensionContext } from './extension'
@@ -2944,7 +2944,7 @@ describe('toolbar styles.css', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/toolbar exec vitest run`
+Run: `pnpm --filter @geekx/toolbar exec vitest run`
 Expected: FAIL —— `./toolbar`、`./use-extension-setup` 不存在，样式断言失败。
 
 - [ ] **Step 2: 实现**
@@ -3037,7 +3037,7 @@ export function useExtensionSetup(
 `packages/toolbar/src/toolbar.tsx`：
 
 ```tsx
-import { Dropdown, Modal, Popover, Tooltip, type DropdownItem } from '@editorx/ui'
+import { Dropdown, Modal, Popover, Tooltip, type DropdownItem } from '@geekx/ui'
 import { ChevronDown, Ellipsis } from 'lucide-react'
 import {
   Fragment,
@@ -3308,7 +3308,7 @@ export const Toolbar = memo(ToolbarImpl)
 `packages/toolbar/src/styles.css` 全文：
 
 ```css
-/* @editorx/toolbar：28px 按钮、6px 间距、1×16px 分隔线（左右 8px） */
+/* @geekx/toolbar：28px 按钮、6px 间距、1×16px 分隔线（左右 8px） */
 .ex-toolbar {
   position: relative;
   display: flex;
@@ -3380,7 +3380,7 @@ export { useExtensionSetup, useStableArray } from './use-extension-setup'
 
 - [ ] **Step 3: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/toolbar exec vitest run; pnpm --filter @editorx/toolbar typecheck; pnpm lint`
+Run: `pnpm --filter @geekx/toolbar exec vitest run; pnpm --filter @geekx/toolbar typecheck; pnpm lint`
 Expected: 全部 PASS；类型检查与 lint 无错误（exhaustive-deps 无新警告）。
 
 - [ ] **Step 4: 提交**
@@ -3399,7 +3399,7 @@ git commit -m "feat(toolbar): Toolbar 组件、溢出菜单与扩展 setup 生�
 
 ---
 
-### Task 6: markdown-core 新命令 + `@editorx/markdown` 脚手架 + 预览流水线
+### Task 6: markdown-core 新命令 + `@geekx/markdown` 脚手架 + 预览流水线
 
 **Files:**
 - Modify: `packages/markdown-core/src/commands/inline.ts`、`src/commands/registry.ts`、`src/commands/commands.test.ts`
@@ -3414,7 +3414,7 @@ git commit -m "feat(toolbar): Toolbar 组件、溢出菜单与扩展 setup 生�
   ```ts
   // markdown-core
   commands.mark / commands.superscript / commands.subscript   // toggleWrap('=='/'^'/'~')
-  // @editorx/markdown（包内）
+  // @geekx/markdown（包内）
   interface PreviewStats { mdWords: number; lines: number; htmlWords: number; paragraphs: number }
   function createStatsCounter(): { count(sections, hasTime: () => boolean): PreviewStats | null }
   function yieldToMain(): Promise<void>; function whenIdle(cb): () => void
@@ -3442,7 +3442,7 @@ git commit -m "feat(toolbar): Toolbar 组件、溢出菜单与扩展 setup 生�
 
 并在 `'registers every spec command'` 的数组中加入 `'mark'`、`'subscript'`、`'superscript'`。
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/commands`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/commands`
 Expected: FAIL —— `commands.mark` 等为 undefined。
 
 - [ ] **Step 2: markdown-core 命令——实现**
@@ -3474,16 +3474,16 @@ import { bold, image, inlineCode, italic, link, mark, strikethrough, subscript, 
   subscript,
 ```
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run`
 Expected: 全部 PASS。
 
-- [ ] **Step 3: `@editorx/markdown` 包配置**
+- [ ] **Step 3: `@geekx/markdown` 包配置**
 
 `packages/markdown/package.json`：
 
 ```json
 {
-  "name": "@editorx/markdown",
+  "name": "@geekx/markdown",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": [
@@ -3507,21 +3507,21 @@ Expected: 全部 PASS。
     "typecheck": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
-    "@editorx/theme": "workspace:^",
-    "@editorx/toolbar": "workspace:^",
-    "@editorx/ui": "workspace:^",
+    "@geekx/theme": "workspace:^",
+    "@geekx/toolbar": "workspace:^",
+    "@geekx/ui": "workspace:^",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@editorx/theme": "workspace:*",
-    "@editorx/toolbar": "workspace:*",
-    "@editorx/ui": "workspace:*",
+    "@geekx/theme": "workspace:*",
+    "@geekx/toolbar": "workspace:*",
+    "@geekx/ui": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "dependencies": {
-    "@editorx/markdown-core": "workspace:*",
+    "@geekx/markdown-core": "workspace:*",
     "lucide-react": "^1.53.0"
   }
 }
@@ -3534,7 +3534,7 @@ Expected: 全部 PASS。
 `packages/markdown/src/styles.css`（Task 7 填充）：
 
 ```css
-/* @editorx/markdown：编辑器外壳样式（Task 7 起填充，3b 按 CSDN 校准） */
+/* @geekx/markdown：编辑器外壳样式（Task 7 起填充，3b 按 CSDN 校准） */
 ```
 
 `packages/markdown/src/index.ts`（Task 7 起追加导出）：
@@ -3551,7 +3551,7 @@ Expected: 成功。
 `packages/markdown/src/pipeline/stats-counter.test.ts`：
 
 ```ts
-import { createRenderer } from '@editorx/markdown-core'
+import { createRenderer } from '@geekx/markdown-core'
 import { describe, expect, it } from 'vitest'
 import { createStatsCounter } from './stats-counter'
 
@@ -3573,12 +3573,12 @@ describe('createStatsCounter', () => {
 `packages/markdown/src/pipeline/preview-pipeline.test.ts`：
 
 ```ts
-import { createRenderer, renderDiagrams, type EditorEngine } from '@editorx/markdown-core'
+import { createRenderer, renderDiagrams, type EditorEngine } from '@geekx/markdown-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createPreviewPipeline, type PreviewPipelineOptions } from './preview-pipeline'
 
-vi.mock('@editorx/markdown-core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@editorx/markdown-core')>()),
+vi.mock('@geekx/markdown-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@geekx/markdown-core')>()),
   renderDiagrams: vi.fn(() => Promise.resolve()),
 }))
 
@@ -3692,7 +3692,7 @@ describe('createPreviewPipeline', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/markdown exec vitest run`
+Run: `pnpm --filter @geekx/markdown exec vitest run`
 Expected: FAIL —— 模块不存在。
 
 - [ ] **Step 5: 流水线——实现（移植自 `apps/playground/app/markdown-core/markdown-core-demo.tsx`）**
@@ -3726,7 +3726,7 @@ export function whenIdle(cb: (deadline: IdleDeadlineLike) => void): () => void {
 `packages/markdown/src/pipeline/stats-counter.ts`：
 
 ```ts
-import { countHtml, countWords, type HtmlCount, type RenderedSection, type WordCount } from '@editorx/markdown-core'
+import { countHtml, countWords, type HtmlCount, type RenderedSection, type WordCount } from '@geekx/markdown-core'
 
 export interface PreviewStats {
   mdWords: number
@@ -3772,12 +3772,12 @@ export function createStatsCounter() {
 }
 ```
 
-（若 `HtmlCount`/`WordCount`/`RenderedSection` 未从 `@editorx/markdown-core` 根导出，先检查 `packages/markdown-core/src/index.ts`：playground demo 已从根导入这三者，应已导出。）
+（若 `HtmlCount`/`WordCount`/`RenderedSection` 未从 `@geekx/markdown-core` 根导出，先检查 `packages/markdown-core/src/index.ts`：playground demo 已从根导入这三者，应已导出。）
 
 `packages/markdown/src/pipeline/preview-pipeline.ts`：
 
 ```ts
-import { patchPreview, renderDiagrams, type EditorEngine, type RenderResult, type Renderer } from '@editorx/markdown-core'
+import { patchPreview, renderDiagrams, type EditorEngine, type RenderResult, type Renderer } from '@geekx/markdown-core'
 import { whenIdle, yieldToMain } from './scheduler'
 import { createStatsCounter, type PreviewStats } from './stats-counter'
 
@@ -3898,7 +3898,7 @@ export function createPreviewPipeline(opts: PreviewPipelineOptions): PreviewPipe
 
 - [ ] **Step 6: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run; pnpm --filter @editorx/markdown typecheck`
+Run: `pnpm --filter @geekx/markdown exec vitest run; pnpm --filter @geekx/markdown typecheck`
 Expected: 流水线与统计测试全部 PASS；类型检查无错误。
 
 - [ ] **Step 7: 提交**
@@ -3920,7 +3920,7 @@ git add packages/markdown/src/pipeline/preview-pipeline.ts
 git add packages/markdown/src/pipeline/stats-counter.test.ts
 git add packages/markdown/src/pipeline/preview-pipeline.test.ts
 git add pnpm-lock.yaml
-git commit -m "feat(markdown): 新建 @editorx/markdown 包与预览流水线" -m "markdown-core 新增 mark(==)、superscript(^)、subscript(~) 命令，与渲染器已支持的语法对应。" -m "从 playground demo 移植框架无关的预览流水线：200ms 防抖、yieldToMain、代次丢弃、patchPreview、rAF 布局刷新、主题图表重绘、空闲分段统计，并提供 destroy 清理。" -m "@editorx/markdown 以 theme/ui/toolbar 为 peerDependency，产物首行 'use client'。"
+git commit -m "feat(markdown): 新建 @geekx/markdown 包与预览流水线" -m "markdown-core 新增 mark(==)、superscript(^)、subscript(~) 命令，与渲染器已支持的语法对应。" -m "从 playground demo 移植框架无关的预览流水线：200ms 防抖、yieldToMain、代次丢弃、patchPreview、rAF 布局刷新、主题图表重绘、空闲分段统计，并提供 destroy 清理。" -m "@geekx/markdown 以 theme/ui/toolbar 为 peerDependency，产物首行 'use client'。"
 ```
 
 ---
@@ -4053,7 +4053,7 @@ describe('createEditorStore', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/formats.test.ts src/toc.test.ts src/store.test.ts`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/formats.test.ts src/toc.test.ts src/store.test.ts`
 Expected: FAIL —— 模块不存在。
 
 - [ ] **Step 2: 纯模块——实现**
@@ -4061,7 +4061,7 @@ Expected: FAIL —— 模块不存在。
 `packages/markdown/src/formats.ts`：
 
 ```ts
-import type { Selection } from '@editorx/markdown-core'
+import type { Selection } from '@geekx/markdown-core'
 
 const INLINE: ReadonlyArray<readonly [string, RegExp]> = [
   ['bold', /\*\*[^*\n]+?\*\*|__[^_\n]+?__/g],
@@ -4123,7 +4123,7 @@ export function extractTocTitle(markdown: string): string | null {
 `packages/markdown/src/store.ts`：
 
 ```ts
-import type { TocItem } from '@editorx/markdown-core'
+import type { TocItem } from '@geekx/markdown-core'
 import { useSyncExternalStore } from 'react'
 import type { PreviewStats } from './pipeline/stats-counter'
 
@@ -4207,8 +4207,8 @@ export function useEditorState<T>(store: EditorStore, selector: (snapshot: Edito
 `packages/markdown/src/commands.ts`：
 
 ```ts
-import { commands, execCommand, type CommandName, type EditorEngine } from '@editorx/markdown-core'
-import type { CommandRegistry } from '@editorx/toolbar'
+import { commands, execCommand, type CommandName, type EditorEngine } from '@geekx/markdown-core'
+import type { CommandRegistry } from '@geekx/toolbar'
 
 const NAMES: readonly string[] = [...Object.keys(commands), 'undo', 'redo']
 
@@ -4263,7 +4263,7 @@ export function useControllableState<T>(
 }
 ```
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/formats.test.ts src/toc.test.ts src/store.test.ts`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/formats.test.ts src/toc.test.ts src/store.test.ts`
 Expected: PASS。
 
 - [ ] **Step 3: 组件——写失败测试**
@@ -4292,7 +4292,7 @@ export const editorRoot = () => document.querySelector<HTMLElement>('.ex-mde')!
 ```tsx
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import { createRef, StrictMode, useState, type RefObject } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { MarkdownEditor } from './markdown-editor'
@@ -4483,11 +4483,11 @@ const coreDist = path.join(import.meta.dirname, '..', '..', 'markdown-core', 'di
 
 // 需要先执行 build；turbo 的 test 任务依赖自身 build，直接运行 vitest 且无 dist 时跳过
 describe.skipIf(!existsSync(dist) || !existsSync(coreDist))('构建产物 directive（需先 build）', () => {
-  it("@editorx/markdown 的 dist/index.js 首行为 'use client';", () => {
+  it("@geekx/markdown 的 dist/index.js 首行为 'use client';", () => {
     expect(readFileSync(dist, 'utf8').split(/\r?\n/, 1)[0]).toBe("'use client';")
   })
 
-  it('@editorx/markdown-core 产物不含 use client', () => {
+  it('@geekx/markdown-core 产物不含 use client', () => {
     expect(readFileSync(coreDist, 'utf8')).not.toContain('use client')
   })
 })
@@ -4530,7 +4530,7 @@ describe('markdown styles.css', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/markdown exec vitest run`
+Run: `pnpm --filter @geekx/markdown exec vitest run`
 Expected: FAIL —— `./markdown-editor`、`./types` 不存在。
 
 - [ ] **Step 4: 组件——实现**
@@ -4538,9 +4538,9 @@ Expected: FAIL —— `./markdown-editor`、`./types` 不存在。
 `packages/markdown/src/types.ts`：
 
 ```ts
-import type { EditorEngine } from '@editorx/markdown-core'
-import type { ThemeMode } from '@editorx/theme'
-import type { DeepPartial, EditorDocument, Messages } from '@editorx/toolbar'
+import type { EditorEngine } from '@geekx/markdown-core'
+import type { ThemeMode } from '@geekx/theme'
+import type { DeepPartial, EditorDocument, Messages } from '@geekx/toolbar'
 import type { ReactNode, Ref } from 'react'
 
 export type ViewMode = 'edit' | 'split' | 'preview'
@@ -4596,7 +4596,7 @@ export interface MarkdownEditorProps {
 `packages/markdown/src/mode-tabs.tsx`：
 
 ```tsx
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { Columns2, Monitor, SquareCode, type LucideIcon } from 'lucide-react'
 import { useRef, type KeyboardEvent } from 'react'
 import { cx } from './cx'
@@ -4659,7 +4659,7 @@ import {
   type RendererOptions,
   type RenderResult,
   type ScrollSync,
-} from '@editorx/markdown-core'
+} from '@geekx/markdown-core'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { detectFormats, formatsKey } from './formats'
 import { createPreviewPipeline, type PreviewPipeline } from './pipeline/preview-pipeline'
@@ -4839,10 +4839,10 @@ export function useEditorRuntime(options: RuntimeOptions): EditorRuntime {
 `packages/markdown/src/markdown-editor.tsx`：
 
 ```tsx
-import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
-import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
-import { MessagesProvider, useMessages, type EditorDocument } from '@editorx/toolbar'
-import { ToastProvider } from '@editorx/ui'
+import { ClEditEngine, type EditorEngine, type RendererOptions } from '@geekx/markdown-core'
+import { ThemeProvider, useOptionalTheme, useTheme } from '@geekx/theme'
+import { MessagesProvider, useMessages, type EditorDocument } from '@geekx/toolbar'
+import { ToastProvider } from '@geekx/ui'
 import { useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createCommandRegistry } from './commands'
 import { cx } from './cx'
@@ -4972,7 +4972,7 @@ function EditorShell({
 `packages/markdown/src/styles.css` 全文（结构样式；3b Task 4 按 CSDN 校准后整体替换）：
 
 ```css
-/* @editorx/markdown：编辑器外壳结构样式 */
+/* @geekx/markdown：编辑器外壳结构样式 */
 .ex-mde-theme { display: contents; }
 
 .ex-mde {
@@ -5050,10 +5050,10 @@ export type { MarkdownEditorHandle, MarkdownEditorProps, MarkdownEditorSlots, Vi
 
 - [ ] **Step 5: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run`
+Run: `pnpm --filter @geekx/markdown exec vitest run`
 Expected: 全部 PASS（`dist.test.ts` 无 dist 时跳过）。
 
-Run: `pnpm --filter @editorx/markdown-core build; pnpm --filter @editorx/markdown build; pnpm --filter @editorx/markdown exec vitest run src/dist.test.ts; pnpm --filter @editorx/markdown typecheck; pnpm lint`
+Run: `pnpm --filter @geekx/markdown-core build; pnpm --filter @geekx/markdown build; pnpm --filter @geekx/markdown exec vitest run src/dist.test.ts; pnpm --filter @geekx/markdown typecheck; pnpm lint`
 Expected: `dist.test.ts` 2 个用例 PASS；类型检查、lint 无错误、无新的 exhaustive-deps 警告。
 
 - [ ] **Step 6: 提交**
@@ -5111,8 +5111,8 @@ git commit -m "feat(markdown): MarkdownEditor 核心组件" -m "引擎由 useSta
 `packages/markdown/src/uploads/uploader.test.ts`：
 
 ```ts
-import { ClEditEngine } from '@editorx/markdown-core'
-import { zhCN } from '@editorx/toolbar'
+import { ClEditEngine } from '@geekx/markdown-core'
+import { zhCN } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { createEditorStore } from '../store'
 import { findPlaceholder } from './placeholders'
@@ -5263,7 +5263,7 @@ describe('MarkdownEditor 图片上传', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/uploads`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/uploads`
 Expected: FAIL —— 模块不存在、`adapters` prop 不存在。
 
 - [ ] **Step 2: 实现**
@@ -5292,8 +5292,8 @@ export const baseName = (name: string) => name.replace(/\.[^.]+$/, '')
 `packages/markdown/src/uploads/uploader.ts`：
 
 ```ts
-import type { EditorEngine } from '@editorx/markdown-core'
-import { errorMessage, formatMessage, type EditorAdapters, type Messages, type NotifyType } from '@editorx/toolbar'
+import type { EditorEngine } from '@geekx/markdown-core'
+import { errorMessage, formatMessage, type EditorAdapters, type Messages, type NotifyType } from '@geekx/toolbar'
 import type { EditorStore } from '../store'
 import { baseName, escapeAlt, failedMarkdown, findPlaceholder, uploadingMarkdown } from './placeholders'
 
@@ -5399,7 +5399,7 @@ export function createUploader(opts: UploaderOptions): Uploader {
 `packages/markdown/src/uploads/upload-failures.tsx`：
 
 ```tsx
-import { formatMessage, useMessages } from '@editorx/toolbar'
+import { formatMessage, useMessages } from '@geekx/toolbar'
 import { CircleAlert } from 'lucide-react'
 import { useEditorState, type EditorStore } from '../store'
 
@@ -5437,7 +5437,7 @@ export function UploadFailures({
 `packages/markdown/src/types.ts`：import 行改为
 
 ```ts
-import type { DeepPartial, EditorAdapters, EditorDocument, Messages } from '@editorx/toolbar'
+import type { DeepPartial, EditorAdapters, EditorDocument, Messages } from '@geekx/toolbar'
 ```
 
 并在 `MarkdownEditorProps` 的 `title?: string` 之后加入：
@@ -5450,8 +5450,8 @@ import type { DeepPartial, EditorAdapters, EditorDocument, Messages } from '@edi
 `packages/markdown/src/markdown-editor.tsx` 修改：
 
 1. import 区：
-   - `import { MessagesProvider, useMessages, type EditorDocument } from '@editorx/toolbar'` 改为 `import { MessagesProvider, useMessages, type EditorAdapters, type EditorDocument } from '@editorx/toolbar'`
-   - `import { ToastProvider } from '@editorx/ui'` 改为 `import { ToastProvider, useToast } from '@editorx/ui'`
+   - `import { MessagesProvider, useMessages, type EditorDocument } from '@geekx/toolbar'` 改为 `import { MessagesProvider, useMessages, type EditorAdapters, type EditorDocument } from '@geekx/toolbar'`
+   - `import { ToastProvider } from '@geekx/ui'` 改为 `import { ToastProvider, useToast } from '@geekx/ui'`
    - `import { useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from 'react'` 改为 `import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type ReactNode } from 'react'`
    - 追加 `import { createUploader, imageFiles } from './uploads/uploader'` 与 `import { UploadFailures } from './uploads/upload-failures'`
 2. 在 `const NO_RENDERER_OPTIONS: RendererOptions = {}` 之后加入 `const NO_ADAPTERS: EditorAdapters = {}`。
@@ -5528,7 +5528,7 @@ import type { DeepPartial, EditorAdapters, EditorDocument, Messages } from '@edi
 
 - [ ] **Step 3: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/markdown exec vitest run; pnpm --filter @editorx/markdown typecheck`
+Run: `pnpm --filter @geekx/markdown exec vitest run; pnpm --filter @geekx/markdown typecheck`
 Expected: 全部 PASS；类型检查无错误。若 jsdom 下 `fireEvent.paste` 没有把 `clipboardData.files` 交给引擎的 paste 事件，检查 `ClEditEngine` 是否在 `paste` 监听中原样转发事件对象（Addendum B 约定为同步转发），不要改为在组件里直接监听 DOM。
 
 - [ ] **Step 4: 提交**
@@ -5577,8 +5577,8 @@ git commit -m "feat(markdown): 图片粘贴/拖拽上传与失败重试" -m "粘
 `packages/markdown/src/context.test.ts`：
 
 ```ts
-import { ClEditEngine, createRenderer } from '@editorx/markdown-core'
-import { zhCN } from '@editorx/toolbar'
+import { ClEditEngine, createRenderer } from '@geekx/markdown-core'
+import { zhCN } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { createMarkdownContext } from './context'
 import { getMarkdownInternals } from './internals'
@@ -5679,7 +5679,7 @@ describe('createMarkdownContext', () => {
 ```tsx
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { editorContent, editorRoot, renderEditor } from '../test-utils'
 
@@ -5829,7 +5829,7 @@ describe('内置扩展', () => {
 })
 ```
 
-Run: `pnpm --filter @editorx/markdown exec vitest run src/context.test.ts src/core-extensions`
+Run: `pnpm --filter @geekx/markdown exec vitest run src/context.test.ts src/core-extensions`
 Expected: FAIL —— 模块不存在、工具栏未渲染。
 
 - [ ] **Step 2: 实现 context / internals / download**
@@ -5837,8 +5837,8 @@ Expected: FAIL —— 模块不存在、工具栏未渲染。
 `packages/markdown/src/internals.ts`：
 
 ```ts
-import type { EditorEngine } from '@editorx/markdown-core'
-import type { ExtensionContext } from '@editorx/toolbar'
+import type { EditorEngine } from '@geekx/markdown-core'
+import type { ExtensionContext } from '@geekx/toolbar'
 import type { EditorStore } from './store'
 
 /** 内置扩展需要、但不属于公开 ExtensionContext 的能力 */
@@ -5865,8 +5865,8 @@ export function getMarkdownInternals(ctx: ExtensionContext): MarkdownInternals |
 `packages/markdown/src/context.ts`：
 
 ```ts
-import { htmlToMarkdown, type EditorEngine, type Renderer } from '@editorx/markdown-core'
-import type { EditorAdapters, ExtensionContext, InsertContent, Messages, NotifyType } from '@editorx/toolbar'
+import { htmlToMarkdown, type EditorEngine, type Renderer } from '@geekx/markdown-core'
+import type { EditorAdapters, ExtensionContext, InsertContent, Messages, NotifyType } from '@geekx/toolbar'
 import { createCommandRegistry } from './commands'
 import { registerMarkdownInternals } from './internals'
 import type { EditorStore } from './store'
@@ -6007,8 +6007,8 @@ export function pickFile(accept: string): Promise<File | null> {
 `packages/markdown/src/core-extensions/dialogs.tsx`：
 
 ```tsx
-import type { ExtensionContext } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { ExtensionContext } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { Upload } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 
@@ -6140,7 +6140,7 @@ export function TableDialog({ ctx, close }: DialogProps) {
 `packages/markdown/src/core-extensions/format.tsx`：
 
 ```tsx
-import type { EditorExtension, ExtensionContext, Messages } from '@editorx/toolbar'
+import type { EditorExtension, ExtensionContext, Messages } from '@geekx/toolbar'
 import { Bold, Heading, Italic, Strikethrough } from 'lucide-react'
 import { detectFormats } from '../formats'
 import { getMarkdownInternals } from '../internals'
@@ -6205,7 +6205,7 @@ export const formatExtension: EditorExtension = {
 `packages/markdown/src/core-extensions/blocks.tsx`：
 
 ```tsx
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import {
   Code,
   CodeXml,
@@ -6283,7 +6283,7 @@ export const moreFormatExtension: EditorExtension = {
 `packages/markdown/src/core-extensions/insert.tsx`：
 
 ```tsx
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { Image, Link, Sigma, Table, TableOfContents, Workflow } from 'lucide-react'
 import { ImageDialog, LinkDialog, TableDialog } from './dialogs'
 import { ICON_SIZE, run } from './format'
@@ -6348,8 +6348,8 @@ export const moreInsertExtension: EditorExtension = {
 `packages/markdown/src/core-extensions/actions.tsx`：
 
 ```tsx
-import { exportHtml, exportMarkdown, importFile } from '@editorx/markdown-core'
-import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@editorx/toolbar'
+import { exportHtml, exportMarkdown, importFile } from '@geekx/markdown-core'
+import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@geekx/toolbar'
 import { BookOpen, Download, FileText, FileUp, Maximize2 } from 'lucide-react'
 import { downloadBlob, pickFile } from '../download'
 import { getMarkdownInternals } from '../internals'
@@ -6436,7 +6436,7 @@ export const moreActionsExtension: EditorExtension = {
 `packages/markdown/src/core-extensions/index.ts`：
 
 ```ts
-import type { EditorExtension, ToolbarLayout } from '@editorx/toolbar'
+import type { EditorExtension, ToolbarLayout } from '@geekx/toolbar'
 import { moreActionsExtension } from './actions'
 import { codeExtension, listExtension, moreFormatExtension } from './blocks'
 import { formatExtension } from './format'
@@ -6488,7 +6488,7 @@ import type {
   Messages,
   MissingAdapterPolicy,
   ToolbarLayout,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 ```
 
 `MarkdownEditorHandle` 中 `getEngine(): EditorEngine` 之前加入：
@@ -6514,8 +6514,8 @@ import type {
 `packages/markdown/src/markdown-editor.tsx` 全文替换为：
 
 ```tsx
-import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
-import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
+import { ClEditEngine, type EditorEngine, type RendererOptions } from '@geekx/markdown-core'
+import { ThemeProvider, useOptionalTheme, useTheme } from '@geekx/theme'
 import {
   collectShortcuts,
   errorMessage,
@@ -6530,8 +6530,8 @@ import {
   useStableArray,
   type EditorAdapters,
   type EditorExtension,
-} from '@editorx/toolbar'
-import { ToastProvider, useToast } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { ToastProvider, useToast } from '@geekx/ui'
 import {
   useCallback,
   useEffect,
@@ -6851,7 +6851,7 @@ export {
 
 - [ ] **Step 5: 运行测试确认通过**
 
-Run: `pnpm --filter @editorx/toolbar build; pnpm --filter @editorx/markdown exec vitest run; pnpm --filter @editorx/markdown typecheck; pnpm lint`
+Run: `pnpm --filter @geekx/toolbar build; pnpm --filter @geekx/markdown exec vitest run; pnpm --filter @geekx/markdown typecheck; pnpm lint`
 Expected: 全部 PASS（含 Task 7/8 的既有用例：工具栏加入后 `screen.getByRole('button', ...)` 的查询仍唯一）；类型检查与 lint 无错误。
 
 - [ ] **Step 6: 提交**
@@ -6885,7 +6885,7 @@ git commit -m "feat(markdown): 扩展上下文与 CSDN 布局的内置工具栏"
 
 Run: `pnpm build; pnpm test; pnpm typecheck; pnpm lint`
 Expected:
-- build：`@editorx/{theme,ui,toolbar,markdown-core,markdown}` 与 playground 均成功；
+- build：`@geekx/{theme,ui,toolbar,markdown-core,markdown}` 与 playground 均成功；
 - test：全部包 PASS（含 `dist.test.ts`：toolbar/markdown 首行 `'use client';`，markdown-core 不含）；
 - typecheck、lint：0 错误，无新增 exhaustive-deps 警告。
 
@@ -6893,9 +6893,9 @@ Expected:
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium
+pnpm --filter @geekx/playground exec playwright test --project chromium
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test --project chromium-perf --no-deps
+pnpm --filter @geekx/playground exec playwright test --project chromium-perf --no-deps
 ```
 
 Expected: `chromium` 全部通过（`showcase-*`、`markdown-core-*` 截图无差异）；`chromium-perf` 两个 `@perf` 用例通过（3a 未改动 `/markdown-core` 页，用于确认 markdown-core 命令改动未退化）。

@@ -7,10 +7,10 @@
 | 1 | 基础设施：monorepo、theme、ui、playground | 已完成 |
 | 2 | markdown-core：渲染链、cledit 移植、命令、同步滚动 | 已完成 |
 | 3 | toolbar 扩展 API + `<MarkdownEditor />` + CSDN 外观 | 已完成，浏览器验证通过（`4ac6969`）；mac 参考图对齐已完成 |
-| 4 | `<PublishPanel />` / `<PublishModal />`（`@editorx/publish`） | 已完成（develop，09154c1..36196eb，未 push），浏览器验证通过（macOS）；mac 参考图对齐已完成 |
+| 4 | `<PublishPanel />` / `<PublishModal />`（`@geekx/publish`） | 已完成（develop，09154c1..36196eb，未 push），浏览器验证通过（macOS）；mac 参考图对齐已完成 |
 | 5 | 富文本（CKEditor 5 GPL）：`<RichTextEditor />` | 已完成（develop，代码 HEAD `c17676f`），见 `phase6-notes-from-5.md` |
 | 6 | `<CsdnEditor />`：顶栏、组合、切换、自动保存 | 已完成（develop），见 `phase7-notes-from-6.md` |
-| 7 | `@editorx/csdn-extensions`：AI 助手、投票、视频、资源绑定、InsCode、模板 | 已完成（develop），见 `phase8-notes-from-7.md` |
+| 7 | `@geekx/csdn-extensions`：AI 助手、投票、视频、资源绑定、InsCode、模板 | 已完成（develop），见 `phase8-notes-from-7.md` |
 | 8 | 发布准备：Changesets、文档/README、npm 发布流程 | 未开始 |
 
 阶段 3/4 参考图对齐（业主 2026-10-10 macOS 2× 截图）已完成。代码止于 `9770135`；交接提交补上可选验收 spec 与本文档。未 push。
@@ -61,7 +61,7 @@
   必须严格还原截图中的样式与布局，没有截图的状态才允许推断并记为裁定。
 - 分支 `develop`；不经询问不 push / merge。
 - 提交：中文 Conventional Commits + 正文；只 `git add <明确路径>`，不用 `git add .` / `-A`。
-- 技术决定：pnpm monorepo 发布 `@editorx/*`；React 19 + Next.js 16 App Router；不耦合后端（全部经 adapters 回调）；
+- 技术决定：pnpm monorepo 发布 `@geekx/*`；React 19 + Next.js 16 App Router；不耦合后端（全部经 adapters 回调）；
   内容模型 `{ editorType, markdown?, html }`；原生 CSS，`.ex-` 前缀 + `--ex-*` 变量，亮/暗主题；CSDN 功能全部以工具栏扩展实现；CKEditor 5 用 GPL。
 - 经验：杀掉 3100 端口后再跑 Playwright（`Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | % { Stop-Process -Id $_.OwningProcess -Force }`）；
   turbo 缓存可能给出过期产物，最终验证用 `pnpm build --force`；同一工作树不要两个写入者并行；像素比对用直接截图 `/markdown?fixture=csdn&view=...&panel=csdn:ai` 与参考图做墨迹行/列比对。

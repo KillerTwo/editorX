@@ -10,8 +10,8 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
     expect(readFileSync(dist, 'utf8').split(/\r?\n/, 1)[0]).toBe("'use client';")
   })
 
-  it('不依赖 @editorx/markdown', () => {
-    expect(readFileSync(dist, 'utf8')).not.toMatch(/@editorx\/markdown/)
+  it('不依赖 @geekx/markdown', () => {
+    expect(readFileSync(dist, 'utf8')).not.toMatch(/@geekx\/markdown/)
   })
 
   it('ckeditor5 只在函数里动态加载，模块求值不碰 document.createElement', () => {

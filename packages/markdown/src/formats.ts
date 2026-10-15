@@ -1,4 +1,4 @@
-import type { Selection } from '@editorx/markdown-core'
+import type { Selection } from '@geekx/markdown-core'
 
 const INLINE: ReadonlyArray<readonly [string, RegExp]> = [
   ['bold', /\*\*[^*\n]+?\*\*|__[^_\n]+?__/g],

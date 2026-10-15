@@ -1,4 +1,4 @@
-import { renderDiagrams } from '@editorx/markdown-core'
+import { renderDiagrams } from '@geekx/markdown-core'
 
 export const EXPORT_DIAGRAM_TIMEOUT = 10_000
 

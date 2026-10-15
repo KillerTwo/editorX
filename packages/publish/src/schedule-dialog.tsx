@@ -1,5 +1,5 @@
-import { formatMessage, useMessages } from '@editorx/toolbar'
-import { Button, DatePicker, Modal, TimePicker } from '@editorx/ui'
+import { formatMessage, useMessages } from '@geekx/toolbar'
+import { Button, DatePicker, Modal, TimePicker } from '@geekx/ui'
 import { useId, useState } from 'react'
 import {
   combineLocal,

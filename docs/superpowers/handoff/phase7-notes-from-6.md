@@ -1,10 +1,10 @@
 # 阶段 6 交给阶段 7 的笔记
 
-阶段 6 代码 HEAD：`f4845cb`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@editorx/csdn` 的 `<CsdnEditor />`。阶段 7 做 `csdn-extensions` 时以本文为准。
+阶段 6 代码 HEAD：`f4845cb`（分支 `develop`）。本笔记是其后的 docs(handoff) 提交。范围是 `@geekx/csdn` 的 `<CsdnEditor />`。阶段 7 做 `csdn-extensions` 时以本文为准。
 
 ## 代码范围
 
-`<CsdnEditor />` 组合顶栏、一个编辑器、发布设置、确认切换和自动保存。`extensions` 默认是空数组。`@editorx/csdn-extensions` 尚未创建。
+`<CsdnEditor />` 组合顶栏、一个编辑器、发布设置、确认切换和自动保存。`extensions` 默认是空数组。`@geekx/csdn-extensions` 尚未创建。
 
 ## 顶栏
 

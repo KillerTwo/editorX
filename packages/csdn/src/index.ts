@@ -1,5 +1,5 @@
-import '@editorx/csdn-extensions/styles.css'
-import { RichTextEditor } from '@editorx/rich-text'
+import '@geekx/csdn-extensions/styles.css'
+import { RichTextEditor } from '@geekx/rich-text'
 import './styles.css'
 
 export { CsdnEditor } from './csdn-editor'

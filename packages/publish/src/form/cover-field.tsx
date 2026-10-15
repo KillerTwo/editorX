@@ -4,8 +4,8 @@ import {
   useMessages,
   type CoverMode,
   type PublishCover,
-} from '@editorx/toolbar'
-import { RadioGroup } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { RadioGroup } from '@geekx/ui'
 import { Trash2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from 'react'
 import type { AdapterState } from '../adapter-state'

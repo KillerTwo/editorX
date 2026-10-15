@@ -1,9 +1,9 @@
-import { htmlToText } from '@editorx/publish'
+import { htmlToText } from '@geekx/publish'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { countRichTextChars } from '@editorx/rich-text'
+import { countRichTextChars } from '@geekx/rich-text'
 import { CsdnEditor } from './csdn-editor'
 import type { CsdnEditorHandle } from './types'
 

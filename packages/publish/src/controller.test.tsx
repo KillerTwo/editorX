@@ -1,4 +1,4 @@
-import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@editorx/toolbar'
+import { zhCN, type EditorAdapters, type EditorDocument, type PublishSettings } from '@geekx/toolbar'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { StrictMode, useLayoutEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'

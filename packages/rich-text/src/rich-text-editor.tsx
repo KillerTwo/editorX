@@ -1,4 +1,4 @@
-import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
+import { ThemeProvider, useOptionalTheme, useTheme } from '@geekx/theme'
 import {
   activeExtensions,
   errorMessage,
@@ -16,8 +16,8 @@ import {
   type ExtensionContext,
   type InsertContent,
   type Messages,
-} from '@editorx/toolbar'
-import { ToastProvider, useToast } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { ToastProvider, useToast } from '@geekx/ui'
 import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createEditorConfig } from './ck-config'
 import { countRichTextChars } from './count'

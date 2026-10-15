@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 `@editorx/markdown-core` 中交付 `ClEditEngine`（StackEdit cledit 的 TS 移植，contenteditable + 分段 Markdown 高亮 + 撤销 + 选区保持 + IME 兼容）、编辑器/预览样式、双向同步滚动，并在 playground `/markdown-core` 页用 Playwright 验证输入、IME、同步滚动、KaTeX/Mermaid、10k 行性能与亮/暗视觉基线。
+**Goal:** 在 `@geekx/markdown-core` 中交付 `ClEditEngine`（StackEdit cledit 的 TS 移植，contenteditable + 分段 Markdown 高亮 + 撤销 + 选区保持 + IME 兼容）、编辑器/预览样式、双向同步滚动，并在 playground `/markdown-core` 页用 Playwright 验证输入、IME、同步滚动、KaTeX/Mermaid、10k 行性能与亮/暗视觉基线。
 
 **Architecture:** 引擎代码全部位于 `packages/markdown-core/src/engine/**`：`cledit/` 子目录是框架无关的小模块（utils / watcher / marker / undo / selection / highlighter / keystrokes），`cl-edit-engine.ts` 组装它们并实现 2a 定义的 `EditorEngine`。高亮按 2a 的 `splitSections` 切段，每段一个 `<div class="ex-editor-section" data-section-index>`，只替换文本变化的段，从而与预览 `.ex-preview-section[data-section-index]` 一一对应；`src/scroll-sync/**` 用两侧段偏移做线性插值。playground 页面只消费公共 API。
 
@@ -19,7 +19,7 @@
 - 文件归属：2b 只创建/修改 `src/engine/**`、`src/scroll-sync/**`、`src/styles.css`、`src/index.ts`（追加）、`package.json`（追加 prismjs 依赖）、`packages/theme/src/styles.css`（追加 token）、`apps/playground/app/markdown-core/**`、`apps/playground/e2e/markdown-core.spec.ts`、`apps/playground/package.json`、`apps/playground/app/page.tsx`（追加链接）。
 - 移植自 StackEdit 的文件顶部必须带归属注释：`// Ported from StackEdit (https://github.com/benweet/stackedit), Apache-2.0. Original: <相对路径>`。
 - Shell 为 Windows PowerShell：命令用 `;` 串联，不用 `&&`。
-- Playwright `webServer` 运行 `pnpm start`（先 `pnpm --filter @editorx/playground build`）；跑 e2e 前先停止残留 `:3100` 进程：`Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`。
+- Playwright `webServer` 运行 `pnpm start`（先 `pnpm --filter @geekx/playground build`）；跑 e2e 前先停止残留 `:3100` 进程：`Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`。
 - 不得重新生成已有视觉基线（只用 `--update-snapshots` 生成本计划新增的 `markdown-core-*.png`，且限定 `-g` 到新用例）；截图阈值 `maxDiffPixelRatio: 0.001`。
 - 提交信息：中文 Conventional Commits，标题 + 空行 + 3 行描述；只 `git add` 明确列出的文件，禁止 `git add .` / `git add -A`。
 
@@ -52,7 +52,7 @@ packages/markdown-core/
       index.ts
 packages/theme/src/styles.css            # 追加 --ex-color-md-* token（主块 + 兜底三块）
 apps/playground/
-  package.json                           # 追加 @editorx/markdown-core 依赖
+  package.json                           # 追加 @geekx/markdown-core 依赖
   app/page.tsx                           # 追加 /markdown-core 链接
   app/markdown-core/page.tsx             # server 页面壳
   app/markdown-core/markdown-core-demo.tsx  # 'use client'：引擎 + 预览 + 同步滚动
@@ -71,7 +71,7 @@ apps/playground/
 - Task 7: 同步滚动（插值纯函数 + createScrollSync）
 - Task 8: playground `/markdown-core` 页面 + Playwright e2e + 视觉基线
 
-测试命令约定（2a 的脚手架提供 `test` = `vitest run`）：单文件用 `pnpm --filter @editorx/markdown-core exec vitest run <相对 src 的路径>`。
+测试命令约定（2a 的脚手架提供 `test` = `vitest run`）：单文件用 `pnpm --filter @geekx/markdown-core exec vitest run <相对 src 的路径>`。
 
 ---
 
@@ -213,7 +213,7 @@ describe('Marker', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/utils.test.ts src/engine/cledit/marker.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/utils.test.ts src/engine/cledit/marker.test.ts`
 Expected: FAIL，`Failed to resolve import "./utils"` / `"./marker"`。
 
 - [ ] **Step 3: 实现 utils 与 marker**
@@ -311,7 +311,7 @@ export class Marker {
 
 - [ ] **Step 4: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/utils.test.ts src/engine/cledit/marker.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/utils.test.ts src/engine/cledit/marker.test.ts`
 Expected: PASS（13 个用例）。
 
 - [ ] **Step 5: 写 watcher / undo 失败测试**
@@ -475,7 +475,7 @@ describe('UndoManager', () => {
 
 - [ ] **Step 6: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/watcher.test.ts src/engine/cledit/undo.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/watcher.test.ts src/engine/cledit/undo.test.ts`
 Expected: FAIL，`Failed to resolve import "./watcher"` / `"./undo"`。
 
 - [ ] **Step 7: 实现 watcher 与 undo**
@@ -625,7 +625,7 @@ export class UndoManager {
 
 - [ ] **Step 8: 运行确认通过 + 类型检查**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit; pnpm --filter @editorx/markdown-core typecheck`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit; pnpm --filter @geekx/markdown-core typecheck`
 Expected: 4 个测试文件全部 PASS；typecheck 无错误。
 
 - [ ] **Step 9: 提交**
@@ -804,7 +804,7 @@ describe('SelectionManager', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/selection.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/selection.test.ts`
 Expected: FAIL，`Failed to resolve import "./selection"`。
 
 - [ ] **Step 3: 实现**
@@ -934,8 +934,8 @@ export class SelectionManager {
 
 - [ ] **Step 4: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/selection.test.ts; pnpm --filter @editorx/markdown-core typecheck`
-Expected: 10 个用例 PASS；typecheck 无错误。若 jsdom 版本缺 `Selection.extend` 导致反向用例失败：不要改测试，确认 `jsdom` ≥ 16（`pnpm --filter @editorx/markdown-core why jsdom`）。
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/selection.test.ts; pnpm --filter @geekx/markdown-core typecheck`
+Expected: 10 个用例 PASS；typecheck 无错误。若 jsdom 版本缺 `Selection.extend` 导致反向用例失败：不要改测试，确认 `jsdom` ≥ 16（`pnpm --filter @geekx/markdown-core why jsdom`）。
 
 - [ ] **Step 5: 提交**
 
@@ -964,7 +964,7 @@ git commit -m "feat(markdown-core): 移植 cledit 选区管理器" -m "文本偏
 
 - [ ] **Step 1: 安装依赖**
 
-Run: `pnpm --filter @editorx/markdown-core add prismjs; pnpm --filter @editorx/markdown-core add -D @types/prismjs`
+Run: `pnpm --filter @geekx/markdown-core add prismjs; pnpm --filter @geekx/markdown-core add -D @types/prismjs`
 Expected: `packages/markdown-core/package.json` 出现 `prismjs` 与 `@types/prismjs`。
 
 - [ ] **Step 2: 写 grammar 失败测试**
@@ -1068,7 +1068,7 @@ describe('highlightMarkdown', () => {
 
 - [ ] **Step 3: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/grammar.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/grammar.test.ts`
 Expected: FAIL，`Failed to resolve import "./grammar"`。
 
 - [ ] **Step 4: 实现 grammar**
@@ -1154,7 +1154,7 @@ export function highlightMarkdown(text: string): string {
 
 - [ ] **Step 5: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/grammar.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/grammar.test.ts`
 Expected: PASS。若某个期望失败，先确认是 grammar 键顺序问题（Prism 按对象键顺序匹配：`fence` → `math-block` → 标题 → `setext` → `hr` → `blockquote` → `list` → `table` → 行内），调整实现而非测试。
 
 - [ ] **Step 6: 写 highlighter 失败测试**
@@ -1258,7 +1258,7 @@ describe('Highlighter', () => {
 
 - [ ] **Step 7: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/highlighter.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/highlighter.test.ts`
 Expected: FAIL，`Failed to resolve import "./highlighter"`。
 
 - [ ] **Step 8: 实现 highlighter**
@@ -1375,7 +1375,7 @@ export class Highlighter implements SectionLocator {
 
 - [ ] **Step 9: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit; pnpm --filter @editorx/markdown-core typecheck`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit; pnpm --filter @geekx/markdown-core typecheck`
 Expected: cledit 目录全部 PASS；typecheck 无错误。
 
 - [ ] **Step 10: 提交**
@@ -1519,7 +1519,7 @@ describe('handleKeystroke', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/keystrokes.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/keystrokes.test.ts`
 Expected: FAIL，`Failed to resolve import "./keystrokes"`。
 
 - [ ] **Step 3: 实现**
@@ -1678,7 +1678,7 @@ export function handleKeystroke(key: KeyInfo, state: TextState): { state: TextSt
 
 - [ ] **Step 4: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cledit/keystrokes.test.ts; pnpm --filter @editorx/markdown-core typecheck`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cledit/keystrokes.test.ts; pnpm --filter @geekx/markdown-core typecheck`
 Expected: 全部 PASS；typecheck 无错误。
 
 - [ ] **Step 5: 提交**
@@ -1947,7 +1947,7 @@ describe('ClEditEngine 输入', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine/cl-edit-engine.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine/cl-edit-engine.test.ts`
 Expected: FAIL，`Failed to resolve import "./cl-edit-engine"`。
 
 - [ ] **Step 3: 实现引擎**
@@ -2300,12 +2300,12 @@ export type { ClEditEngineOptions } from './engine'
 
 - [ ] **Step 4: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/engine; pnpm --filter @editorx/markdown-core typecheck`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/engine; pnpm --filter @geekx/markdown-core typecheck`
 Expected: engine 目录全部 PASS；typecheck 无错误。若 IME 用例里 `typeInto` 后 `content.contains(node)` 为 `false`，说明组合期间仍触发了重绘——检查 Watcher 回调是否先判断 `this.composing`。
 
 - [ ] **Step 5: 全量测试与构建，确认 dist 无 'use client'**
 
-Run: `pnpm --filter @editorx/markdown-core test; pnpm --filter @editorx/markdown-core build; Select-String -Path packages/markdown-core/dist/index.js -Pattern "use client" -SimpleMatch`
+Run: `pnpm --filter @geekx/markdown-core test; pnpm --filter @geekx/markdown-core build; Select-String -Path packages/markdown-core/dist/index.js -Pattern "use client" -SimpleMatch`
 Expected: 全部测试 PASS；构建成功；`Select-String` 无输出。
 
 - [ ] **Step 6: 提交**
@@ -2325,7 +2325,7 @@ git commit -m "feat(markdown-core): 新增 ClEditEngine 实现 EditorEngine 接�
 
 **Interfaces:**
 - Consumes: Task 3 的 token 类名（`ex-md-*`）；Task 5 的 `.ex-editor`、`.ex-editor-content[data-empty][data-placeholder]`、`.ex-editor-section`；2a 渲染器输出的 `.ex-preview-section`、`.ex-mermaid`、KaTeX `.katex-display`、Prism `.token.*`；契约 Addendum A 的 `.ex-toc > .ex-toc-title + ul`、`.ex-flowchart`（flowchart.js/raphael SVG）、尾部脚注段 `.ex-preview-section.ex-footnotes`（markdown-it-footnote 的 `hr.footnotes-sep`、`ol.footnotes-list`、`sup.footnote-ref`、`a.footnote-backref`）；Mermaid SVG 的内联 `<style>` 被 2a 净化掉，因此节点/连线/文字配色必须由本样式按 Mermaid 类名（`.node`、`.edgePath`、`.flowchart-link`、`.edgeLabel`、`.nodeLabel`、`.label`、`.cluster`、`.marker`、`.actor`、`.messageLine0`、`.messageLine1`、`.messageText`、`.note`）提供。
-- Produces: `@editorx/markdown-core/styles.css`；预览容器类名约定 `.ex-preview`（消费者把渲染 HTML 放进带此类名的元素，Task 8 照此使用）；新 theme token：`--ex-color-md-{heading,marker,link,code,code-bg,quote,math,mark-bg,tag}`、`--ex-color-code-{bg,text,comment,keyword,string,number,function,tag}`。
+- Produces: `@geekx/markdown-core/styles.css`；预览容器类名约定 `.ex-preview`（消费者把渲染 HTML 放进带此类名的元素，Task 8 照此使用）；新 theme token：`--ex-color-md-{heading,marker,link,code,code-bg,quote,math,mark-bg,tag}`、`--ex-color-code-{bg,text,comment,keyword,string,number,function,tag}`。
 
 - [ ] **Step 1: 写失败测试**
 
@@ -2425,7 +2425,7 @@ describe('markdown-core styles.css', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/styles.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/styles.test.ts`
 Expected: FAIL，`ENOENT ... styles.css`。
 
 - [ ] **Step 3: 在 theme 中追加 token（四处，值必须一一对应）**
@@ -2496,7 +2496,7 @@ Expected: FAIL，`ENOENT ... styles.css`。
     --ex-color-code-tag: #7ee787;
 ```
 
-Run: `pnpm --filter @editorx/theme test`
+Run: `pnpm --filter @geekx/theme test`
 Expected: PASS（`styles.test.ts` 的一致性用例自动覆盖新 token；任何一处漏写会报出具体 token 名）。
 
 - [ ] **Step 4: 编写 markdown-core 样式**
@@ -2896,7 +2896,7 @@ Expected: PASS（`styles.test.ts` 的一致性用例自动覆盖新 token；任�
 
 - [ ] **Step 6: 运行确认通过 + 构建产物包含样式**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/styles.test.ts; pnpm --filter @editorx/theme test; pnpm --filter @editorx/markdown-core build; Test-Path packages/markdown-core/dist/styles.css`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/styles.test.ts; pnpm --filter @geekx/theme test; pnpm --filter @geekx/markdown-core build; Test-Path packages/markdown-core/dist/styles.css`
 Expected: 两组测试 PASS；构建成功；`Test-Path` 输出 `True`。
 
 - [ ] **Step 7: 提交**
@@ -3022,7 +3022,7 @@ describe('buildPairs / measurePreviewSections', () => {
 
 - [ ] **Step 2: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/scroll-sync/interpolate.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/scroll-sync/interpolate.test.ts`
 Expected: FAIL，`Failed to resolve import "./interpolate"`。
 
 - [ ] **Step 3: 实现插值**
@@ -3091,7 +3091,7 @@ export function buildPairs(editor: SectionOffset[], preview: Array<Dimension | u
 
 - [ ] **Step 4: 运行确认通过**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/scroll-sync/interpolate.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/scroll-sync/interpolate.test.ts`
 Expected: PASS。
 
 - [ ] **Step 5: 写 createScrollSync 失败测试**
@@ -3255,7 +3255,7 @@ describe('createScrollSync', () => {
 
 - [ ] **Step 6: 运行确认失败**
 
-Run: `pnpm --filter @editorx/markdown-core exec vitest run src/scroll-sync/scroll-sync.test.ts`
+Run: `pnpm --filter @geekx/markdown-core exec vitest run src/scroll-sync/scroll-sync.test.ts`
 Expected: FAIL，`Failed to resolve import "./scroll-sync"`。
 
 - [ ] **Step 7: 实现**
@@ -3365,7 +3365,7 @@ export type { Dimension, ScrollSide, ScrollSyncOptions, SectionPair } from './sc
 
 - [ ] **Step 8: 运行确认通过 + 全量**
 
-Run: `pnpm --filter @editorx/markdown-core test; pnpm --filter @editorx/markdown-core typecheck; pnpm --filter @editorx/markdown-core build`
+Run: `pnpm --filter @geekx/markdown-core test; pnpm --filter @geekx/markdown-core typecheck; pnpm --filter @geekx/markdown-core build`
 Expected: 全部 PASS；typecheck 与构建成功。
 
 - [ ] **Step 9: 提交**
@@ -3378,7 +3378,7 @@ git commit -m "feat(markdown-core): 新增编辑区与预览双向同步滚动" 
 ### Task 8: playground `/markdown-core` 页面 + Playwright e2e + 视觉基线
 
 **Files:**
-- Modify: `apps/playground/package.json`（dependencies 追加 `@editorx/markdown-core: workspace:*` 与 `katex`）
+- Modify: `apps/playground/package.json`（dependencies 追加 `@geekx/markdown-core: workspace:*` 与 `katex`）
 - Modify: `apps/playground/app/page.tsx`（追加链接）
 - Create: `apps/playground/app/markdown-core/page.tsx`
 - Create: `apps/playground/app/markdown-core/markdown-core-demo.tsx`
@@ -3388,7 +3388,7 @@ git commit -m "feat(markdown-core): 新增编辑区与预览双向同步滚动" 
 - Create（生成）: `apps/playground/e2e/markdown-core.spec.ts-snapshots/markdown-core-light-chromium-win32.png`、`markdown-core-dark-chromium-win32.png`
 
 **Interfaces:**
-- Consumes（包根导出，契约 Addendum A.5）：2a 的 `createRenderer(options?: RendererOptions): Renderer`、`renderDiagrams(container: HTMLElement, opts: { theme: 'light' | 'dark' }): Promise<void>`（同时渲染 `.ex-mermaid` 与 `.ex-flowchart`）、`countWords(md: string): { words: number; chars: number; lines: number }`、`countHtml(html: string): { words: number; paragraphs: number }`、类型 `RenderResult`（`sections[i].html` 为段内 HTML，不含包裹层；`html` 含包裹层，且可能以尾部脚注段 `<div class="ex-preview-section ex-footnotes" data-section-index="{源段数}">` 结尾）；2b 的 `ClEditEngine`（含 `getCursorPosition()`，Task 5）、`createScrollSync`（Task 7）、`@editorx/markdown-core/styles.css`（Task 6，预览容器类 `.ex-preview`）；`@editorx/theme` 的 `ThemeProvider`/`useTheme().resolved`；`@editorx/ui` 的 `Button`、`ThemeToggle`（亮色下无障碍名为"切换到暗黑模式"）。
+- Consumes（包根导出，契约 Addendum A.5）：2a 的 `createRenderer(options?: RendererOptions): Renderer`、`renderDiagrams(container: HTMLElement, opts: { theme: 'light' | 'dark' }): Promise<void>`（同时渲染 `.ex-mermaid` 与 `.ex-flowchart`）、`countWords(md: string): { words: number; chars: number; lines: number }`、`countHtml(html: string): { words: number; paragraphs: number }`、类型 `RenderResult`（`sections[i].html` 为段内 HTML，不含包裹层；`html` 含包裹层，且可能以尾部脚注段 `<div class="ex-preview-section ex-footnotes" data-section-index="{源段数}">` 结尾）；2b 的 `ClEditEngine`（含 `getCursorPosition()`，Task 5）、`createScrollSync`（Task 7）、`@geekx/markdown-core/styles.css`（Task 6，预览容器类 `.ex-preview`）；`@geekx/theme` 的 `ThemeProvider`/`useTheme().resolved`；`@geekx/ui` 的 `Button`、`ThemeToggle`（亮色下无障碍名为"切换到暗黑模式"）。
 - Produces（e2e 依赖的页面约定）：编辑滚动容器 `[data-testid=editor]`（内含 `.ex-editor-content`）；预览滚动容器 `[data-testid=preview]`（内含 `.ex-preview > .ex-preview-section[data-section-index]`，可能有尾部 `.ex-footnotes` 段）；`[data-testid=change-count]` 文本 `"变更 {n}"`（引擎 `change` 次数）；状态栏 `[data-testid=status-md]` 文本 `"Markdown {countWords.words} 字数 {countWords.lines} 行数 当前行 {line}, 当前列 {column}"`、`[data-testid=status-html]` 文本 `"HTML {countHtml.words} 字数 {countHtml.paragraphs} 段落"`；按钮"加载 10k 行文档"。预览在 `change` 后防抖 200ms 增量更新（只替换 HTML 变化的段，尾部脚注段按其完整 HTML 比较），字数统计随预览一起更新；行/列在每次 `selectionChange`/`change` 时立即更新；主题变化时全量重渲染以按新主题重绘 Mermaid 与 flowchart.js。
 
 **IME 方案：** Chromium 下用 CDP：`const client = await page.context().newCDPSession(page)`；`Input.imeSetComposition({ text, selectionStart, selectionEnd })` 产生真实的 `compositionstart/compositionupdate` 与组合态 DOM 文本；`Input.insertText({ text })` 在组合态下提交并触发 `compositionend`。这走浏览器真实 IME 管线，比手动派发 `CompositionEvent`（不会改 DOM）可靠。注意 `page.keyboard.type` 对非 US 布局字符走 `insertText` 且不派发 `keydown`，所以延迟测量只用 ASCII 按键。
@@ -3396,9 +3396,9 @@ git commit -m "feat(markdown-core): 新增编辑区与预览双向同步滚动" 
 - [ ] **Step 1: 安装依赖**
 
 ```powershell
-pnpm --filter @editorx/playground add "@editorx/markdown-core@workspace:*"
+pnpm --filter @geekx/playground add "@geekx/markdown-core@workspace:*"
 $katex = (Get-Content packages/markdown-core/package.json -Raw | ConvertFrom-Json).dependencies.katex
-pnpm --filter @editorx/playground add "katex@$katex"
+pnpm --filter @geekx/playground add "katex@$katex"
 ```
 
 Expected: `apps/playground/package.json` 出现两项依赖，`katex` 版本与 markdown-core 一致。
@@ -3815,8 +3815,8 @@ test('视觉基线：暗黑模式', async ({ page }) => {
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm turbo run build --filter=@editorx/playground
-pnpm --filter @editorx/playground exec playwright test e2e/markdown-core.spec.ts
+pnpm turbo run build --filter=@geekx/playground
+pnpm --filter @geekx/playground exec playwright test e2e/markdown-core.spec.ts
 ```
 
 Expected: FAIL —— `/markdown-core` 返回 404，`beforeEach` 等待 `.ex-mermaid svg` 超时。
@@ -3826,7 +3826,7 @@ Expected: FAIL —— `/markdown-core` 返回 404，`beforeEach` 等待 `.ex-mer
 `apps/playground/app/markdown-core/page.tsx`:
 
 ```tsx
-import '@editorx/markdown-core/styles.css'
+import '@geekx/markdown-core/styles.css'
 import 'katex/dist/katex.min.css'
 import './markdown-core.css'
 import { MarkdownCoreDemo } from './markdown-core-demo'
@@ -3915,9 +3915,9 @@ import {
   createScrollSync,
   renderDiagrams,
   type RenderResult,
-} from '@editorx/markdown-core'
-import { ThemeProvider, useTheme } from '@editorx/theme'
-import { Button, ThemeToggle } from '@editorx/ui'
+} from '@geekx/markdown-core'
+import { ThemeProvider, useTheme } from '@geekx/theme'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { useEffect, useRef, useState } from 'react'
 import { generateLargeDoc, SAMPLE } from './sample'
 
@@ -4090,14 +4090,14 @@ export function MarkdownCoreDemo() {
 
 - [ ] **Step 6: 类型检查与构建**
 
-Run: `pnpm --filter @editorx/playground typecheck; pnpm turbo run build --filter=@editorx/playground`
+Run: `pnpm --filter @geekx/playground typecheck; pnpm turbo run build --filter=@geekx/playground`
 Expected: 无类型错误；`next build` 成功并列出 `/markdown-core` 路由。
 
 - [ ] **Step 7: 生成本页视觉基线（只限新用例）**
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test e2e/markdown-core.spec.ts -g "视觉基线" --update-snapshots
+pnpm --filter @geekx/playground exec playwright test e2e/markdown-core.spec.ts -g "视觉基线" --update-snapshots
 ```
 
 Expected: 生成 `apps/playground/e2e/markdown-core.spec.ts-snapshots/markdown-core-light-chromium-win32.png` 与 `markdown-core-dark-chromium-win32.png`；打开两张图人工确认：左侧编辑区有分段高亮（标题蓝色、标记灰色），右侧预览顶部是带"这里写自定义目录标题"的目录，下方有 KaTeX、代码块；底部状态栏两组统计可见；暗色图整体为暗底。`git status` 中 `showcase` 基线不得出现变化。
@@ -4106,7 +4106,7 @@ Expected: 生成 `apps/playground/e2e/markdown-core.spec.ts-snapshots/markdown-c
 
 ```powershell
 Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-pnpm --filter @editorx/playground exec playwright test
+pnpm --filter @geekx/playground exec playwright test
 ```
 
 Expected: 全部 PASS（含原有 showcase/compare 用例）。延迟数据见报告中的 `latency-ms` 注解。若延迟用例失败：先看注解中的 median/p95，不得放宽阈值；按 spec §11 记录结果并在交付说明中提出启用 `CodeMirrorEngine` 的评估。若 IME 用例失败于 `__exSection.isConnected === false`，说明组合期间仍在重绘，回到 Task 5 排查。若脚注用例失败于 `sup a` 数量，先确认 2a 的脚注引用标记结构（`sup.footnote-ref > a`）。

@@ -1,4 +1,4 @@
-import type { EditorDocument } from '@editorx/toolbar'
+import type { EditorDocument } from '@geekx/toolbar'
 import { sliceChars, SUMMARY_MAX } from './validate'
 
 const UPLOADING_PREFIX = 'ex-uploading://'

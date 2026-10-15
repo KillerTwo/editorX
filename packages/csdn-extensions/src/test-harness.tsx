@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@editorx/theme'
+import { ThemeProvider } from '@geekx/theme'
 import {
   Toolbar,
   resolveToolbar,
@@ -7,7 +7,7 @@ import {
   type ExtensionContext,
   type MissingAdapterPolicy,
   type ToolbarLayout,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 import { render } from '@testing-library/react'
 import { StrictMode, type ReactElement } from 'react'
 import { vi } from 'vitest'

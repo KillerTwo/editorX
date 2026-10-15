@@ -1,4 +1,4 @@
-import type { Category, EditorAdapters, PublishOption, TagCategory } from '@editorx/toolbar'
+import type { Category, EditorAdapters, PublishOption, TagCategory } from '@geekx/toolbar'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 

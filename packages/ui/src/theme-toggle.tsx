@@ -1,4 +1,4 @@
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { Moon, Sun } from 'lucide-react'
 import { Button } from './button'
 

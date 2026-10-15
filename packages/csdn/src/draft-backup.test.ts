@@ -1,5 +1,5 @@
-import { createSettings } from '@editorx/publish'
-import type { EditorDocument } from '@editorx/toolbar'
+import { createSettings } from '@geekx/publish'
+import type { EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import {
   draftFingerprint,

@@ -1,5 +1,5 @@
-import type { EditorExtension, ExtensionContext, Resource } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext, Resource } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { Link2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { escapeHtml, httpUrl } from './embed-html'

@@ -1,5 +1,5 @@
-import { ClEditEngine, createRenderer } from '@editorx/markdown-core'
-import { mergeMessages, zhCN, type Messages } from '@editorx/toolbar'
+import { ClEditEngine, createRenderer } from '@geekx/markdown-core'
+import { mergeMessages, zhCN, type Messages } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { createEditorStore } from '../store'
 import { findPlaceholder, imageMarkdown } from './placeholders'

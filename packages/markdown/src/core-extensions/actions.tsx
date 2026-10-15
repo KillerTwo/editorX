@@ -1,5 +1,5 @@
-import { exportHtml, exportMarkdown, importFile } from '@editorx/markdown-core'
-import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@editorx/toolbar'
+import { exportHtml, exportMarkdown, importFile } from '@geekx/markdown-core'
+import { errorMessage, formatMessage, type EditorExtension, type ExtensionContext } from '@geekx/toolbar'
 import { BookOpen, Download, FileText, FileUp, Maximize2 } from 'lucide-react'
 import { downloadBlob, pickFile } from '../download'
 import { EXPORT_PAGE_CSS } from '../export-html'

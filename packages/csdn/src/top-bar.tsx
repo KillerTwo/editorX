@@ -1,7 +1,7 @@
-import { titleCounter } from '@editorx/rich-text'
-import type { EditorType } from '@editorx/toolbar'
-import { useMessages } from '@editorx/toolbar'
-import { Button, ThemeToggle } from '@editorx/ui'
+import { titleCounter } from '@geekx/rich-text'
+import type { EditorType } from '@geekx/toolbar'
+import { useMessages } from '@geekx/toolbar'
+import { Button, ThemeToggle } from '@geekx/ui'
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react'
 import { cx } from './cx'
 

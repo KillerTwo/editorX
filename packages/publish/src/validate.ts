@@ -1,4 +1,4 @@
-import { formatMessage, type Messages, type PublishSettings } from '@editorx/toolbar'
+import { formatMessage, type Messages, type PublishSettings } from '@geekx/toolbar'
 import { formatOffset, normalizeScheduleRange, scheduleBounds, type ScheduleRange } from './schedule'
 import { COVER_CAPACITY } from './settings'
 

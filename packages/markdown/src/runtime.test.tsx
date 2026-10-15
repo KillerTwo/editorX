@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
+import { ClEditEngine, type EditorEngine, type RendererOptions } from '@geekx/markdown-core'
 import { useRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { useEditorRuntime } from './runtime'
@@ -10,8 +10,8 @@ import type { ViewMode } from './types'
 
 const probes = vi.hoisted(() => [] as Array<{ refreshes: number; destroyed: boolean }>)
 
-vi.mock('@editorx/markdown-core', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@editorx/markdown-core')>()
+vi.mock('@geekx/markdown-core', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@geekx/markdown-core')>()
   return {
     ...mod,
     createScrollSync: (...args: Parameters<typeof mod.createScrollSync>) => {

@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 
 export function SyntaxPanel() {
   const m = useMessages()

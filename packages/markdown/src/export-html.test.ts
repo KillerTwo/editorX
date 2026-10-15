@@ -1,9 +1,9 @@
-import { exportHtml, renderDiagrams } from '@editorx/markdown-core'
+import { exportHtml, renderDiagrams } from '@geekx/markdown-core'
 import { describe, expect, it, vi } from 'vitest'
 import { drawDiagramsForExport } from './export-html'
 
-vi.mock('@editorx/markdown-core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@editorx/markdown-core')>()),
+vi.mock('@geekx/markdown-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@geekx/markdown-core')>()),
   renderDiagrams: vi.fn(() => Promise.resolve()),
 }))
 

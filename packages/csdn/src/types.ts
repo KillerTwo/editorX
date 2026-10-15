@@ -1,4 +1,4 @@
-import type { ThemeMode } from '@editorx/theme'
+import type { ThemeMode } from '@geekx/theme'
 import type {
   DeepPartial,
   EditorAdapters,
@@ -9,8 +9,8 @@ import type {
   Messages,
   PublishSettings,
   ToolbarLayout,
-} from '@editorx/toolbar'
-import type { PublishHiddenField } from '@editorx/publish'
+} from '@geekx/toolbar'
+import type { PublishHiddenField } from '@geekx/publish'
 import type { ReactNode, Ref } from 'react'
 
 export interface CsdnEditorHandle {

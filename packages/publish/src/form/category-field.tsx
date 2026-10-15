@@ -1,5 +1,5 @@
-import { useMessages, type Category } from '@editorx/toolbar'
-import { Checkbox } from '@editorx/ui'
+import { useMessages, type Category } from '@geekx/toolbar'
+import { Checkbox } from '@geekx/ui'
 import type { AdapterState } from '../adapter-state'
 import type { PublishVariant } from '../types'
 import { labelId } from './form-item'

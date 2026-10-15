@@ -1,4 +1,4 @@
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
+import type { EditorExtension, ExtensionContext } from '@geekx/toolbar'
 import { Sigma, Table, TableOfContents, Workflow } from 'lucide-react'
 import { ImageIcon, LinkIcon } from '../icons'
 import { getMarkdownInternals } from '../internals'

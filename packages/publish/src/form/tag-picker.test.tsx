@@ -1,4 +1,4 @@
-import type { TagCategory } from '@editorx/toolbar'
+import type { TagCategory } from '@geekx/toolbar'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'

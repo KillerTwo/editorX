@@ -1,9 +1,9 @@
-import { createRenderer, renderDiagrams, type EditorEngine } from '@editorx/markdown-core'
+import { createRenderer, renderDiagrams, type EditorEngine } from '@geekx/markdown-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createPreviewPipeline, type PreviewPipeline, type PreviewPipelineOptions } from './preview-pipeline'
 
-vi.mock('@editorx/markdown-core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@editorx/markdown-core')>()),
+vi.mock('@geekx/markdown-core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@geekx/markdown-core')>()),
   renderDiagrams: vi.fn(() => Promise.resolve()),
 }))
 

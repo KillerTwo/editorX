@@ -1,4 +1,4 @@
-import { createRenderer } from '@editorx/markdown-core'
+import { createRenderer } from '@geekx/markdown-core'
 import { describe, expect, it, vi } from 'vitest'
 import { extractTocTitle, tocMarkerSelection } from './toc'
 

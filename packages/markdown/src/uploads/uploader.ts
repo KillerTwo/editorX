@@ -1,5 +1,5 @@
-import type { EditorEngine } from '@editorx/markdown-core'
-import { errorMessage, formatMessage, type EditorAdapters, type Messages, type NotifyType } from '@editorx/toolbar'
+import type { EditorEngine } from '@geekx/markdown-core'
+import { errorMessage, formatMessage, type EditorAdapters, type Messages, type NotifyType } from '@geekx/toolbar'
 import type { EditorStore } from '../store'
 import { failedMarkdown, findPlaceholder, imageMarkdown, uploadingMarkdown } from './placeholders'
 

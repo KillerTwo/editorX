@@ -1,5 +1,5 @@
-import { commands, execCommand, type CommandName, type EditorEngine } from '@editorx/markdown-core'
-import type { CommandRegistry } from '@editorx/toolbar'
+import { commands, execCommand, type CommandName, type EditorEngine } from '@geekx/markdown-core'
+import type { CommandRegistry } from '@geekx/toolbar'
 
 const NAMES: readonly string[] = [...Object.keys(commands), 'undo', 'redo']
 

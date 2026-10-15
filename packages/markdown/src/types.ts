@@ -1,5 +1,5 @@
-import type { EditorEngine } from '@editorx/markdown-core'
-import type { ThemeMode } from '@editorx/theme'
+import type { EditorEngine } from '@geekx/markdown-core'
+import type { ThemeMode } from '@geekx/theme'
 import type {
   DeepPartial,
   EditorAdapters,
@@ -9,7 +9,7 @@ import type {
   Messages,
   MissingAdapterPolicy,
   ToolbarLayout,
-} from '@editorx/toolbar'
+} from '@geekx/toolbar'
 import type { ReactNode, Ref } from 'react'
 
 export type ViewMode = 'edit' | 'split' | 'preview'

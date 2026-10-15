@@ -1,4 +1,4 @@
-import type { EditorExtension } from '@editorx/toolbar'
+import type { EditorExtension } from '@geekx/toolbar'
 import { renderToString } from 'react-dom/server'
 import { StrictMode, createRef } from 'react'
 import { describe, expect, it } from 'vitest'

@@ -1,5 +1,5 @@
-import { formatMessage, useMessages, type TagCategory } from '@editorx/toolbar'
-import { InlineLayer } from '@editorx/ui'
+import { formatMessage, useMessages, type TagCategory } from '@geekx/toolbar'
+import { InlineLayer } from '@geekx/ui'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { cx } from '../cx'
 import { CloseIcon } from '../icons'

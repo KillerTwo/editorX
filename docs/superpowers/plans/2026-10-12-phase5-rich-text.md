@@ -1,12 +1,12 @@
-# 阶段 5：`@editorx/rich-text` 的 `<RichTextEditor />` 实现计划
+# 阶段 5：`@geekx/rich-text` 的 `<RichTextEditor />` 实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 `develop` 上交付 `@editorx/rich-text` 的 `<RichTextEditor />`（CKEditor 5 GPL、CSDN 富文本稿纸与工具栏、左侧目录、右侧抽屉宿主、字数与稿纸后插槽），并先修掉阶段 4 留给图片对话框的裁剪器、封面焦点、无障碍与发布默认值问题。
+**Goal:** 在 `develop` 上交付 `@geekx/rich-text` 的 `<RichTextEditor />`（CKEditor 5 GPL、CSDN 富文本稿纸与工具栏、左侧目录、右侧抽屉宿主、字数与稿纸后插槽），并先修掉阶段 4 留给图片对话框的裁剪器、封面焦点、无障碍与发布默认值问题。
 
-**Architecture:** 富文本包只依赖 `theme` / `ui` / `toolbar`（以及控制方装好的 `ckeditor5`），不依赖 `markdown`、`publish`、`csdn`。编辑器根节点是 `height: 100%` 的滚动容器，工具栏带、左侧目录、右侧抽屉和宿主放进来的固定发布栏都相对这个容器定位，不使用 `window` 滚动。`PublishPanel` 仍归 `@editorx/publish`；playground 的 `/rich-text` 把 `editorType: 'richtext'` 的文档和 `barPosition="fixed"` 的发布栏放进稿纸后插槽。颜色只走 `--ex-color-rte-*`。
+**Architecture:** 富文本包只依赖 `theme` / `ui` / `toolbar`（以及控制方装好的 `ckeditor5`），不依赖 `markdown`、`publish`、`csdn`。编辑器根节点是 `height: 100%` 的滚动容器，工具栏带、左侧目录、右侧抽屉和宿主放进来的固定发布栏都相对这个容器定位，不使用 `window` 滚动。`PublishPanel` 仍归 `@geekx/publish`；playground 的 `/rich-text` 把 `editorType: 'richtext'` 的文档和 `barPosition="fixed"` 的发布栏放进稿纸后插槽。颜色只走 `--ex-color-rte-*`。
 
-**Tech Stack:** React 19、Next.js 16 App Router、`ckeditor5@49.0.0`、`@ckeditor/ckeditor5-react@12.0.0`（`licenseKey: 'GPL'`）、`@editorx/toolbar` 的 `EditorExtension` / `PanelDef` / `ToolbarLayout` / `Messages`、tsup（`'use client';` banner + `tooling/copy-css.mjs`）、Vitest + jsdom、Playwright（darwin 视觉基线）。
+**Tech Stack:** React 19、Next.js 16 App Router、`ckeditor5@49.0.0`、`@ckeditor/ckeditor5-react@12.0.0`（`licenseKey: 'GPL'`）、`@geekx/toolbar` 的 `EditorExtension` / `PanelDef` / `ToolbarLayout` / `Messages`、tsup（`'use client';` banner + `tooling/copy-css.mjs`）、Vitest + jsdom、Playwright（darwin 视觉基线）。
 
 **Spec:** `docs/superpowers/specs/2026-10-09-csdn-editor-design.md`（§2 非目标、§3.1 依赖方向、§5 扩展 API、§6.2 `<RichTextEditor />`、§10 阶段 5）。视觉数字以本计划正文为准（来源是 2026-10-10 审计，mac 图 `mac_2026-10-10_19-13-05` / `19-13-15` / `19-13-37`，单位 CSS px）。交接约束见 `docs/superpowers/handoff/phase5-notes-from-4.md`；其中「定时发布是原生 datetime-local」和「回到顶部是红色」已被该笔记「阶段 3/4 参考图对齐之后」一节取代，本计划不恢复那两句。
 
@@ -18,12 +18,12 @@
 - 滚动：组件根是 `height: 100%` 的容器。工具栏带、目录、右侧抽屉，以及宿主挂上的固定发布栏，都定位在这个容器内。根上 `transform: translate(0)`，让 `PublishPanel` 已有的 `barPosition="fixed"`（`position: fixed`）相对编辑器而不是窗口。禁止 `window` 滚动。
 - `PanelDef.position` 增加 `'left'`。左侧目录是使用该位置的核心扩展。不另做一套面板系统。Markdown 编辑器继续只渲染 `position === 'right'` 与 `'bottom'`（`packages/markdown/src/markdown-editor.tsx` 已有这两次 filter），左侧面板不会进 Markdown 图标栏。
 - 颜色只新增 `--ex-color-rte-*`，写在 `packages/theme/src/styles.css` 的 `light-dark()` 主块和三个 `@supports not (color: light-dark(#000, #fff))` 兜底块。已有同值 token 时，rte token 用 `var(--ex-color-…)` 别名（四个位置都写同一个 `var()`）。富文本 CSS 里不写颜色字面量。
-- 审计 §7 已接受的默认：下拉内容按下面 Task 7 的清单，用 `@editorx/ui` 的 `Dropdown` 重做样式；悬停背景 `rgba(0, 0, 0, 0.04)`、圆角 4；激活色为 `--ex-color-primary`（图标和标签一起变）；正文样式复用 Markdown 预览值（正文 16/26、`#4d4d4d`，h1 22/32、h2 20/30、h3 18/28、h4–h6 16/26，标题 `#4f4f4f`、字重 600、`margin: 24px 0 8px`，p/ul/ol 下边距 24，列表缩进 31、`#404040`，链接 `#4ea1db`），空占位单独用 32px 行距；稿纸 `min-height: 812px`；窄视口右侧抽屉覆盖、目录在宽度小于 1200 时收起；深色 token 是推断值，深色基线只保证稳定；标题超过 100 被挡住（`maxLength={100}`），计数在「将要超过」时用错误色 token 显示 `n/100`，因为 `maxLength` 挡住了键入，计数不会因键入变成大于 100；已输入标题色 `#606266`。
+- 审计 §7 已接受的默认：下拉内容按下面 Task 7 的清单，用 `@geekx/ui` 的 `Dropdown` 重做样式；悬停背景 `rgba(0, 0, 0, 0.04)`、圆角 4；激活色为 `--ex-color-primary`（图标和标签一起变）；正文样式复用 Markdown 预览值（正文 16/26、`#4d4d4d`，h1 22/32、h2 20/30、h3 18/28、h4–h6 16/26，标题 `#4f4f4f`、字重 600、`margin: 24px 0 8px`，p/ul/ol 下边距 24，列表缩进 31、`#404040`，链接 `#4ea1db`），空占位单独用 32px 行距；稿纸 `min-height: 812px`；窄视口右侧抽屉覆盖、目录在宽度小于 1200 时收起；深色 token 是推断值，深色基线只保证稳定；标题超过 100 被挡住（`maxLength={100}`），计数在「将要超过」时用错误色 token 显示 `n/100`，因为 `maxLength` 挡住了键入，计数不会因键入变成大于 100；已输入标题色 `#606266`。
 - 字数 = 非空白码点。先去掉 U+200B–U+200D、U+2060、U+FEFF，再按 `countWords` 的 `chars` 口径去掉 `\s`（`packages/markdown-core/src/utils/count.ts` 的 `WHITESPACE` 与 `INVISIBLE`）。不把空格算进「共 N 字」。不新增对 `markdown-core` 的依赖，在富文本包里复制这两条正则。
 - 目录来自 CKEditor 文档里的标题，没有 `@[TOC]` 也生成。Markdown 编辑器的 `@[TOC]` 行为不改。富文本空目录文案是「为文内增加标题，这里将生成目录」（已有 `zhCN.panels.tocEmpty`）。
 - CKEditor：`ckeditor5@49.0.0` 与 `@ckeditor/ckeditor5-react@12.0.0`，`licenseKey: 'GPL'`。编辑器只在客户端创建。`value` 是 HTML，`onChange(html)`。ref：`getDocument` / `setValue` / `focus` / `insert`。任何任务都不要运行 `pnpm install`、`pnpm add` 或 `playwright install`。Task 8 开始前由控制方安装，见该任务上方的「控制方安装」。
 - `barPosition="fixed"` 已在 `PublishPanel` 上。本阶段暴露字数回调和稿纸后插槽。playground 在稿纸下组合 `PublishPanel`（`editorType: 'richtext'`，`barPosition="fixed"`）。富文本包不拥有发布表单。
-- 测试命令是 `pnpm --filter @editorx/<name> exec vitest run <文件>`。`--` 不会缩小范围，不要写 `pnpm --filter … -- vitest`。跑 pnpm 前 `export COREPACK_INTEGRITY_KEYS=0`。改了包 CSS 之后、跑 e2e 之前执行 `pnpm build --force`。杀端口 3100：`pids=$(lsof -ti tcp:3100 || true); if [ -n "$pids" ]; then kill -9 $pids; fi`。不要更新无关视觉基线，不要删除或重生成已有 win32 PNG。
+- 测试命令是 `pnpm --filter @geekx/<name> exec vitest run <文件>`。`--` 不会缩小范围，不要写 `pnpm --filter … -- vitest`。跑 pnpm 前 `export COREPACK_INTEGRITY_KEYS=0`。改了包 CSS 之后、跑 e2e 之前执行 `pnpm build --force`。杀端口 3100：`pids=$(lsof -ti tcp:3100 || true); if [ -n "$pids" ]; then kill -9 $pids; fi`。不要更新无关视觉基线，不要删除或重生成已有 win32 PNG。
 - Mac/darwin 是验收平台。parity spec 把 darwin 与 win32 拆开；win32 的 `describe` 使用 `test.skip`，源码注释写「待 Windows 复测」。
 - react-hooks v7：effect 里不要同步 `setState`。焦点放进 `useLayoutEffect` 可以。组件测试用 `StrictMode`。
 - 验收平台是 darwin。视觉基线只提交 darwin。深色基线无参考图，只要求连续两次渲染一致。
@@ -189,8 +189,8 @@ export interface RichTextEditorProps {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/ui exec vitest run src/image-cropper.test.tsx
-pnpm --filter @editorx/publish exec vitest run src/form/cover-field.test.tsx
+pnpm --filter @geekx/ui exec vitest run src/image-cropper.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/form/cover-field.test.tsx
 ```
 
 Expected: FAIL，`图片无法显示` 或 `crossorigin` 找不到。
@@ -250,8 +250,8 @@ const endDrag = (e: PointerEvent<HTMLDivElement>) => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/ui exec vitest run src/image-cropper.test.tsx
-pnpm --filter @editorx/publish exec vitest run src/form/cover-field.test.tsx
+pnpm --filter @geekx/ui exec vitest run src/image-cropper.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/form/cover-field.test.tsx
 ```
 
 Expected: PASS。原有「拖动图片」用例仍用 `pointerId: 1`，必须保持通过。
@@ -324,7 +324,7 @@ git status
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/publish exec vitest run src/logic.test.ts src/form/cover-field.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/logic.test.ts src/form/cover-field.test.tsx
 ```
 
 Expected: FAIL。`data-src` 用例会得到 `['/lazy.png', '/real.png']` 或 `['/only.png']`；上传中节点不是 button，或 `activeElement` 是 `body`。
@@ -367,7 +367,7 @@ useLayoutEffect(() => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/publish exec vitest run src/logic.test.ts src/form/cover-field.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/logic.test.ts src/form/cover-field.test.tsx
 ```
 
 Expected: PASS。
@@ -435,8 +435,8 @@ git status
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/publish exec vitest run src/form/fields.test.tsx
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/form/fields.test.tsx
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx
 ```
 
 Expected: FAIL，仍然找得到 `role="img"`，或 `a11y` 不存在。
@@ -448,9 +448,9 @@ Expected: FAIL，仍然找得到 `role="img"`，或 `a11y` 不存在。
 `form-item.tsx`：
 
 ```tsx
-import { Tooltip } from '@editorx/ui'
+import { Tooltip } from '@geekx/ui'
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 
 export function FormItem({ field, id, label, labelSuffix, required, help, error, children }: FormItemProps) {
   const helpName = useMessages().publish.a11y.help
@@ -508,8 +508,8 @@ export function FormItem({ field, id, label, labelSuffix, required, help, error,
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx
-pnpm --filter @editorx/publish exec vitest run src/form/fields.test.tsx
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/form/fields.test.tsx
 ```
 
 Expected: PASS。
@@ -634,7 +634,7 @@ git status
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/publish exec vitest run src/publish-panel.test.tsx src/controller.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/publish-panel.test.tsx src/controller.test.tsx
 ```
 
 Expected: FAIL。未传文档时墨衍仍禁用；空正文仍调用了 `onPublish`。
@@ -644,7 +644,7 @@ Expected: FAIL。未传文档时墨衍仍禁用；空正文仍调用了 `onPubli
 `settings.ts`：
 
 ```ts
-import type { CoverMode, EditorDocument, EditorType, PublishCover, PublishPayload, PublishSettings } from '@editorx/toolbar'
+import type { CoverMode, EditorDocument, EditorType, PublishCover, PublishPayload, PublishSettings } from '@geekx/toolbar'
 
 export const FALLBACK_DOC: EditorDocument = { editorType: 'markdown', title: '', html: '' }
 
@@ -706,8 +706,8 @@ const found = validatePublish(target, { messages, now: now(), title: doc.title, 
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx
-pnpm --filter @editorx/publish exec vitest run src/publish-panel.test.tsx src/controller.test.tsx src/logic.test.ts
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx
+pnpm --filter @geekx/publish exec vitest run src/publish-panel.test.tsx src/controller.test.tsx src/logic.test.ts
 ```
 
 Expected: PASS。
@@ -729,7 +729,7 @@ git status
 
 ---
 
-### Task 5: 搭建 @editorx/rich-text
+### Task 5: 搭建 @geekx/rich-text
 
 **Files:**
 - Create: `packages/rich-text/package.json`
@@ -743,15 +743,15 @@ git status
 - Create: `packages/rich-text/src/rich-text-editor.tsx`
 - Create: `packages/rich-text/src/dist.test.ts`
 - Create: `packages/rich-text/src/editor.test.tsx`
-- Modify: `apps/playground/package.json`（dependencies 增加 `"@editorx/rich-text": "workspace:*"`）
-- Modify: `apps/playground/app/layout.tsx`（在 publish 样式之后 `import '@editorx/rich-text/styles.css'`）
+- Modify: `apps/playground/package.json`（dependencies 增加 `"@geekx/rich-text": "workspace:*"`）
+- Modify: `apps/playground/app/layout.tsx`（在 publish 样式之后 `import '@geekx/rich-text/styles.css'`）
 - Test: `packages/rich-text/src/dist.test.ts`、`packages/rich-text/src/editor.test.tsx`、`packages/rich-text/src/styles.test.ts`
 
 **Interfaces:**
 - Consumes: `packages/publish/package.json`、`tsup.config.ts`、`vitest.config.ts`、`tsconfig.json`、`dist.test.ts` 的结构。`pnpm-workspace.yaml` 已包含 `packages/*`。`turbo.json` 的 `build` / `test` 不用改。
-- Produces: 包名 `@editorx/rich-text`，导出 `RichTextEditor`、`RichTextEditorProps`、`RichTextEditorHandle`、`RichTextEditorSlots`。根节点 `class="ex-rte"`，内部有 `.ex-rte__scroll`。CSS 含 `height: 100%`、`overflow: auto`、`transform: translate(0)`。`dist/index.js` 首行是 `'use client';`，且存在 `dist/styles.css`。此任务的 `package.json` 不写 ckeditor。
+- Produces: 包名 `@geekx/rich-text`，导出 `RichTextEditor`、`RichTextEditorProps`、`RichTextEditorHandle`、`RichTextEditorSlots`。根节点 `class="ex-rte"`，内部有 `.ex-rte__scroll`。CSS 含 `height: 100%`、`overflow: auto`、`transform: translate(0)`。`dist/index.js` 首行是 `'use client';`，且存在 `dist/styles.css`。此任务的 `package.json` 不写 ckeditor。
 
-若 `pnpm --filter @editorx/rich-text` 因 lockfile 还没有这个包而拒绝执行，停下来交给控制方跑 `pnpm install --offline`。任务步骤本身不安装。
+若 `pnpm --filter @geekx/rich-text` 因 lockfile 还没有这个包而拒绝执行，停下来交给控制方跑 `pnpm install --offline`。任务步骤本身不安装。
 
 - [ ] **Step 1: 写失败测试**
 
@@ -811,16 +811,16 @@ describe('rich-text styles', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/editor.test.tsx src/styles.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/editor.test.tsx src/styles.test.ts
 ```
 
 Expected: FAIL，模块不存在。若 filter 找不到包，先写完 Step 3 的 `package.json` 再跑；仍然失败则交给控制方 `pnpm install --offline`，不要自己装。
 
 - [ ] **Step 3: 实现**
 
-`package.json` 与 `packages/publish/package.json` 相同，名称改为 `@editorx/rich-text`，`dependencies` 只有 `"lucide-react": "^1.53.0"`。`tsconfig.json`、`vitest.config.ts`、`tsup.config.ts` 与 publish 相同（banner `'use client';`，`onSuccess` 调 `tooling/copy-css.mjs`）。
+`package.json` 与 `packages/publish/package.json` 相同，名称改为 `@geekx/rich-text`，`dependencies` 只有 `"lucide-react": "^1.53.0"`。`tsconfig.json`、`vitest.config.ts`、`tsup.config.ts` 与 publish 相同（banner `'use client';`，`onSuccess` 调 `tooling/copy-css.mjs`）。
 
-`types.ts` 写入本计划「文件结构」一节的三个 interface 与 `RichTextEditorProps`，并从 `@editorx/toolbar`、`@editorx/theme`、`react` 引入对应类型。
+`types.ts` 写入本计划「文件结构」一节的三个 interface 与 `RichTextEditorProps`，并从 `@geekx/toolbar`、`@geekx/theme`、`react` 引入对应类型。
 
 `styles.css`：
 
@@ -866,14 +866,14 @@ export type { RichTextEditorHandle, RichTextEditorProps, RichTextEditorSlots } f
 import './styles.css'
 ```
 
-`layout.tsx` 增加 `import '@editorx/rich-text/styles.css'`。playground 的 dependencies 增加 `"@editorx/rich-text": "workspace:*"`。
+`layout.tsx` 增加 `import '@geekx/rich-text/styles.css'`。playground 的 dependencies 增加 `"@geekx/rich-text": "workspace:*"`。
 
 构建后再跑 dist 测试：
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text build
-pnpm --filter @editorx/rich-text exec vitest run src/dist.test.ts src/editor.test.tsx src/styles.test.ts
+pnpm --filter @geekx/rich-text build
+pnpm --filter @geekx/rich-text exec vitest run src/dist.test.ts src/editor.test.tsx src/styles.test.ts
 ```
 
 - [ ] **Step 4: 跑测试确认通过**
@@ -1000,7 +1000,7 @@ describe('富文本 token', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/theme exec vitest run src/styles.test.ts
+pnpm --filter @geekx/theme exec vitest run src/styles.test.ts
 ```
 
 Expected: FAIL，`mainTokens.get('--ex-color-rte-band')` 为空。
@@ -1013,7 +1013,7 @@ Expected: FAIL，`mainTokens.get('--ex-color-rte-band')` 为空。
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/theme exec vitest run src/styles.test.ts
+pnpm --filter @geekx/theme exec vitest run src/styles.test.ts
 ```
 
 Expected: PASS，包括原有的兜底一致性用例。
@@ -1053,7 +1053,7 @@ git status
 - Consumes: `ToolbarLayout`、`zhCN.toolbar`、`.ex-toolbar__item.has-label` / `__icon` / `__label` / `__caret`（`packages/toolbar/src/toolbar.tsx`）。Markdown 核心扩展都带 `editors: ['markdown']`。
 - Produces:
   - `PanelDef.position: 'left' | 'right' | 'bottom'`。
-  - `RICH_TEXT_TOOLBAR_LAYOUT`（从 `@editorx/rich-text` 导出）：
+  - `RICH_TEXT_TOOLBAR_LAYOUT`（从 `@geekx/rich-text` 导出）：
 
 ```ts
 export const RICH_TEXT_TOOLBAR_LAYOUT: ToolbarLayout = [
@@ -1149,8 +1149,8 @@ describe('RICH_TEXT_TOOLBAR_LAYOUT', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx src/layout.test.ts
-pnpm --filter @editorx/rich-text exec vitest run src/layout.test.ts src/styles.test.ts
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx src/layout.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/layout.test.ts src/styles.test.ts
 ```
 
 Expected: FAIL，`zhCN.toolbar.undo` 或布局常量不存在。
@@ -1233,8 +1233,8 @@ Expected: FAIL，`zhCN.toolbar.undo` 或布局常量不存在。
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/toolbar exec vitest run src/messages.test.tsx src/layout.test.ts
-pnpm --filter @editorx/rich-text exec vitest run src/layout.test.ts src/styles.test.ts
+pnpm --filter @geekx/toolbar exec vitest run src/messages.test.tsx src/layout.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/layout.test.ts src/styles.test.ts
 ```
 
 Expected: PASS。
@@ -1262,7 +1262,7 @@ git status
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text add --offline ckeditor5@49.0.0 @ckeditor/ckeditor5-react@12.0.0
+pnpm --filter @geekx/rich-text add --offline ckeditor5@49.0.0 @ckeditor/ckeditor5-react@12.0.0
 ```
 
 Task 8 开始时，这两项已经在 `packages/rich-text/package.json` 的 `dependencies` 里。若没有，停下来交给控制方。不要运行 `pnpm install`、`pnpm add` 或 `playwright install`。
@@ -1367,7 +1367,7 @@ it('服务端渲染不调用 mountEditor', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/upload-adapter.test.ts src/ck-config.test.ts src/bridge.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/upload-adapter.test.ts src/ck-config.test.ts src/bridge.test.tsx
 ```
 
 Expected: FAIL，模块不存在。
@@ -1397,7 +1397,7 @@ export function createUploadAdapter(
 
 `mount-editor.ts` 在函数内部 `await import('ckeditor5')`，`DecoupledEditor.create(element, config)`。不要在模块顶层调用 `create`。`insertHtml` 用 `editor.data.processor.toView` 与 `editor.data.toModel`，再 `editor.model.insertContent`。`onChange` 监听 `change:data`。组件卸载时 `destroy()`。
 
-`rich-text-editor.tsx`：外壳对齐 `PublishRoot`（有外层 `ThemeProvider` 且没传 `theme` / `defaultTheme` 时复用外层，类名 `ex-rte-theme`）。包一层 `MessagesProvider`。`useEffect` 里调用 `mountEditor`，cleanup 里 `cancelled = true` 并 `destroy`。不要在 effect 函数体里同步 `setState`；`setMounted` 放在 `mountEditor(...).then(...)` 里，且检查 `cancelled`。工具栏用 `@editorx/toolbar` 的 `Toolbar`，`editorType: 'richtext'`，扩展为 `[...coreExtensions, ...extensions]`，布局默认 `RICH_TEXT_TOOLBAR_LAYOUT`。`commands.run` 转到 `mounted.execute`。`insert` / `replaceSelection` 在有 `html` 时调用 `insertHtml`。根结构：
+`rich-text-editor.tsx`：外壳对齐 `PublishRoot`（有外层 `ThemeProvider` 且没传 `theme` / `defaultTheme` 时复用外层，类名 `ex-rte-theme`）。包一层 `MessagesProvider`。`useEffect` 里调用 `mountEditor`，cleanup 里 `cancelled = true` 并 `destroy`。不要在 effect 函数体里同步 `setState`；`setMounted` 放在 `mountEditor(...).then(...)` 里，且检查 `cancelled`。工具栏用 `@geekx/toolbar` 的 `Toolbar`，`editorType: 'richtext'`，扩展为 `[...coreExtensions, ...extensions]`，布局默认 `RICH_TEXT_TOOLBAR_LAYOUT`。`commands.run` 转到 `mounted.execute`。`insert` / `replaceSelection` 在有 `html` 时调用 `insertHtml`。根结构：
 
 ```tsx
 <div className={cx('ex-rte', className)} data-editor="rich-text" data-wide={wide || undefined} style={{ height }}>
@@ -1421,7 +1421,7 @@ CSS 追加正文样式（选择器 `.ex-rte .ck-content`）：字号 16px、行�
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/upload-adapter.test.ts src/ck-config.test.ts src/bridge.test.tsx src/editor.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/upload-adapter.test.ts src/ck-config.test.ts src/bridge.test.tsx src/editor.test.tsx
 ```
 
 Expected: PASS。`editor.test.tsx` 继续断言 `.ex-rte__scroll` 存在，且 `renderToString` 的 HTML 不含 `ck-editor`。
@@ -1465,7 +1465,7 @@ git status
 `title-counter.test.ts`：
 
 ```ts
-import { zhCN } from '@editorx/toolbar'
+import { zhCN } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import { titleCounter } from './title-counter'
 
@@ -1550,7 +1550,7 @@ expect(css).not.toMatch(/\.ex-rte-placeholder[^,{]*ul/)
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/title-counter.test.ts src/paper.test.tsx src/styles.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/title-counter.test.ts src/paper.test.tsx src/styles.test.ts
 ```
 
 Expected: FAIL，找不到标题输入框。
@@ -1560,7 +1560,7 @@ Expected: FAIL，找不到标题输入框。
 `title-counter.ts`：
 
 ```ts
-import { formatMessage, type Messages } from '@editorx/toolbar'
+import { formatMessage, type Messages } from '@geekx/toolbar'
 
 type TitleMessages = Pick<Messages['richText'], 'titleNeed' | 'titleCount' | 'titleOver'>
 
@@ -1653,7 +1653,7 @@ CSS（稿纸相对坐标来自审计 §3）：
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/title-counter.test.ts src/paper.test.tsx src/styles.test.ts src/bridge.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/title-counter.test.ts src/paper.test.tsx src/styles.test.ts src/bridge.test.tsx
 ```
 
 Expected: PASS。
@@ -1716,7 +1716,7 @@ it('从标题生成目录，不要求 @[TOC]', () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/headings.test.ts src/toc-panel.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/headings.test.ts src/toc-panel.test.tsx
 ```
 
 Expected: FAIL，`extractHeadings` 不存在。
@@ -1768,8 +1768,8 @@ Expected: FAIL，`extractHeadings` 不存在。
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/headings.test.ts src/toc-panel.test.tsx src/styles.test.ts
-pnpm --filter @editorx/markdown exec vitest run src/panels/panels.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/headings.test.ts src/toc-panel.test.tsx src/styles.test.ts
+pnpm --filter @geekx/markdown exec vitest run src/panels/panels.test.tsx
 ```
 
 Expected: PASS。Markdown 目录测试不该因 `position: 'left'` 失败。
@@ -1845,7 +1845,7 @@ CSS 断言 `width: 390px`、`top: 52px`、`bottom: 68px`、`z-index: 20`、`posi
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/drawer.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/drawer.test.tsx
 ```
 
 Expected: FAIL，找不到「占位面板」。
@@ -1880,7 +1880,7 @@ Expected: FAIL，找不到「占位面板」。
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/drawer.test.tsx src/styles.test.ts
+pnpm --filter @geekx/rich-text exec vitest run src/drawer.test.tsx src/styles.test.ts
 ```
 
 Expected: PASS。
@@ -1950,7 +1950,7 @@ it('挂载和插入都会报告非空白字数', async () => {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/count.test.ts src/count-editor.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/count.test.ts src/count-editor.test.tsx
 ```
 
 Expected: FAIL。
@@ -1975,7 +1975,7 @@ export function countRichTextChars(html: string): number {
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec vitest run src/count.test.ts src/count-editor.test.tsx
+pnpm --filter @geekx/rich-text exec vitest run src/count.test.ts src/count-editor.test.tsx
 ```
 
 Expected: PASS。
@@ -2061,8 +2061,8 @@ git status
 
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
-pnpm --filter @editorx/rich-text exec tsc -p tsconfig.json --noEmit
-pnpm --filter @editorx/playground exec tsc --noEmit
+pnpm --filter @geekx/rich-text exec tsc -p tsconfig.json --noEmit
+pnpm --filter @geekx/playground exec tsc --noEmit
 ```
 
 Expected: 退出码 0。
@@ -2191,7 +2191,7 @@ test('空文档亮色', async ({ page }) => {
 export COREPACK_INTEGRITY_KEYS=0
 pnpm build --force
 pids=$(lsof -ti tcp:3100 || true); if [ -n "$pids" ]; then kill -9 $pids; fi
-pnpm --filter @editorx/playground exec playwright test e2e/rich-text.spec.ts e2e/rich-text-parity.spec.ts
+pnpm --filter @geekx/playground exec playwright test e2e/rich-text.spec.ts e2e/rich-text-parity.spec.ts
 ```
 
 Expected: darwin 上功能 spec 与 darwin parity 通过；win32 describe 为 skipped。失败时改组件，不要放宽容差到超过 2px，也不要改预期去迎合一个写错的选择器。
@@ -2201,8 +2201,8 @@ Expected: darwin 上功能 spec 与 darwin parity 通过；win32 describe 为 sk
 ```bash
 export COREPACK_INTEGRITY_KEYS=0
 pids=$(lsof -ti tcp:3100 || true); if [ -n "$pids" ]; then kill -9 $pids; fi
-pnpm --filter @editorx/playground exec playwright test e2e/rich-text-visual.spec.ts --update-snapshots
-pnpm --filter @editorx/playground exec playwright test e2e/rich-text-visual.spec.ts
+pnpm --filter @geekx/playground exec playwright test e2e/rich-text-visual.spec.ts --update-snapshots
+pnpm --filter @geekx/playground exec playwright test e2e/rich-text-visual.spec.ts
 ```
 
 Expected: 第二次不带 `--update-snapshots` 也通过。只应出现 `*-chromium-darwin.png`。若出现 win32 文件，删掉这次误生成的 win32 新文件，保留 skip，不要删除仓库里原有的其他 win32 基线。
@@ -2241,7 +2241,7 @@ git status
 
 `phase6-notes-from-5.md` 用中文，至少包括这些段落（数字保持本计划里的值）：
 
-- 代码范围：`@editorx/rich-text` 的 `<RichTextEditor />`。HEAD 用提交时的 `git rev-parse --short HEAD`。分支 `develop`。
+- 代码范围：`@geekx/rich-text` 的 `<RichTextEditor />`。HEAD 用提交时的 `git rev-parse --short HEAD`。分支 `develop`。
 - 公开 API：`RichTextEditor`、`richTextCoreExtensions`、`RICH_TEXT_TOOLBAR_LAYOUT`、`countRichTextChars`。ref 为 `focus` / `getValue` / `setValue` / `getDocument` / `insert`。插槽 `titleActions`、`afterPaper`、`rightCollapsed`。`onWordCount` 是非空白字数。
 - 滚动：根节点 `transform: translate(0)` 之后，`barPosition="fixed"` 相对编辑器。阶段 6 顶栏若在编辑器外面，不要改回 `window` 滚动。
 - 发布：playground 传 `editorType: 'richtext'`，墨衍禁用。未传 document 的回退是 `FALLBACK_DOC`（markdown）。空标题或 `htmlToText` 为空不会 `onPublish`。

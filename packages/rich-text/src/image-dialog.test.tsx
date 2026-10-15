@@ -1,4 +1,4 @@
-import { cropImage } from '@editorx/ui'
+import { cropImage } from '@geekx/ui'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
@@ -20,8 +20,8 @@ vi.mock('./mount-editor', () => ({
   })),
 }))
 
-vi.mock('@editorx/ui', async () => {
-  const actual = await vi.importActual<typeof import('@editorx/ui')>('@editorx/ui')
+vi.mock('@geekx/ui', async () => {
+  const actual = await vi.importActual<typeof import('@geekx/ui')>('@geekx/ui')
   return { ...actual, cropImage: vi.fn() }
 })
 

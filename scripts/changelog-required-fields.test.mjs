@@ -3,15 +3,15 @@ import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const PUBLISHABLE = [
-  ['@editorx/theme', 'packages/theme'],
-  ['@editorx/ui', 'packages/ui'],
-  ['@editorx/toolbar', 'packages/toolbar'],
-  ['@editorx/markdown-core', 'packages/markdown-core'],
-  ['@editorx/markdown', 'packages/markdown'],
-  ['@editorx/rich-text', 'packages/rich-text'],
-  ['@editorx/publish', 'packages/publish'],
-  ['@editorx/csdn-extensions', 'packages/csdn-extensions'],
-  ['@editorx/csdn', 'packages/csdn'],
+  ['@geekx/theme', 'packages/theme'],
+  ['@geekx/ui', 'packages/ui'],
+  ['@geekx/toolbar', 'packages/toolbar'],
+  ['@geekx/markdown-core', 'packages/markdown-core'],
+  ['@geekx/markdown', 'packages/markdown'],
+  ['@geekx/rich-text', 'packages/rich-text'],
+  ['@geekx/publish', 'packages/publish'],
+  ['@geekx/csdn-extensions', 'packages/csdn-extensions'],
+  ['@geekx/csdn', 'packages/csdn'],
 ]
 
 const SENTENCE =
@@ -27,7 +27,7 @@ test('九个库的 changelog 写明四个必填字段', () => {
     for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
       const block = pkg[depType] ?? {}
       for (const [dep, range] of Object.entries(block)) {
-        if (!dep.startsWith('@editorx/')) continue
+        if (!dep.startsWith('@geekx/')) continue
         assert.equal(range, depType === 'peerDependencies' ? 'workspace:^' : 'workspace:*', `${name} ${depType} ${dep}`)
       }
     }

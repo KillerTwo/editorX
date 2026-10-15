@@ -1,5 +1,5 @@
-import type { EditorExtension, ExtensionContext, Template } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext, Template } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { applyTemplate, reportFailure } from './form'

@@ -6,7 +6,7 @@ develop 分支，09154c1..c23fbda）。本笔记的修订是其后的 docs(hando
 e2e chromium 74/74（基线无改动）、perf 4/4。
 
 ## 可直接复用的 API
-- `@editorx/publish`：<PublishPanel />（内联卡片 + sticky 操作栏，slots.barStart）与 <PublishModal open onClose />（740 宽）。
+- `@geekx/publish`：<PublishPanel />（内联卡片 + sticky 操作栏，slots.barStart）与 <PublishModal open onClose />（740 宽）。
   共用 props：value/defaultValue/onChange、document、adapters、missingAdapter、rules、coverModes、templates、
   agreementLinks、onPublished、locale、theme/defaultTheme/onThemeChange/themeStorageKey、className。
   只依赖 theme/ui/toolbar，可直接接到 <RichTextEditor /> 宿主（传 editorType: 'richtext' 的 EditorDocument）。
@@ -23,11 +23,11 @@ e2e chromium 74/74（基线无改动）、perf 4/4。
 - 纯函数：createSettings / validatePublish / PublishRules（函数替换、false 关闭）/ extractSummary / extractImages /
   htmlToText / toLocalInputValue / fromLocalInputValue（S8：已从包入口导出）。extractImages 跳过 ex-uploading:// 占位，富文本 HTML 同样适用。
 - `controller.publish()` 只在宿主 `onPublished` 抛错时 reject（文章已发布成功），调用方不要把它当成发布失败。
-- `@editorx/ui` 新组件：RadioGroup、Checkbox、Select（button + listbox）、ImageCropper + cropImage（16:9 等任意比例）、
+- `@geekx/ui` 新组件：RadioGroup、Checkbox、Select（button + listbox）、ImageCropper + cropImage（16:9 等任意比例）、
   Modal maskClassName；弹窗内的浮层（Popover / Tooltip / Dropdown / Select listbox）通过 useModalLayerClass 画在遮罩之上。
   裁剪相关类型与常量已改名为 `CropSize` / `CROP_MAX_ZOOM`（原 `Size` / `MAX_ZOOM`）。
   富文本的图片/视频/链接对话框可直接复用。
-- `@editorx/toolbar`：EditorAdapters 新增 getActivities / getTopics，onSaveDraft(doc, settings?)（「不并发」只对同一调用方成立）；
+- `@geekx/toolbar`：EditorAdapters 新增 getActivities / getTopics，onSaveDraft(doc, settings?)（「不并发」只对同一调用方成立）；
   zhCN.publish 文案桶。GitCode 备份协议文案已按参考截图逐字对齐：
   「您已同意GitCode 用户协议 和 隐私政策，我们会为您自动创建账号并备份文章至我的项目。」（用户协议/隐私政策在传 agreementLinks 时为链接，否则纯文本）。
 - 主题 token：--ex-color-on-primary（主色按钮文字），--ex-color-pub-*（36 个，仅发布面板使用；Task 13 修正轮新增

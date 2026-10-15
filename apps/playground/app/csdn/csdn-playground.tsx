@@ -2,9 +2,9 @@
 
 import '../quota-notice.css'
 import './csdn.css'
-import { CsdnEditor } from '@editorx/csdn'
-import { csdnExtensions } from '@editorx/csdn-extensions'
-import type { EditorExtension, EditorType } from '@editorx/toolbar'
+import { CsdnEditor } from '@geekx/csdn'
+import { csdnExtensions } from '@geekx/csdn-extensions'
+import type { EditorExtension, EditorType } from '@geekx/toolbar'
 import { useEffect, useMemo, useState } from 'react'
 import { csdnHistoryExtension as markdownHistory, csdnMarketingExtension } from '../markdown/csdn-demo-extensions'
 import { QuotaNotice } from '../quota-notice'

@@ -1,5 +1,5 @@
-import { ThemeProvider } from '@editorx/theme'
-import { ToastProvider } from '@editorx/ui'
+import { ThemeProvider } from '@geekx/theme'
+import { ToastProvider } from '@geekx/ui'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import type { ExtensionContext } from './extension'

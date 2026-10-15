@@ -1,4 +1,4 @@
-# @editorx/csdn-extensions
+# @geekx/csdn-extensions
 
 ## 0.1.0
 
@@ -9,6 +9,6 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @editorx/theme@0.1.0
-  - @editorx/ui@0.1.0
-  - @editorx/toolbar@0.1.0
+  - @geekx/theme@0.1.0
+  - @geekx/ui@0.1.0
+  - @geekx/toolbar@0.1.0

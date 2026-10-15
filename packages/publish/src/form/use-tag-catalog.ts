@@ -1,4 +1,4 @@
-import { useMessages, type TagCategory } from '@editorx/toolbar'
+import { useMessages, type TagCategory } from '@geekx/toolbar'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLatest } from '../use-latest'
 

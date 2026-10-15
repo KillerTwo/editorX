@@ -10,9 +10,9 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
     expect(readFileSync(dist, 'utf8').split(/\r?\n/, 1)[0]).toBe("'use client';")
   })
 
-  it('静态依赖 @editorx/rich-text，并带有 styles.css', () => {
+  it('静态依赖 @geekx/rich-text，并带有 styles.css', () => {
     const source = readFileSync(dist, 'utf8')
-    expect(source).toContain('@editorx/rich-text')
+    expect(source).toContain('@geekx/rich-text')
     expect(source).not.toContain('import(')
     expect(existsSync(path.join(distDir, 'styles.css'))).toBe(true)
   })

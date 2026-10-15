@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import type { ReactNode } from 'react'
 
 function CollapseGlyph() {

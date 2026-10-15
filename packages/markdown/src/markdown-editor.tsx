@@ -1,5 +1,5 @@
-import { ClEditEngine, type EditorEngine, type RendererOptions } from '@editorx/markdown-core'
-import { ThemeProvider, useOptionalTheme, useTheme } from '@editorx/theme'
+import { ClEditEngine, type EditorEngine, type RendererOptions } from '@geekx/markdown-core'
+import { ThemeProvider, useOptionalTheme, useTheme } from '@geekx/theme'
 import {
   activeExtensions,
   collectShortcuts,
@@ -17,8 +17,8 @@ import {
   type EditorAdapters,
   type EditorExtension,
   type ToolbarHandle,
-} from '@editorx/toolbar'
-import { ToastProvider, useToast } from '@editorx/ui'
+} from '@geekx/toolbar'
+import { ToastProvider, useToast } from '@geekx/ui'
 import {
   useCallback,
   useEffect,

@@ -16,7 +16,7 @@ import {
   type OpenChangeReason,
   type Placement,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { cloneElement, useState, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx'
 import { withFloatingTree } from './floating-tree'

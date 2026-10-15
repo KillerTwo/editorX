@@ -1,5 +1,5 @@
-import { errorMessage, formatMessage, useMessages } from '@editorx/toolbar'
-import { Button, cropImage, ImageCropper, Modal, type CropArea } from '@editorx/ui'
+import { errorMessage, formatMessage, useMessages } from '@geekx/toolbar'
+import { Button, cropImage, ImageCropper, Modal, type CropArea } from '@geekx/ui'
 import { useEffect, useRef, useState } from 'react'
 
 export const COVER_ASPECT = 16 / 9

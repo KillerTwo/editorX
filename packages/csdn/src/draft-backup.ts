@@ -1,4 +1,4 @@
-import type { EditorDocument, PublishSettings } from '@editorx/toolbar'
+import type { EditorDocument, PublishSettings } from '@geekx/toolbar'
 
 export const DRAFT_STORAGE_KEY = 'editorx-csdn-draft'
 export const MAX_TIMER_DELAY = 2_147_483_647

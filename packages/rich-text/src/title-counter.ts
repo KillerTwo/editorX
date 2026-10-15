@@ -1,4 +1,4 @@
-import { formatMessage, type Messages } from '@editorx/toolbar'
+import { formatMessage, type Messages } from '@geekx/toolbar'
 
 type TitleMessages = Pick<Messages['richText'], 'titleNeed' | 'titleCount' | 'titleOver'>
 

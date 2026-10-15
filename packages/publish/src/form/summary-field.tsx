@@ -1,4 +1,4 @@
-import { formatMessage, useMessages } from '@editorx/toolbar'
+import { formatMessage, useMessages } from '@geekx/toolbar'
 import { cx } from '../cx'
 import { WandIcon } from '../icons'
 import type { PublishVariant } from '../types'

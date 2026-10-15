@@ -13,7 +13,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
-import { useTheme } from '@editorx/theme'
+import { useTheme } from '@geekx/theme'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { addDays, addMonths, clampDateKey, isDateDisabled, monthGrid, parseDateKey, todayKey, type DateKey } from './calendar'
 import { cx } from './cx'

@@ -2,9 +2,9 @@
 
 import '../quota-notice.css'
 import './rich-text.css'
-import { PublishPanel } from '@editorx/publish'
-import { RichTextEditor } from '@editorx/rich-text'
-import { formatMessage, zhCN } from '@editorx/toolbar'
+import { PublishPanel } from '@geekx/publish'
+import { RichTextEditor } from '@geekx/rich-text'
+import { formatMessage, zhCN } from '@geekx/toolbar'
 import { useEffect, useMemo, useState } from 'react'
 import { QuotaNotice } from '../quota-notice'
 import { createPublishAdapters } from '../publish/mock-adapters'

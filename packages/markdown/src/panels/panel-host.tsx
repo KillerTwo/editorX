@@ -1,4 +1,4 @@
-import { ExtensionErrorBoundary, safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@editorx/toolbar'
+import { ExtensionErrorBoundary, safeResolveText, useMessages, type ExtensionContext, type ResolvedPanel } from '@geekx/toolbar'
 import { cx } from '../cx'
 import { useEditorState, type EditorStore } from '../store'
 

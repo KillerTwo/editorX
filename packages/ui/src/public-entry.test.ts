@@ -13,7 +13,7 @@ function walk(dir: string, out: string[]) {
   }
 }
 
-describe('@editorx/ui 公开入口', () => {
+describe('@geekx/ui 公开入口', () => {
   it('不导出模态层辅助函数，包外也没有引用', () => {
     expect(api).not.toHaveProperty('MODAL_LAYER_CLASS')
     expect(api).not.toHaveProperty('ModalLayer')

@@ -1,4 +1,4 @@
-import { countHtml, countWords, type HtmlCount, type RenderedSection, type WordCount } from '@editorx/markdown-core'
+import { countHtml, countWords, type HtmlCount, type RenderedSection, type WordCount } from '@geekx/markdown-core'
 
 export interface PreviewStats {
   /** Markdown 源码非空白字符数（G18：「test」→ 4） */

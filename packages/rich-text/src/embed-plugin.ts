@@ -1,4 +1,4 @@
-import type { EmbedDef } from '@editorx/toolbar'
+import type { EmbedDef } from '@geekx/toolbar'
 import type { Editor } from 'ckeditor5'
 
 type ModelElement = {

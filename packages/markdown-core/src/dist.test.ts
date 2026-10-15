@@ -78,6 +78,6 @@ describe.skipIf(!hasDist)('built dist in a host page', { timeout: 30_000 }, () =
   })
 })
 
-it.runIf(!hasDist)('dist check skipped: run `pnpm --filter @editorx/markdown-core build` first', () => {
+it.runIf(!hasDist)('dist check skipped: run `pnpm --filter @geekx/markdown-core build` first', () => {
   console.warn('[dist.test] packages/markdown-core/dist/index.js not found; skipping built-dist Prism check')
 })

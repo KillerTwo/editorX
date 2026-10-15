@@ -12,10 +12,10 @@ describe.skipIf(!existsSync(dist))('构建产物（需先 build）', () => {
 
   it('带有 styles.css，且不静态依赖 csdn 或 markdown', () => {
     const source = readFileSync(dist, 'utf8')
-    expect(source).not.toContain('@editorx/csdn\'')
-    expect(source).not.toContain('@editorx/markdown')
-    expect(source).not.toContain('@editorx/rich-text')
-    expect(source).not.toContain('@editorx/markdown-core')
+    expect(source).not.toContain('@geekx/csdn\'')
+    expect(source).not.toContain('@geekx/markdown')
+    expect(source).not.toContain('@geekx/rich-text')
+    expect(source).not.toContain('@geekx/markdown-core')
     expect(existsSync(path.join(distDir, 'styles.css'))).toBe(true)
   })
 })

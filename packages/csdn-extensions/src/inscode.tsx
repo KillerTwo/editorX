@@ -1,5 +1,5 @@
-import type { EditorExtension, ExtensionContext } from '@editorx/toolbar'
-import { Button } from '@editorx/ui'
+import type { EditorExtension, ExtensionContext } from '@geekx/toolbar'
+import { Button } from '@geekx/ui'
 import { SquareCode } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { escapeHtml, httpUrl } from './embed-html'

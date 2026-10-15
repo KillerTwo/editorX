@@ -1,4 +1,4 @@
-import type { Resource } from '@editorx/toolbar'
+import type { Resource } from '@geekx/toolbar'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'

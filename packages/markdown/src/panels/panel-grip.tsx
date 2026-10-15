@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'
 
 /** 宽度范围为推断（参考图只有默认 390） */

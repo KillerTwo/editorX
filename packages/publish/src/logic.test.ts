@@ -1,4 +1,4 @@
-import { zhCN, type EditorAdapters, type PublishSettings } from '@editorx/toolbar'
+import { zhCN, type EditorAdapters, type PublishSettings } from '@geekx/toolbar'
 import { describe, expect, it } from 'vitest'
 import { adapterState } from './adapter-state'
 import { extractImages, extractSummary, htmlToText } from './extract'

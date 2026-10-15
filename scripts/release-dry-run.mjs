@@ -4,15 +4,15 @@ import path from 'node:path'
 
 const root = path.resolve(import.meta.dirname, '..')
 const libs = [
-  ['@editorx/theme', 'theme'],
-  ['@editorx/ui', 'ui'],
-  ['@editorx/toolbar', 'toolbar'],
-  ['@editorx/markdown-core', 'markdown-core'],
-  ['@editorx/markdown', 'markdown'],
-  ['@editorx/rich-text', 'rich-text'],
-  ['@editorx/publish', 'publish'],
-  ['@editorx/csdn-extensions', 'csdn-extensions'],
-  ['@editorx/csdn', 'csdn'],
+  ['@geekx/theme', 'theme'],
+  ['@geekx/ui', 'ui'],
+  ['@geekx/toolbar', 'toolbar'],
+  ['@geekx/markdown-core', 'markdown-core'],
+  ['@geekx/markdown', 'markdown'],
+  ['@geekx/rich-text', 'rich-text'],
+  ['@geekx/publish', 'publish'],
+  ['@geekx/csdn-extensions', 'csdn-extensions'],
+  ['@geekx/csdn', 'csdn'],
 ]
 
 const haystack = process.argv.slice(2).join(' ')

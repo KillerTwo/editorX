@@ -1,4 +1,4 @@
-import { formatMessage, useMessages } from '@editorx/toolbar'
+import { formatMessage, useMessages } from '@geekx/toolbar'
 import { CircleAlert } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useEditorState, type EditorStore } from '../store'

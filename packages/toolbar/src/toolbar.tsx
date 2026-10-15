@@ -1,4 +1,4 @@
-import { Dropdown, Modal, Popover, Tooltip, type DropdownItem } from '@editorx/ui'
+import { Dropdown, Modal, Popover, Tooltip, type DropdownItem } from '@geekx/ui'
 import { ChevronDown, Ellipsis } from 'lucide-react'
 import {
   Fragment,

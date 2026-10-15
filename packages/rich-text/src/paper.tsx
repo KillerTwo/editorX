@@ -1,4 +1,4 @@
-import { useMessages } from '@editorx/toolbar'
+import { useMessages } from '@geekx/toolbar'
 import { Wand2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { titleCounter } from './title-counter'

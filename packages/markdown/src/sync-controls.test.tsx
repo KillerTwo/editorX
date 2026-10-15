@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderEditor } from './test-utils'
 
 const spies = vi.hoisted(() => ({ syncFrom: [] as string[], paused: [] as boolean[] }))
-vi.mock('@editorx/markdown-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@editorx/markdown-core')>()
+vi.mock('@geekx/markdown-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@geekx/markdown-core')>()
   return {
     ...actual,
     createScrollSync: (...args: Parameters<typeof actual.createScrollSync>) => {

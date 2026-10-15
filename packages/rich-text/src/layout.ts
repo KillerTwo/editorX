@@ -1,4 +1,4 @@
-import type { ToolbarLayout } from '@editorx/toolbar'
+import type { ToolbarLayout } from '@geekx/toolbar'
 
 export const RICH_TEXT_TOOLBAR_LAYOUT: ToolbarLayout = [
   ['undo', 'redo', 'csdn:history'],

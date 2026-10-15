@@ -1,4 +1,4 @@
-import type { EditorAdapters, EditorDocument } from '@editorx/toolbar'
+import type { EditorAdapters, EditorDocument } from '@geekx/toolbar'
 import type { EditorStore } from './store'
 
 export interface SaveErrorInfo {
