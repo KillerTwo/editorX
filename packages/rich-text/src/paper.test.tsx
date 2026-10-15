@@ -29,7 +29,7 @@ describe('稿纸标题', () => {
       </StrictMode>,
     )
     const input = screen.getByRole('textbox', { name: '文章标题' })
-    await userEvent.type(input, '1'.repeat(101))
+    await userEvent.setup({ delay: null }).type(input, '1'.repeat(101))
     expect(input).toHaveValue('1'.repeat(100))
     expect(screen.getByText('100 / 100')).not.toHaveClass('is-over')
     expect(screen.queryByText('101/100')).toBeNull()

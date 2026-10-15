@@ -5,5 +5,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['../../tooling/test/setup-dom.ts'],
     restoreMocks: true,
+    // turbo runs every package suite at once, so jsdom/CKEditor tests need headroom.
+    testTimeout: 15_000,
   },
 })

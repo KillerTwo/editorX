@@ -32,7 +32,9 @@ beforeEach(() => {
   vi.mocked(mountEditor).mockImplementation(async (_element, _config, html: string) => createMounted(html))
 })
 
-const css = readFileSync(path.join(import.meta.dirname, 'styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+const css = readFileSync(path.join(import.meta.dirname, 'styles.css'), 'utf8')
+  .replace(/\r\n/g, '\n')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
 
 const panel: EditorExtension = {
   name: 'csdn:ai',

@@ -50,7 +50,7 @@ describe('RichTextEditor 壳', () => {
       expect(container.innerHTML).toContain('视频卡片')
       expect(container.innerHTML).toContain('资源卡片')
       expect(container.innerHTML).toContain('代码卡片')
-    })
+    }, { timeout: 10_000 })
     const data = ref.current?.getValue() ?? ''
     expect(data).toContain('投票卡片')
     expect(data).toContain('视频卡片')

@@ -33,7 +33,10 @@ function keepNodeFileUrls(): Plugin[] {
         const next = code.replace(
           /new URL\(\s*(["'])(?:https?:\/\/[^/"']+)?(\/@fs)?(\/[^"']+)\1\s*,\s*(?:'' \+ )?import\.meta\.url\s*\)/g,
           (_full, quote: string, fsMarker: string | undefined, absPath: string) => {
-            const absolute = fsMarker ? absPath : path.join(repoRoot, absPath.replace(/^\//, ''))
+            // On Windows `/@fs` is followed by `/D:/...`; the leading slash must go.
+            const absolute = fsMarker
+              ? absPath.replace(/^\/(?=[A-Za-z]:)/, '')
+              : path.join(repoRoot, absPath.replace(/^\//, ''))
             return `new URL(${quote}${pathToFileURL(absolute).href}${quote})`
           },
         )
@@ -49,5 +52,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['../../tooling/test/setup-dom.ts'],
     restoreMocks: true,
+    // turbo runs every package suite at once, so jsdom/CKEditor tests need headroom.
+    testTimeout: 15_000,
   },
 })

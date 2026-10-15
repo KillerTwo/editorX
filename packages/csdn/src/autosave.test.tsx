@@ -206,7 +206,7 @@ describe('自动保存与本地备份', () => {
   it('富文本底栏保存失败仍留下备份，并保持未保存', async () => {
     const user = userEvent.setup()
     let fail = true
-    const onSaveDraft = vi.fn(async () => {
+    const onSaveDraft = vi.fn<(doc: EditorDocument, settings?: PublishSettings) => Promise<void>>(async () => {
       if (fail) throw new Error('offline')
     })
     const { container } = render(
@@ -251,7 +251,7 @@ describe('自动保存与本地备份', () => {
     const previous = '{"keep":"previous"}'
     window.localStorage.setItem(DRAFT_STORAGE_KEY, previous)
     const original = Storage.prototype.setItem
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key, value) {
       if (key === DRAFT_STORAGE_KEY) throw new Error('quota')
       return original.call(this, key, value)
     })

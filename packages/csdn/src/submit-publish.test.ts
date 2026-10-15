@@ -1,5 +1,5 @@
 import { createSettings } from '@geekx/publish'
-import { zhCN, type EditorDocument } from '@geekx/toolbar'
+import { zhCN, type EditorAdapters, type EditorDocument } from '@geekx/toolbar'
 import { describe, expect, it, vi } from 'vitest'
 import { submitPublish } from './submit-publish'
 
@@ -97,7 +97,7 @@ describe('submitPublish', () => {
 
   it('设置里带 scheduledAt 时，立即发布的 payload 不含该字段', async () => {
     const settings = createSettings({ tags: ['jvm'], scheduledAt: '2099-01-01T00:00:00.000Z' })
-    const onPublish = vi.fn(async () => undefined)
+    const onPublish = vi.fn<NonNullable<EditorAdapters['onPublish']>>(async () => undefined)
     const notify = vi.fn()
     const ok = await submitPublish({
       document: ready,
