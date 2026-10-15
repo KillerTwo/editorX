@@ -37,9 +37,11 @@ for (const [name, dirName] of libs) {
     cwd: dir,
     encoding: 'utf8',
     env: { ...process.env, npm_config_offline: 'true', COREPACK_INTEGRITY_KEYS: '0' },
+    // npm is npm.cmd on Windows, which spawn can only run through a shell.
+    shell: process.platform === 'win32',
   })
   if (result.status !== 0) {
-    console.error(result.stderr)
+    console.error(result.error ?? result.stderr)
     process.exit(result.status ?? 1)
   }
   const packed = JSON.parse(result.stdout)
