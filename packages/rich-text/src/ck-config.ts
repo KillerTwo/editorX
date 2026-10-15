@@ -1,5 +1,5 @@
 import type { EditorAdapters, EmbedDef } from '@geekx/toolbar'
-import type { Editor } from 'ckeditor5'
+import type { Editor, ViewDowncastWriter, ViewElement } from 'ckeditor5'
 import { registerExEmbed } from './embed-plugin'
 import { createUploadAdapter } from './upload-adapter'
 
@@ -124,7 +124,17 @@ export async function createEditorConfig(options: {
       GeneralHtmlSupport,
       Undo,
     ],
-    extraPlugins: [createExBridgePlugin(Plugin, { toWidget, trustedHtml }, options.uploadImage, options.embeds)],
+    extraPlugins: [
+      createExBridgePlugin(
+        Plugin,
+        {
+          toWidget: (element, writer) => toWidget(element as ViewElement, writer as ViewDowncastWriter),
+          trustedHtml,
+        },
+        options.uploadImage,
+        options.embeds,
+      ),
+    ],
     codeBlock: {
       languages: CODE_LANGUAGES.map((language) => ({ language, label: language })),
     },
